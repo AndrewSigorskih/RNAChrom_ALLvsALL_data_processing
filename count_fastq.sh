@@ -25,7 +25,7 @@ for (( idx = 0; idx < ${#names[@]}/2; idx++ )); do
         j=$((2*$idx + 1))
         cnt1=(`grep -c ^@SRR "${DIRNAME}/${names[$i]}.fastq"`)
         grep ^@SRR "${DIRNAME}/${names[$i]}.fastq" | cut -f 1 -d " " | cut -d "." -f 2 > tmp1.tmp
-        grep ^@SRR "${DIRNAME}/${names[$i]}.fastq" | cut -f 1 -d " " | cut -d "." -f 2 > tmp2.tmp
+        grep ^@SRR "${DIRNAME}/${names[$j]}.fastq" | cut -f 1 -d " " | cut -d "." -f 2 > tmp2.tmp
         cnt2=(`awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' tmp1.tmp tmp2.tmp`)
         echo -e "${names[$i]}\t${names[$j]}\t${cnt1}\t${cnt2}" >> $OUTFILENAME
         rm tmp1.tmp tmp2.tmp
