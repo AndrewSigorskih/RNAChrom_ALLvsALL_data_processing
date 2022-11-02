@@ -17,7 +17,7 @@ if [ ! -d $DIRNAME ]; then
         echo "path $DIRNAME does not exist!"
         exit 101
 fi
-names=(`cat ids2.txt`)
+names=(`cat ids.txt`)
 OUTFILENAME="stats_${DIRNAME}.lst"
 echo -e "id1\tid2\ttot_reads_1\tidentical" > $OUTFILENAME 
 for (( idx = 0; idx < ${#names[@]}/2; idx++ )); do
