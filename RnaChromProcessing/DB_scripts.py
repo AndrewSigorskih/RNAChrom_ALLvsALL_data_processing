@@ -26,6 +26,7 @@ class DB_processor:
         with open(cfg_file, "r") as f:
             dct = json.load(f)
         self.base_dir = dct.get("base_dir", os.getcwd())
+        self.fastuniq_pth = dct.get("fastuniq_pth", "fastuniq")
         self.trimmomatic_pth = dct.get("trimmomatic_pth", "trimmomatic")
         self.hisat2_pth = dct.get("hisat2_pth", "hisat2")
         self.genome = dct.get("genome_pth", "/mnt/scratch/rnachrom/data/genomes/hg38/hg38")
@@ -37,28 +38,31 @@ class DB_processor:
         if (not self.rna_ids) or (not self.dna_ids):
             raise ValueError("File ids not specified!")
         # todo: manage dirs
+        # todo: add checks for non-existing paths to all functions
     
     def run_fastuiniq(self, *args):
         """delete non-unique reads"""
+        # todo: modify and use run_fastuniq.sh here 
+        # or turn it completely into python function
         pass
                    
     def run_trimmomatic(self,
                         window: int = 5,
                         qual_th: int = 26,
-                        minlen:int = 15,
+                        minlen: int = 15,
                         indir: Optional[str] = None,
                         outdir: Optional[str] = None
                         ):
         """trim reads by quality"""
         if not indir: 
-            indir = f"{self.base_dir}/fastuniq"
+            indir = os.path.join(self.base_dir, "fastuniq")
         if not outdir:
-            outdir = f"{self.base_dir}/trimmed"
+            outdir = os.path.join(self.base_dir, "trimmed")
         for dna, rna in zip(self.dna_ids, self.rna_ids):
             command = (f"{self.trimmomatic_pth} PE -phred33 "
-                       f"{indir}/{rna}.fastq {indir}/{dna}.fastq "
-                       f"{outdir}/{rna}.fastq {outdir}/{rna}.unpaired "
-                       f"{outdir}/{dna}.fastq {outdir}/{dna}.unpaired "
+                       f"{os.path.join(indir, f'{rna}.fastq')} {os.path.join(indir, f'{dna}.fastq')} "
+                       f"{os.path.join(outdir, f'{rna}.fastq')} {os.path.join(outdir, f'{rna}.unpaired')} "
+                       f"{os.path.join(outdir, f'{dna}.fastq')} {os.path.join(outdir, f'{dna}.unpaired')} "
                        f"SLIDINGWINDOW:{winfow}:{qual_th} MINLEN:{minlen}"
             )
             _run_check_command(command)
@@ -66,20 +70,24 @@ class DB_processor:
     
     def align(self):
         """align reads to genome"""
+        indir = os.path.join(self.base_dir, "trimmed")
+        outdir = os.path.join(self.base_dir, "sam")
         for filename in self.dna_ids:
             command = (f"{self.hisat2_pth} -p {self.nthreads} -x {self.genome} "
                        f"--no-spliced-alignment -k 100 --no-softclip -U "
-                       f"{self.base_dir}/trimmed/{filename}.fastq "
-                       f"| samtools view -bSh > {self.base_dir}/sam/{filename}.bam"            
+                       f"{os.path.join(indir, f'{filename}.fastq')} | "
+                       f"samtools view -bSh > {os.path.join(outdir, f'{filename}.bam')}"
+                       #f"{self.base_dir}/trimmed/{filename}.fastq | "
+                       #f"samtools view -bSh > {self.base_dir}/sam/{filename}.bam"            
             )
             _run_check_command(command)
             
         for filename in self.rna_ids:
-            outfilename = f"{self.base_dir}/sam/{filename}"
             command = (f"{self.hisat2_pth} -p {self.nthreads} -x {self.genome} "
                        f"-k 100 --no-softclip --known-splicesite-infile {self.known_splice} "
                        f"--dta-cufflinks --novel-splicesite-outfile {outfilename}.novel_splice "
-                       f"-U {self.base_dir}/trimmed/{filename}.fastq | samtools view -bSh > {outfilename}.bam"
+                       f"-U {os.path.join(indir, f'{filename}.fastq')} | samtools view -bSh > "
+                       f"{os.path.join(outdir, f'{filename}.bam')}"
             )
             _run_check_command(command)
         return None
@@ -88,8 +96,8 @@ class DB_processor:
         """filter aligned reads: allow only readt that are aligned once
         with 2 or less mismatches"""
         for filename in self.rna_ids + self.dna_ids:
-            infilename = f"{self.base_dir}/sam/{filename}.bam"
-            outfilename = f"{self.base_dir}/bam/{filename}.bam"
+            infilename = os.path.join(self.base_dir, "sam", f"{filename}.bam")
+            outfilename = os.path.join(self.base_dir, "bam", f"{filename}.bam")
             command = (f"samtools view -Sh -F 4 {infilename} | "
                        f"grep -E 'XM:i:[0-2]\s.*NH:i:1$|^@' | "
                        f"samtools view -Sbh - > {outfilename}"
@@ -104,20 +112,22 @@ class DB_processor:
                        mode: str = "full"):
         """bam to bed conversion"""
         for filename in self.rna_ids + self.dna_ids:
+            infile = os.path.join(self.base_dir, indir, f"{filename}.bam")
+            outfile = os.path.join(self.base_dir, outdir, f"{filename}.bed")
             if mode=='full':
-                command = (f"samtools view -Sh -F 4 {self.base_dir}/{indir}/{filename}.bam | "
+                command = (f"samtools view -Sh -F 4 {infile} | "
                            f"grep -E 'XM:i:[0-2]\s.*NH:i:1$|^@' | samtools view -Sbh - | "
-                           f"bedtools bamtobed -cigar -i stdin > {self.base_dir}/{outdir}/{filename}.bed"
+                           f"bedtools bamtobed -cigar -i stdin > {outfile}"
                 )
             elif mode == "mapped2mism":
-                command = (f"samtools view -Sh -F 4 {self.base_dir}/{indir}/{filename}.bam | "
+                command = (f"samtools view -Sh -F 4 {infile} | "
                            f"grep -E 'XM:i:[0-2]\s.*' | samtools view -Sbh - | "
-                           f"bedtools bamtobed -cigar -i stdin > {self.base_dir}/{outdir}/{filename}.bed"
+                           f"bedtools bamtobed -cigar -i stdin > {outfile}"
                 )
             elif mode == "mapped":
-                command = (f"samtools view -Sh -F 4 {self.base_dir}/{indir}/{filename}.bam | "
+                command = (f"samtools view -Sh -F 4 {infile} | "
                            f"samtools view -Sbh - | "
-                           f"bedtools bamtobed -cigar -i stdin > {self.base_dir}/{outdir}/{filename}.bed"
+                           f"bedtools bamtobed -cigar -i stdin > {outfile}"
                 )
             else:
                 raise ValueError(f"Unknown mode: {mode}")
@@ -163,8 +173,8 @@ class DB_processor:
     def make_contacts(self):
         """make contacts files for all pairs of ids"""
         for dna, rna in zip(self.dna_ids, self.rna_ids):
-            self._extract_contacts(f"{self.base_dir}/bed/{dna}.bed",
-                                   f"{self.base_dir}/bed/{rna}.bed",
-                                   f"{self.base_dir}/contacts/{rna}.tab"
+            self._extract_contacts(os.path.join(self.base_dir, "bed", f"{dna}.bed"),
+                                   os.path.join(self.base_dir, "bed", f"{rna}.bed"),
+                                   os.path.join(self.base_dir, "contacts", f"{rna}.tab")
             )
         return None
