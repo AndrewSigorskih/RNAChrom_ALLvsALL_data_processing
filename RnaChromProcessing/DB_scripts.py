@@ -2,7 +2,7 @@ import os
 import subprocess
 import numpy as np
 import pandas as pd
-
+from typing import Optional
 
 def _run_command(command: str) -> str:
     process = subprocess.Popen(command,
@@ -36,18 +36,24 @@ class DB_processor:
         self.dna_ids = dct.get('dna_ids', None)
         if (not self.rna_ids) or (not self.dna_ids):
             raise ValueError("File ids not specified!")
+        # todo: manage dirs
     
     def run_fastuiniq(self, *args):
         """delete non-unique reads"""
         pass
                    
     def run_trimmomatic(self,
-                        indir: str = f"{self.base_dir}/fastuniq"
-                        outdir: str = f"{self.base_dir}/trimmed"
                         window: int = 5,
                         qual_th: int = 26,
-                        minlen:int = 15):
+                        minlen:int = 15,
+                        indir: Optional[str] = None,
+                        outdir: Optional[str] = None
+                        ):
         """trim reads by quality"""
+        if not indir: 
+            indir = f"{self.base_dir}/fastuniq"
+        if not outdir:
+            outdir = f"{self.base_dir}/trimmed"
         for dna, rna in zip(self.dna_ids, self.rna_ids):
             command = (f"{self.trimmomatic_pth} PE -phred33 "
                        f"{indir}/{rna}.fastq {indir}/{dna}.fastq "
@@ -137,17 +143,17 @@ class DB_processor:
                            columns=['id', 'rna_chr', 'rna_bgn', 'rna_end', 'rna_strand', 'rna_cigar',\
                                     'dna_chr', 'dna_bgn', 'dna_end', 'dna_strand', 'dna_cigar'])
         for i, item in enumerate(ids):
-        res.at[i,'id'] = item
-        res.at[i,'rna_chr'] = rna.at[item,0]
-        res.at[i,'rna_bgn'] = rna.at[item,1]
-        res.at[i,'rna_end'] = rna.at[item,2]
-        res.at[i,'rna_strand'] = rna.at[item,5]
-        res.at[i,'rna_cigar'] = rna.at[item,6]
-        res.at[i,'dna_chr'] = dna.at[item,0]
-        res.at[i,'dna_bgn'] = dna.at[item,1]
-        res.at[i,'dna_end'] = dna.at[item,2]
-        res.at[i,'dna_strand'] = dna.at[item,5]
-        res.at[i,'dna_cigar'] = dna.at[item,6]
+            res.at[i,'id'] = item
+            res.at[i,'rna_chr'] = rna.at[item,0]
+            res.at[i,'rna_bgn'] = rna.at[item,1]
+            res.at[i,'rna_end'] = rna.at[item,2]
+            res.at[i,'rna_strand'] = rna.at[item,5]
+            res.at[i,'rna_cigar'] = rna.at[item,6]
+            res.at[i,'dna_chr'] = dna.at[item,0]
+            res.at[i,'dna_bgn'] = dna.at[item,1]
+            res.at[i,'dna_end'] = dna.at[item,2]
+            res.at[i,'dna_strand'] = dna.at[item,5]
+            res.at[i,'dna_cigar'] = dna.at[item,6]
         
         if self.chr_dct:
             res['rna_chr'] = res['rna_chr'].apply(lambda x: chr_dict[x])
