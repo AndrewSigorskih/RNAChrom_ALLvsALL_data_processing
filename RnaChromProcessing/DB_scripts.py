@@ -76,9 +76,7 @@ class DB_processor:
             command = (f"{self.hisat2_pth} -p {self.nthreads} -x {self.genome} "
                        f"--no-spliced-alignment -k 100 --no-softclip -U "
                        f"{os.path.join(indir, f'{filename}.fastq')} | "
-                       f"samtools view -bSh > {os.path.join(outdir, f'{filename}.bam')}"
-                       #f"{self.base_dir}/trimmed/{filename}.fastq | "
-                       #f"samtools view -bSh > {self.base_dir}/sam/{filename}.bam"            
+                       f"samtools view -bSh > {os.path.join(outdir, f'{filename}.bam')}"          
             )
             _run_check_command(command)
             
