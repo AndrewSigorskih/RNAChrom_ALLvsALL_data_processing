@@ -63,7 +63,7 @@ class DB_processor:
                        f"{os.path.join(indir, f'{rna}.fastq')} {os.path.join(indir, f'{dna}.fastq')} "
                        f"{os.path.join(outdir, f'{rna}.fastq')} {os.path.join(outdir, f'{rna}.unpaired')} "
                        f"{os.path.join(outdir, f'{dna}.fastq')} {os.path.join(outdir, f'{dna}.unpaired')} "
-                       f"SLIDINGWINDOW:{winfow}:{qual_th} MINLEN:{minlen}"
+                       f"SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}"
             )
             _run_check_command(command)
         return None
@@ -73,19 +73,23 @@ class DB_processor:
         indir = os.path.join(self.base_dir, "trimmed")
         outdir = os.path.join(self.base_dir, "sam")
         for filename in self.dna_ids:
+            infilename = os.path.join(indir, f'{filename}.fastq')
+            outfilename = os.path.join(outdir, f'{filename}.bam')
             command = (f"{self.hisat2_pth} -p {self.nthreads} -x {self.genome} "
                        f"--no-spliced-alignment -k 100 --no-softclip -U "
-                       f"{os.path.join(indir, f'{filename}.fastq')} | "
-                       f"samtools view -bSh > {os.path.join(outdir, f'{filename}.bam')}"          
+                       f"{infilename} | "
+                       f"samtools view -bSh > {outfilename}"          
             )
             _run_check_command(command)
             
         for filename in self.rna_ids:
+            infilename = os.path.join(indir, f'{filename}.fastq')
+            outfilename = os.path.join(outdir, f'{filename}.bam')
             command = (f"{self.hisat2_pth} -p {self.nthreads} -x {self.genome} "
                        f"-k 100 --no-softclip --known-splicesite-infile {self.known_splice} "
                        f"--dta-cufflinks --novel-splicesite-outfile {outfilename}.novel_splice "
-                       f"-U {os.path.join(indir, f'{filename}.fastq')} | samtools view -bSh > "
-                       f"{os.path.join(outdir, f'{filename}.bam')}"
+                       f"-U {infilename} | samtools view -bSh > "
+                       f"{outfilename}"
             )
             _run_check_command(command)
         return None
@@ -164,8 +168,8 @@ class DB_processor:
             res.at[i,'dna_cigar'] = dna.at[item,6]
         
         if self.chr_dct:
-            res['rna_chr'] = res['rna_chr'].apply(lambda x: chr_dict[x])
-            res['dna_chr'] = res['dna_chr'].apply(lambda x: chr_dict[x])
+            res['rna_chr'] = res['rna_chr'].apply(lambda x: self.chr_dict[x])
+            res['dna_chr'] = res['dna_chr'].apply(lambda x: self.chr_dict[x])
         res.to_csv(outfile, sep='\t', index=False, header=True)
                            
     def make_contacts(self):
