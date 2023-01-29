@@ -1,8 +1,11 @@
 import os
+import shutil
 import subprocess
+from tempfile import NamedTemporaryFile
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-from typing import Optional
 
 def _run_command(command: str) -> str:
     process = subprocess.Popen(command,
@@ -26,8 +29,8 @@ class DB_processor:
         with open(cfg_file, "r") as f:
             dct = json.load(f)
         self.base_dir = dct.get("base_dir", os.getcwd())
-        self.fastuniq_pth = dct.get("fastuniq_pth", "fastuniq")
-        self.trimmomatic_pth = dct.get("trimmomatic_pth", "trimmomatic")
+        self.fastuniq_pth = dct.get("fastuniq_pth", os.environ.get('fastuniq'))
+        self.trimmomatic_pth = dct.get("trimmomatic_pth", os.environ.get('fastuniq'))
         self.hisat2_pth = dct.get("hisat2_pth", "hisat2")
         self.genome = dct.get("genome_pth", "/mnt/scratch/rnachrom/data/genomes/hg38/hg38")
         self.known_splice = dct.get("known_splice","/mnt/scratch/rnachrom/data/genes/human/splicesites.txt")
@@ -40,19 +43,33 @@ class DB_processor:
         # todo: manage dirs
         # todo: add checks for non-existing paths to all functions
     
-    def run_fastuiniq(self, *args):
+    def run_fastuiniq(self,
+                      indir: Optional[str] = None,
+                      outdir: Optional[str] = None):
         """delete non-unique reads"""
-        # todo: modify and use run_fastuniq.sh here 
-        # or turn it completely into python function
-        pass
+        if not indir: 
+            indir = os.path.join(self.base_dir, "raw")
+        if not outdir:
+            outdir = os.path.join(self.base_dir, "fastuniq")
+        for dna, rna in zip(self.dna_ids, self.rna_ids):
+            infile1 = os.path.join(indir, f'{dna}.fastq')
+            infile2 = os.path.join(indir, f'{rna}.fastq')
+            outfile1 = os.path.join(outdir, f'{dna}.fastq')
+            outfile2 = os.path.join(outdir, f'{rna}.fastq')
+            with NamedTemporaryFile(mode='w', delete=False, dir='.') as f:
+                tmpfilename = f.name
+                print(infile1, infile2, sep='\n', file=f)
+            command = (f'{self.fastuniq_pth} -i {tmpfilename}'
+                       f'-o {outfile1} -p {outfile2}')
+            _run_check_command(command)
+            os.remove(tmpfilename)
                    
     def run_trimmomatic(self,
                         window: int = 5,
                         qual_th: int = 26,
                         minlen: int = 15,
                         indir: Optional[str] = None,
-                        outdir: Optional[str] = None
-                        ):
+                        outdir: Optional[str] = None):
         """trim reads by quality"""
         if not indir: 
             indir = os.path.join(self.base_dir, "fastuniq")
