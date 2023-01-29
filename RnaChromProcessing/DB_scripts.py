@@ -30,8 +30,8 @@ class DB_processor:
         with open(cfg_file, "r") as f:
             dct = json.load(f)
         self.base_dir = dct.get("base_dir", os.getcwd())
-        self.fastuniq_pth = dct.get("fastuniq_pth", os.environ.get('fastuniq'))
-        self.trimmomatic_pth = dct.get("trimmomatic_pth", os.environ.get('fastuniq'))
+        self.fastuniq_pth = dct.get("fastuniq_pth", shutil.which('fastuniq'))
+        self.trimmomatic_pth = dct.get("trimmomatic_pth", shutil.which('trimmomatic'))
         self.hisat2_pth = dct.get("hisat2_pth", "hisat2")
         self.genome = dct.get("genome_pth", "/mnt/scratch/rnachrom/data/genomes/hg38/hg38")
         self.known_splice = dct.get("known_splice","/mnt/scratch/rnachrom/data/genes/human/splicesites.txt")
