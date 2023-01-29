@@ -1,2 +1,10 @@
 test.ipynb
 test.py
+
+# Distribution / packaging
+*.egg-info/
+*__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb 
