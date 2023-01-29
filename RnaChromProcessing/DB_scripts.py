@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 def _run_command(command: str) -> str:
+    print(command)
     process = subprocess.Popen(command,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
@@ -59,7 +60,7 @@ class DB_processor:
             with NamedTemporaryFile(mode='w', delete=False, dir='.') as f:
                 tmpfilename = f.name
                 print(infile1, infile2, sep='\n', file=f)
-            command = (f'{self.fastuniq_pth} -i {tmpfilename}'
+            command = (f'{self.fastuniq_pth} -i {tmpfilename} '
                        f'-o {outfile1} -p {outfile2}')
             _run_check_command(command)
             os.remove(tmpfilename)
