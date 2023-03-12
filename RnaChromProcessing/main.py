@@ -23,6 +23,7 @@ class Program:
 
 
 # https://pybit.es/articles/how-to-package-and-deploy-cli-apps/
+# https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
 def main() -> None:
     #TODO: actually set up logging
     parser = argparse.ArgumentParser(
