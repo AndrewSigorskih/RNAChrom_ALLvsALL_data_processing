@@ -5,7 +5,8 @@ dedup_default_cfg = {
 }
 
 rsites_default_cfg = {
-    'cpus': None
+    'cpus': None,
+    'type': 'skip'
 }
 
 trim_default_cfg = {

@@ -2,15 +2,10 @@ import os
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
 
-from stages import Dedup
+from stages import Dedup, Rsites, Trim, Hisat
 from ..utils import exit_with_error, make_directory, run_command
-from ..utils import dedup_default_cfg
-
-# https://stackoverflow.com/questions/74291040/running-multiple-external-commands-in-parallel-in-python
-
-# https://stackoverflow.com/questions/9554544/python-running-command-line-tools-in-parallel
-
-# https://stackoverflow.com/questions/12097406/python-parallel-commands
+from ..utils import dedup_default_cfg, rsites_default_cfg, \
+                    trim_default_cfg, hisat_default_cfg
 
 class BaseProcessor:
     def __init__(self, cfg: Dict[str, Any]):
@@ -28,8 +23,7 @@ class BaseProcessor:
         self.work_dir = TemporaryDirectory(dir=self.base_dir)
         self.setup_dirs()
         # get stages-specific configs, maybe get default and update???
-        self.dupremover: Dedup = Dedup(cfg.get('dedup', dedup_default_cfg),
-                                       self.input_dir, self.dedup_dir)
+        self.stages_from_cfgs(cfg)
 
     def validate_inputs(self):
         if not self.input_dir:
@@ -54,9 +48,33 @@ class BaseProcessor:
             self.hisat_dir, self.bam_dir, self.bed_dir, self.contacts_dir
         ):
             make_directory(dirname)
+    
+    def stages_from_cfgs(self, cfg: Dict[str, Any]):
+        dedup_default_cfg.update(cfg.get('dedup', {}))
+        self.dupremover: Dedup = Dedup(dedup_default_cfg,
+                                       self.input_dir, self.dedup_dir,
+                                       self.cpus)
+        rsites_default_cfg.update(cfg.get('rsites', {}))
+        self.rsitefilter: Rsites = Rsites(rsites_default_cfg,
+                                          self.dedup_dir, self.rsite_dir,
+                                          self.cpus)
+        trim_default_cfg.update(cfg.get('trim', {}))
+        self.trimmer: Trim = Trim(trim_default_cfg,
+                                  self.rsite_dir, self.trim_dir,
+                                  self.cpus)
+        hisat_default_cfg.update(cfg.get('hisat', {}))
+        self.aligner: Hisat = Hisat(hisat_default_cfg,
+                                    self.trim_dir, self.hisat_dir,
+                                    self.cpus)
 
     def run(self):
         os.chdir(self.workdir)
-        self.dupremover.run(self.dna_ids, self.rna_ids, self.cpus)
+        self.dupremover.run(self.dna_ids, self.rna_ids)
+        self.rsitefilter.run(self.dna_ids, self.rna_ids)
+        self.trimmer.run(self.dna_ids, self.rna_ids)
+        self.aligner.run(self.dna_ids, self.rna_ids)
+        # filter bam
+        # contacts
         ...
         self.chdir(self.base_dir)
+        # copy everythong needed to out dir
