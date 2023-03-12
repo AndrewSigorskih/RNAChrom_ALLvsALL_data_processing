@@ -66,6 +66,7 @@ class BaseProcessor:
         self.aligner: Hisat = Hisat(hisat_default_cfg,
                                     self.trim_dir, self.hisat_dir,
                                     self.cpus)
+        # TODO add two more stages
 
     def run(self):
         os.chdir(self.workdir)

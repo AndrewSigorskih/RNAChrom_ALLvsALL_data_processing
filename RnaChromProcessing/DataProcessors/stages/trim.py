@@ -11,7 +11,7 @@ class Trim(BasicStage):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tool: str = cfg.get('tool', None)
-        self.params: List[str] = cfg.get('params', [])
+        self.params: Dict[str, Any] = cfg.get('params', [])
         self.tool_path: str = cfg.get('tool_path', shutil.which(self.tool))
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
@@ -24,3 +24,29 @@ class Trim(BasicStage):
             dna_ids: List[str],
             rna_ids: List[str]):
         """Run chosen trimming tool"""
+        # choose tool to run
+        if self.tool == 'skip':
+            func = self._copy_files
+        elif (self.tool == 'trimmomatic'):
+            func = self._run_trimmomatic
+        else:  # unknown tool
+            exit_with_error(f'Unknown trimming tool: {self.tool}!')
+        # run chosen function
+        self.run_function(func, dna_ids, rna_ids)
+    
+    def _run_trimmomatic(self,
+                    dna_in_file: str,
+                    rna_in_file: str,
+                    dna_out_file: str,
+                    rna_out_file: str):
+        """run trimmomatic"""
+        window = self.params['window']
+        qual_th = self.params['qual_th']
+        minlen = self.params['minlen']
+        command = (
+            f'java -jar {self.tool_path}PE -phred33 {dna_in_file} '
+            f'{rna_in_file} {dna_out_file} {dna_out_file}.unpaired '
+            f'{rna_out_file} {rna_out_file}.unpaired '
+            f'SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}'
+        )
+        run_command(command, shell=True)

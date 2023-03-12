@@ -33,7 +33,7 @@ class Dedup(BasicStage):
         elif self.tool == 'fastuniq':
             func = self._run_fastuniq
         else:  # unknown tool
-            exit_with_error('Unknown deduplication tool!')
+            exit_with_error(f'Unknown deduplication tool: {self.tool}!')
         # run chosen function
         self.run_function(func, dna_ids, rna_ids)
 
