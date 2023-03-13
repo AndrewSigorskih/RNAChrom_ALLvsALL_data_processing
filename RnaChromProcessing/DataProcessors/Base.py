@@ -66,7 +66,7 @@ class BaseProcessor:
         self.aligner: Hisat = Hisat(hisat_default_cfg,
                                     self.trim_dir, self.hisat_dir,
                                     self.cpus)
-        # TODO add two more stages
+        # TODO add three more stages
 
     def run(self):
         os.chdir(self.workdir)
@@ -75,6 +75,7 @@ class BaseProcessor:
         self.trimmer.run(self.dna_ids, self.rna_ids)
         self.aligner.run(self.dna_ids, self.rna_ids)
         # filter bam
+        #aligned to bed
         # contacts
         ...
         self.chdir(self.base_dir)
