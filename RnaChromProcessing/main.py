@@ -1,9 +1,10 @@
 import argparse
 import json
 
-from utils import check_file_exists
+from .DataProcessors import BaseProcessor
+from .utils import check_file_exists
 
-from DataProcessors import BaseProcessor
+
 
 class Program:
     def __init__(self, args: argparse.Namespace) -> None:

@@ -1,6 +1,6 @@
 from typing import List
 
-from basicstage import BasicStage
+from .basicstage import BasicStage
 from ...utils import run_command
 
 class AlignedToBed(BasicStage):

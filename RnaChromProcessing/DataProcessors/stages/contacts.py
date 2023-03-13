@@ -2,7 +2,7 @@ from typing import List
 
 import pandas as pd
 
-from basicstage import BasicStage
+from .basicstage import BasicStage
 
 DNA_COLUMN_NAMES = [
     'dna_chr', 'dna_bgn', 'dna_end', 'id',

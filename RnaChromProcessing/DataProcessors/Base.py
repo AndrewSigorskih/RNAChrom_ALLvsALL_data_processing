@@ -3,7 +3,7 @@ import os
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
 
-from stages import AlignedToBed, BamFilter, Contacts,\
+from .stages import AlignedToBed, BamFilter, Contacts,\
                    Dedup, Rsites, Trim, Hisat
 from ..utils import exit_with_error, make_directory, run_command
 from ..utils import dedup_default_cfg, rsites_default_cfg, \

@@ -2,7 +2,7 @@ import shutil
 
 from typing import Any, Dict, List
 
-from basicstage import BasicStage
+from .basicstage import BasicStage
 from ...utils import exit_with_error, run_command
 
 
