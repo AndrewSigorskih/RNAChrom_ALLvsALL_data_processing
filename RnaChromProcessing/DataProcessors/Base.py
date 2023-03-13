@@ -30,6 +30,7 @@ class BaseProcessor:
         self.stages_from_cfgs(cfg)
 
     def validate_inputs(self):
+        """Basic input sanity check"""
         if not self.input_dir:
             exit_with_error('Input directory not specified!')
         if not self.output_dir:
@@ -40,6 +41,7 @@ class BaseProcessor:
             exit_with_error('Empty keep list!')
     
     def setup_dirs(self):
+        """Create dirs for pipeline stages and store names"""
         self.dedup_dir: str = os.path.join(self.work_dir.name, 'dedup')
         self.rsite_dir: str = os.path.join(self.work_dir.name, 'rsites')
         self.trim_dir : str = os.path.join(self.work_dir.name, 'trim')
@@ -54,6 +56,8 @@ class BaseProcessor:
             make_directory(dirname)
     
     def stages_from_cfgs(self, cfg: Dict[str, Any]):
+        """For each stage, create corresponding routine object 
+        based on default config and user input"""
         dedup_default_cfg.update(cfg.get('dedup', {}))
         self.dupremover: Dedup = Dedup(dedup_default_cfg,
                                        self.input_dir, self.dedup_dir,
@@ -70,11 +74,16 @@ class BaseProcessor:
         self.aligner: Hisat = Hisat(hisat_default_cfg,
                                     self.trim_dir, self.hisat_dir,
                                     self.cpus)
-        self.bamfilter = BamFilter(self.cpus)
-        self.bamtobed = AlignedToBed(self.cpus)
-        self.contactsmerger = Contacts(self.cpus)
+        self.bamfilter = BamFilter(self.hisat_dir, self.bam_dir,
+                                   self.cpus)
+        self.bamtobed = AlignedToBed(self.bam_dir, self.bed_dir,
+                                     self.cpus)
+        self.contactsmerger = Contacts(self.bed_dir, self.contacts_dir,
+                                       self.cpus)
 
     def run(self):
+        """Iteratively run all stages of pipeline and 
+        retrieve data"""
         # run pipeline
         os.chdir(self.workdir)
         self.dupremover.run(self.dna_ids, self.rna_ids)
@@ -86,10 +95,11 @@ class BaseProcessor:
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
         self.chdir(self.base_dir)
         # copy everythong needed to out dir
+        if not os.path.exists(self.output_dir):
+            make_directory(self.output_dir)
         for to_copy in self.keep:
             if to_copy not in SUBDIR_LIST:
-                # drop warning here
+                #TODO drop warning here
                 continue
             source_pth = os.path.join(self.work_dir, to_copy)
-            dest_pth = os.path.join(self.output_dir, to_copy)
-            shutil.copytree(source_pth, dest_pth)
+            shutil.move(source_pth, self.output_dir)
