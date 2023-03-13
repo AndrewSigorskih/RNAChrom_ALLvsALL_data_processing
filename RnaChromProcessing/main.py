@@ -1,7 +1,6 @@
 import argparse
 import json
 
-from DB_scripts import DB_processor
 from utils import check_file_exists
 
 from DataProcessors import BaseProcessor
@@ -20,6 +19,8 @@ class Program:
         # we are collecting contacts
         # actually run base class or any of its pre-defined subclasses here
         # depending on config
+        processor = BaseProcessor(self.config)
+        processor.run()
 
 
 # https://pybit.es/articles/how-to-package-and-deploy-cli-apps/
@@ -41,5 +42,4 @@ def main() -> None:
     
 
 if __name__ == '__main__':
-    #main()
-    BaseProcessor()
+    main()

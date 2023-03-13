@@ -1,11 +1,15 @@
+import shutil
 import os
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
 
-from stages import Dedup, Rsites, Trim, Hisat
+from stages import AlignedToBed, BamFilter, Contacts,\
+                   Dedup, Rsites, Trim, Hisat
 from ..utils import exit_with_error, make_directory, run_command
 from ..utils import dedup_default_cfg, rsites_default_cfg, \
                     trim_default_cfg, hisat_default_cfg
+
+SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
 
 class BaseProcessor:
     def __init__(self, cfg: Dict[str, Any]):
@@ -66,17 +70,26 @@ class BaseProcessor:
         self.aligner: Hisat = Hisat(hisat_default_cfg,
                                     self.trim_dir, self.hisat_dir,
                                     self.cpus)
-        # TODO add three more stages
+        self.bamfilter = BamFilter(self.cpus)
+        self.bamtobed = AlignedToBed(self.cpus)
+        self.contactsmerger = Contacts(self.cpus)
 
     def run(self):
+        # run pipeline
         os.chdir(self.workdir)
         self.dupremover.run(self.dna_ids, self.rna_ids)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
         self.trimmer.run(self.dna_ids, self.rna_ids)
         self.aligner.run(self.dna_ids, self.rna_ids)
-        # filter bam
-        #aligned to bed
-        # contacts
-        ...
+        self.bamfilter.run(self.dna_ids, self.rna_ids)
+        self.bamtobed.run(self.dna_ids, self.rna_ids)
+        self.contactsmerger.run(self.dna_ids, self.rna_ids)
         self.chdir(self.base_dir)
         # copy everythong needed to out dir
+        for to_copy in self.keep:
+            if to_copy not in SUBDIR_LIST:
+                # drop warning here
+                continue
+            source_pth = os.path.join(self.work_dir, to_copy)
+            dest_pth = os.path.join(self.output_dir, to_copy)
+            shutil.copytree(source_pth, dest_pth)
