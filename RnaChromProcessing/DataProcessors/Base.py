@@ -26,6 +26,7 @@ class BaseProcessor:
         # spam errors
         self.validate_inputs()
         # create working directory
+        os.chdir(self.base_dir)
         self.work_dir = TemporaryDirectory(dir=self.base_dir)
         self.setup_dirs()
         # get stages-specific configs, maybe get default and update???
@@ -89,6 +90,7 @@ class BaseProcessor:
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
+        os.chdir(self.work_dir.name)
         self.dupremover.run(self.dna_ids, self.rna_ids)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
         self.trimmer.run(self.dna_ids, self.rna_ids)
@@ -96,6 +98,7 @@ class BaseProcessor:
         self.bamfilter.run(self.dna_ids, self.rna_ids)
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
+        os.chdir(self.base_dir)
         # copy everything needed to out dir
         if not os.path.exists(self.output_dir):
             make_directory(self.output_dir)
