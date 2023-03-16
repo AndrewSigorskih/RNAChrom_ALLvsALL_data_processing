@@ -2,6 +2,7 @@ import shutil
 import os
 
 from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 from typing import Callable, List
 
 from ...utils import exit_with_error
@@ -43,7 +44,8 @@ class BasicStage:
         rna_output_files = [filename.replace(self.input_dir, self.output_dir) 
                             for filename in rna_input_files]
         # run func in parallel
-        with ThreadPool(self.cpus) as pool:
+        #with ThreadPool(self.cpus) as pool:
+        with Pool(self.cpus) as pool:
             results = pool.starmap(func, zip(dna_input_files, rna_input_files,
                                    dna_output_files, rna_output_files))
         if any([x != 0 for x in results]):
