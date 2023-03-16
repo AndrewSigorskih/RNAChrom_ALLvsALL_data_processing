@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
 class Program:
     def __init__(self) -> None:
         args: argparse.Namespace = parse_args()
-        self.mode: str = args.mode
+        self.mode: str = args.run_mode
         check_file_exists(args.config)
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
@@ -34,6 +34,7 @@ class Program:
         else:
             level = logging.INFO
         configure_logger(level)
+        logger.debug(f'Started with argumants: {vars(args)}')
 
     def run(self) -> None:
         if self.mode == 'XRNA':
