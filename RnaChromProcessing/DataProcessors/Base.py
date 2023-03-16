@@ -17,7 +17,7 @@ class BaseProcessor:
     def __init__(self, cfg: Dict[str, Any]):
         # get basic parameters
         self.cpus: int = cfg.get('cpus', 1)
-        self.base_dir: str = cfg.get('base_dir', os.getcwd())
+        self.base_dir: str = os.path.abspath(cfg.get('base_dir', os.getcwd()))
         self.input_dir: str = cfg.get('input_dir', None)
         self.output_dir: str = cfg.get('input_dir', None)
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
@@ -35,8 +35,10 @@ class BaseProcessor:
         """Basic input sanity check"""
         if not self.input_dir:
             exit_with_error('Input directory not specified!')
+        self.input_dir = os.path.abspath(self.input_dir)
         if not self.output_dir:
             exit_with_error('Output directory not specified!')
+        self.output_dir = os.path.abspath(self.output_dir)
         if (not self.rna_ids) or (not self.dna_ids):
             exit_with_error('Input file ids not specified!')
         if not self.keep:
@@ -87,7 +89,6 @@ class BaseProcessor:
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
-        os.chdir(self.work_dir.name)
         self.dupremover.run(self.dna_ids, self.rna_ids)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
         self.trimmer.run(self.dna_ids, self.rna_ids)
@@ -95,7 +96,6 @@ class BaseProcessor:
         self.bamfilter.run(self.dna_ids, self.rna_ids)
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
-        self.chdir(self.base_dir)
         # copy everything needed to out dir
         if not os.path.exists(self.output_dir):
             make_directory(self.output_dir)

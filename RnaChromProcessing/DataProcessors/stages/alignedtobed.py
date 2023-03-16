@@ -31,3 +31,4 @@ class AlignedToBed(BasicStage):
                 f'bedtools bamtobed -cigar -i stdin > {outfile}'
             )
             run_command(cmd, shell=True)
+        return 0

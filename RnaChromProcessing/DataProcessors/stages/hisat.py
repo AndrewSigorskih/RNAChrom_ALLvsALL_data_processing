@@ -54,7 +54,8 @@ class Hisat(BasicStage):
             f'--novel-splicesite-outfile {rna_out_file}.novel_splice '
             f'-U {rna_in_file} | samtools view -bSh > {rna_out_file}'
         )
-        run_command(dna_cmd, shell=True)
-        run_command(rna_cmd, shell=True)
+        return_code_1 = run_command(dna_cmd, shell=True)
+        return_code_2 = run_command(rna_cmd, shell=True)
+        return (return_code_1 or return_code_2)
 
 

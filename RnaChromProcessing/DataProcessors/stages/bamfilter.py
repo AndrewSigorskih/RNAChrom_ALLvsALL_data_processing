@@ -30,3 +30,4 @@ class BamFilter(BasicStage):
                 f'samtools view -Sbh - > {outfile}'
             )
             run_command(cmd, shell=True)
+        return 0

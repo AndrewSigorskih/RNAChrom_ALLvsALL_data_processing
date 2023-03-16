@@ -26,16 +26,18 @@ def check_file_exists(path: str) -> None:
         exit_with_error(message)
 
 def run_command(cmd: Union[List[str], str],
-                **subprocess_args: Dict[str, Any]) -> None:
+                **subprocess_args: Dict[str, Any]) -> int:
     if isinstance(cmd, list):
         cmd_str = " ".join(cmd)
     else:
         cmd_str = cmd
     logger.debug(f'Running command: {cmd_str}')
-    return_code = subprocess.run(cmd, **subprocess_args).returncode
-    if return_code != 0:
-        msg = f'Failed with code: {return_code}'
-        exit_with_error(msg)
+    return_code: int = subprocess.run(cmd, **subprocess_args).returncode
+    return return_code
+    #return_code = subprocess.run(cmd, **subprocess_args).returncode
+    #if return_code != 0:
+        #msg = f'Failed with code: {return_code}'
+        #exit_with_error(msg)
 
 def configure_logger(level: int = logging.DEBUG) -> None:
     handler = logging.StreamHandler()

@@ -44,3 +44,4 @@ class Contacts(BasicStage):
         del dna
         rna = rna.drop(['rna_score', 'dna_score'], axis=1)
         rna.to_csv(output, sep='\t', index=False, header=True)
+        return 0

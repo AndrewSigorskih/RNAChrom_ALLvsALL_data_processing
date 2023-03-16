@@ -4,6 +4,8 @@ import os
 from multiprocessing.pool import ThreadPool
 from typing import Callable, List
 
+from ...utils import exit_with_error
+
 
 class BasicStage:
     def __init__(self,
@@ -18,13 +20,14 @@ class BasicStage:
                     dna_in_file: str,
                     rna_in_file: str,
                     dna_out_file: str,
-                    rna_out_file: str):
+                    rna_out_file: str) -> int:
         """trivially copy files"""
         shutil.copy(dna_in_file, dna_out_file)
         shutil.copy(rna_in_file, rna_out_file)
+        return 0
     
     def run_function(self,
-                     func: Callable[[str, str, str, str], None],
+                     func: Callable[[str, str, str, str], int],
                      dna_ids: List[str],
                      rna_ids: List[str]):
         # get filenames
@@ -41,5 +44,10 @@ class BasicStage:
                             for filename in rna_input_files]
         # run func in parallel
         with ThreadPool(self.cpus) as pool:
-            pool.starmap(func, zip(dna_input_files, rna_input_files,
+            results = pool.starmap(func, zip(dna_input_files, rna_input_files,
                                    dna_output_files, rna_output_files))
+        if any([x != 0 for x in results]):
+            msg = f'One or several calls of {func.__name__} returned non-zero process exit code!'
+            exit_with_error(msg)
+
+            

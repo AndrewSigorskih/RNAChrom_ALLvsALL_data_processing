@@ -50,5 +50,6 @@ class Dedup(BasicStage):
             print(dna_in_file, rna_in_file, sep='\n', file=f)
         command = (f'{self.tool_path} -i {tmpfilename} '
                     f'-o {dna_out_file} -p {rna_out_file}')
-        run_command(command, shell=True)
+        return_code = run_command(command, shell=True)
         os.remove(tmpfilename)
+        return return_code
