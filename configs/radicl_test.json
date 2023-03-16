@@ -1,0 +1,23 @@
+{
+    "rna_ids": ["SRR9201799", "SRR9201801"],
+    "dna_ids": ["SRR9201800", "SRR9201802"],
+    "base_dir" : ".",
+    "input_dir": "../data/radicl/raw",
+    "output_dir": "results",
+    "cpus": 2,
+    "keep" : ["contacts", "bam", "trim", "dedup"],
+    "dedup": {
+        "tool": "fastuniq",
+        "tool_path": "bin/fastuniq"
+    },
+    "rsites": {
+        "type": "skip"
+    },
+    "trim": {
+        "tool" : "trimmomatic"
+    },
+    "hisat": {
+        "genome": "data/mm10/mm10",
+        "known_splice": "data/genes/gencode.vM32.ss"
+    }
+}
