@@ -5,8 +5,6 @@ import logging
 from .DataProcessors import BaseProcessor
 from .utils import check_file_exists, configure_logger
 
-logger = logging.getLogger(name=__name__)
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
             formatter_class=argparse.RawTextHelpFormatter
@@ -34,7 +32,8 @@ class Program:
         else:
             level = logging.INFO
         configure_logger(level)
-        logger.debug(f'Started with arguments: {vars(args)}')
+        self.logger = logging.getLogger(name=__name__)
+        self.logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
         if self.mode == 'XRNA':

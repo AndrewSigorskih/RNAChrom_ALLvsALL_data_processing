@@ -17,7 +17,7 @@
         "tool" : "trimmomatic"
     },
     "hisat": {
-        "genome": "data/mm10/mm10",
-        "known_splice": "data/genes/gencode.vM32.ss"
+        "genome": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/mm10/mm10",
+        "known_splice": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/genes/gencode.vM32.ss"
     }
 }
