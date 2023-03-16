@@ -3,7 +3,7 @@ import shutil
 from typing import Any, Dict, List
 
 from .basicstage import BasicStage
-from ...utils import exit_with_error, run_command
+from ...utils import check_file_exists, exit_with_error, run_command
 
 
 class Hisat(BasicStage):
@@ -19,8 +19,9 @@ class Hisat(BasicStage):
             self.cpus: int = cpus
         if not self.tool_path:
             exit_with_error(f'Cannot deduce path to {self.tool} executable!')
-        if not self.genome_path or self.known_splice:
+        if (not self.genome_path) or (not self.known_splice):
             exit_with_error('Genome or known splice were not provided!')
+        check_file_exists(self.known_splice)
 
     def run(self,
             dna_ids: List[str],

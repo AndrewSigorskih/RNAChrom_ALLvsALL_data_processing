@@ -34,7 +34,7 @@ class Program:
         else:
             level = logging.INFO
         configure_logger(level)
-        logger.debug(f'Started with argumants: {vars(args)}')
+        logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
         if self.mode == 'XRNA':
@@ -47,7 +47,6 @@ class Program:
 
 
 def main() -> None:
-    #TODO: actually set up logging
     Program().run()
     
 

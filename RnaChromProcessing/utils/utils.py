@@ -6,7 +6,7 @@ import sys
 from typing import Any, Dict, List, Union
 
 LOGGING_FORMAT = '%(name)s | line %(lineno)-3d | %(levelname)-8s | %(message)s'
-logger = logging.getLogger()
+logger = logging.getLogger(name=__name__)
 
 def exit_with_error(message: str = '') -> None:
     if not message:
