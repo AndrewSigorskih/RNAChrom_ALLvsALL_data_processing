@@ -43,8 +43,13 @@ class Trim(BasicStage):
         window = self.params['window']
         qual_th = self.params['qual_th']
         minlen = self.params['minlen']
+        # make sure conda wrapper works as well
+        if self.tool_path.endswith('.jar'):
+            tool_alias: str = f'java -jar {self.tool_path}'
+        else:  # wrapper
+            tool_alias = self.tool_path
         command = (
-            f'java -jar {self.tool_path}PE -phred33 {dna_in_file} '
+            f'{tool_alias} PE -phred33 {dna_in_file} '
             f'{rna_in_file} {dna_out_file} {dna_out_file}.unpaired '
             f'{rna_out_file} {rna_out_file}.unpaired '
             f'SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}'

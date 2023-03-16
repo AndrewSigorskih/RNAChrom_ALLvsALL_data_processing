@@ -1,13 +1,17 @@
+import logging
 import os
 import subprocess
 import sys
 
 from typing import Any, Dict, List, Union
 
+LOGGING_FORMAT = '%(name)s | line %(lineno)-3d | %(levelname)-8s | %(message)s'
+logger = logging.getLogger()
+
 def exit_with_error(message: str = '') -> None:
     if not message:
         message = 'Empty error message!'
-    print(message, file=sys.stderr)
+    logger.critical(message, file=sys.stderr)
     sys.exit(1)
 
 def make_directory(path: str, exist_ok: bool = True) -> None:
@@ -27,9 +31,15 @@ def run_command(cmd: Union[List[str], str],
         cmd_str = " ".join(cmd)
     else:
         cmd_str = cmd
-    #TODO change to logging
-    print(f'Running command: {cmd_str}')
+    logger.debug(f'Running command: {cmd_str}')
     return_code = subprocess.run(cmd, **subprocess_args).returncode
     if return_code != 0:
         msg = f'Failed with code: {return_code}'
         exit_with_error(msg)
+
+def configure_logger(level: int = logging.DEBUG) -> None:
+    handler = logging.StreamHandler()
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+    logger.setLevel(level)
+    logger.addHandler(handler)

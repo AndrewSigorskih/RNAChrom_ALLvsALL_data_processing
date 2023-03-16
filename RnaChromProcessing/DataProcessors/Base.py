@@ -1,4 +1,5 @@
 import shutil
+import logging
 import os
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
@@ -9,6 +10,7 @@ from ..utils import exit_with_error, make_directory, run_command
 from ..utils import dedup_default_cfg, rsites_default_cfg, \
                     trim_default_cfg, hisat_default_cfg
 
+logger = logging.getLogger(name=__name__)
 SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
 
 class BaseProcessor:
@@ -94,12 +96,12 @@ class BaseProcessor:
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
         self.chdir(self.base_dir)
-        # copy everythong needed to out dir
+        # copy everything needed to out dir
         if not os.path.exists(self.output_dir):
             make_directory(self.output_dir)
         for to_copy in self.keep:
             if to_copy not in SUBDIR_LIST:
-                #TODO drop warning here
+                logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
                 continue
             source_pth = os.path.join(self.work_dir, to_copy)
             shutil.move(source_pth, self.output_dir)
