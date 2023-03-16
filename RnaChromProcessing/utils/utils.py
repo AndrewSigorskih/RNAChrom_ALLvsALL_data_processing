@@ -11,7 +11,7 @@ logger = logging.getLogger()
 def exit_with_error(message: str = '') -> None:
     if not message:
         message = 'Empty error message!'
-    logger.critical(message, file=sys.stderr)
+    logger.critical(message)
     sys.exit(1)
 
 def make_directory(path: str, exist_ok: bool = True) -> None:
