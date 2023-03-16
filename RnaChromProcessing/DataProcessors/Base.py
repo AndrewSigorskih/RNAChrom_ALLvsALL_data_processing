@@ -87,7 +87,7 @@ class BaseProcessor:
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
-        os.chdir(self.workdir)
+        os.chdir(self.work_dir.name)
         self.dupremover.run(self.dna_ids, self.rna_ids)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
         self.trimmer.run(self.dna_ids, self.rna_ids)
