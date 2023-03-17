@@ -26,7 +26,7 @@ class Contacts(BasicStage):
         func = self._make_contacts
         self.run_function(func, dna_ids, rna_ids)
     
-    def make_contacts(self,
+    def _make_contacts(self,
                       dna_in_file: str,
                       rna_in_file: str,
                       _: str,  # ignore dna out file
