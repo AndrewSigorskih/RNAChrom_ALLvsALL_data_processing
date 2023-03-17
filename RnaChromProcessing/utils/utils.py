@@ -39,7 +39,8 @@ def run_command(cmd: Union[List[str], str],
         #msg = f'Failed with code: {return_code}'
         #exit_with_error(msg)
 
-def configure_logger(level: int = logging.DEBUG) -> None:
+def configure_logger(debug: bool = False) -> None:
+    level: int = logging.DEBUG if debug else logging.INFO
     handler = logging.StreamHandler()
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter(LOGGING_FORMAT))

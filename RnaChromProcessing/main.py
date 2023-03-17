@@ -27,11 +27,7 @@ class Program:
         check_file_exists(args.config)
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
-        if args.verbose:
-            level = logging.DEBUG
-        else:
-            level = logging.INFO
-        configure_logger(level)
+        configure_logger(args.verbose)
         self.logger = logging.getLogger(name=__name__)
         self.logger.debug(f'Started with arguments: {vars(args)}')
 
