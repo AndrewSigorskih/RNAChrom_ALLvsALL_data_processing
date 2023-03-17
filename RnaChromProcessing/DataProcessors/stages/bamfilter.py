@@ -22,6 +22,7 @@ class BamFilter(BasicStage):
                     dna_out_file: str,
                     rna_out_file: str):
         """actual bam-filtering function"""
+        exit_codes = []
         for infile, outfile in ((dna_in_file, dna_out_file),
                                 (rna_in_file, rna_out_file)):
             cmd = (
@@ -29,5 +30,6 @@ class BamFilter(BasicStage):
                 "grep -E 'XM:i:[0-2]\s.*NH:i:1$|^@' | "
                 f'samtools view -Sbh - > {outfile}'
             )
-            run_command(cmd, shell=True)
-        return 0
+            exit_code = run_command(cmd, shell=True)
+            exit_codes.append(exit_code)
+        return exit_codes[0] or exit_codes[1]

@@ -40,6 +40,11 @@ class Program:
         # depending on config
         BaseProcessor(self.config).run()
 
+# TODO hide trimmomatic text blanket in tmp log file(s)
+# TODO add hisat internal cpus for even-finer tuning
+# TODO add cpus for contacts building
+# TODO add condition on whether exit from run_function if non-zero exitcode returned
+# TODO make actual exitcode returnal from filter bams and bamtobed
 
 def main() -> None:
     Program().run()
