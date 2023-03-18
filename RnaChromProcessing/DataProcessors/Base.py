@@ -85,6 +85,17 @@ class BaseProcessor:
                                      self.cpus)
         self.contactsmerger = Contacts(self.bed_dir, self.contacts_dir,
                                        self.cpus)
+        
+    def save_outputs(self):
+        """copy everything needed to out dir"""
+        if not os.path.exists(self.output_dir):
+            make_directory(self.output_dir)
+        for to_copy in self.keep:
+            if to_copy not in SUBDIR_LIST:
+                logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
+                continue
+            source_pth = os.path.join(self.work_dir.name, to_copy)
+            shutil.move(source_pth, self.output_dir)
 
     def run(self):
         """Iteratively run all stages of pipeline and 
@@ -99,12 +110,5 @@ class BaseProcessor:
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
         os.chdir(self.base_dir)
-        # copy everything needed to out dir
-        if not os.path.exists(self.output_dir):
-            make_directory(self.output_dir)
-        for to_copy in self.keep:
-            if to_copy not in SUBDIR_LIST:
-                logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
-                continue
-            source_pth = os.path.join(self.work_dir, to_copy)
-            shutil.move(source_pth, self.output_dir)
+        # copy outputs
+        self.save_outputs()
