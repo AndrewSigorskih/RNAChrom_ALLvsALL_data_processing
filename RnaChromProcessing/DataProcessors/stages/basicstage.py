@@ -4,12 +4,9 @@ import os
 import concurrent.futures
 from typing import Callable, List
 
-from ...utils import exit_with_error
+from ...utils import exit_with_error, find_in_list
 
 suff_to_filter = ('.unpaired', '.novel_splice')
-
-def find_in_list(id: str, lst: List[str]):
-    return next(x for x in lst if x.startswith(id))
 
 class BasicStage:
     def __init__(self,
@@ -33,7 +30,8 @@ class BasicStage:
     def run_function(self,
                      func: Callable[[str, str, str, str], int],
                      dna_ids: List[str],
-                     rna_ids: List[str]):
+                     rna_ids: List[str],
+                     require_zero_code: bool = True):
         # get filenames
         filenames: List[str] = [x for x in os.listdir(self.input_dir)
                                 if not any([x.endswith(y) for y in suff_to_filter])]
@@ -53,7 +51,7 @@ class BasicStage:
                        for dna_inp, rna_inp, dna_out, rna_out in 
                        zip(dna_input_files, rna_input_files, dna_output_files, rna_output_files)]
             results = [future.result() for future in concurrent.futures.as_completed(futures)]
-        if any([x != 0 for x in results]):
+        if require_zero_code and any([x != 0 for x in results]):
             msg = f'One or several calls of {func.__name__} returned non-zero process exit code!'
             exit_with_error(msg)
             

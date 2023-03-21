@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
 
 from .stages import AlignedToBed, BamFilter, Contacts,\
-                   Dedup, Rsites, Trim, Hisat
+                    Dedup, Hisat, Rsites, Trim, StatsCalc
 from ..utils import exit_with_error, make_directory, run_command
 from ..utils import dedup_default_cfg, rsites_default_cfg, \
                     trim_default_cfg, hisat_default_cfg
@@ -19,7 +19,7 @@ class BaseProcessor:
         self.cpus: int = cfg.get('cpus', 1)
         self.base_dir: str = os.path.abspath(cfg.get('base_dir', os.getcwd()))
         self.input_dir: str = cfg.get('input_dir', None)
-        self.output_dir: str = cfg.get('input_dir', None)
+        self.output_dir: str = cfg.get('output_dir', None)
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
         self.rna_ids: List[str] = cfg.get('rna_ids', [])
         self.keep: List[str] = cfg.get('keep', [])
@@ -34,12 +34,17 @@ class BaseProcessor:
 
     def validate_inputs(self):
         """Basic input sanity check"""
+        # input dir: check name
         if not self.input_dir:
             exit_with_error('Input directory not specified!')
         self.input_dir = os.path.abspath(self.input_dir)
+        # output dir: check name and create if needed
         if not self.output_dir:
             exit_with_error('Output directory not specified!')
         self.output_dir = os.path.abspath(self.output_dir)
+        if not os.path.exists(self.output_dir):
+            make_directory(self.output_dir)
+        # other important inputs
         if (not self.rna_ids) or (not self.dna_ids):
             exit_with_error('Input file ids not specified!')
         if not self.keep:
@@ -88,8 +93,6 @@ class BaseProcessor:
         
     def save_outputs(self):
         """copy everything needed to out dir"""
-        if not os.path.exists(self.output_dir):
-            make_directory(self.output_dir)
         for to_copy in self.keep:
             if to_copy not in SUBDIR_LIST:
                 logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
@@ -109,6 +112,9 @@ class BaseProcessor:
         self.bamfilter.run(self.dna_ids, self.rna_ids)
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
-        os.chdir(self.base_dir)
+        # calculate stats
+        StatsCalc(self.output_dir, self.cpus,
+                  self.dna_ids, self.rna_ids).run()
         # copy outputs
+        os.chdir(self.base_dir)
         self.save_outputs()

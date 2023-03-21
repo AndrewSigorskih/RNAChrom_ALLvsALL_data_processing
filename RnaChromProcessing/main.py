@@ -44,7 +44,7 @@ class Program:
 # TODO add "grid" and "imargi" rsite-dealing strategies
 # TODO add hisat internal cpus argument for even-finer tuning
 # TODO add cpus argument for contacts building
-# TODO add condition on whether exit from run_function if non-zero exitcode returned
+# TODO [DONE] add condition on whether exit from run_function if non-zero exitcode returned
 # TODO [DONE] make actual exitcode returnal from filter bams and bamtobed
 # TODO make statistics calculation as separate step
 # TODO calculate actual strand of contacts rna parts and store in useful format

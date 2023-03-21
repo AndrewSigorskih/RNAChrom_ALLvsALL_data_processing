@@ -3,10 +3,13 @@ import os
 import subprocess
 import sys
 
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 LOGGING_FORMAT = '%(name)s | line %(lineno)-3d | %(levelname)-8s | %(message)s'
 logger = logging.getLogger(name=__name__)
+
+def find_in_list(id: str, lst: List[str]):
+    return next(x for x in lst if x.startswith(id))
 
 def exit_with_error(message: str = '') -> None:
     if not message:
@@ -26,7 +29,7 @@ def check_file_exists(path: str) -> None:
         exit_with_error(message)
 
 def run_command(cmd: Union[List[str], str],
-                **subprocess_args: Dict[str, Any]) -> int:
+                **subprocess_args: Any) -> int:
     if isinstance(cmd, list):
         cmd_str = " ".join(cmd)
     else:
@@ -34,10 +37,17 @@ def run_command(cmd: Union[List[str], str],
     logger.debug(f'Running command: {cmd_str}')
     return_code: int = subprocess.run(cmd, **subprocess_args).returncode
     return return_code
-    #return_code = subprocess.run(cmd, **subprocess_args).returncode
-    #if return_code != 0:
-        #msg = f'Failed with code: {return_code}'
-        #exit_with_error(msg)
+
+def run_get_stdout(cmd: Union[List[str], str],
+                **subprocess_args: Any) -> str:
+    if isinstance(cmd, list):
+        cmd_str = " ".join(cmd)
+    else:
+        cmd_str = cmd
+    logger.debug(f'Running command: {cmd_str}')
+    result = subprocess.run(cmd, capture_output=True,
+                            text=True, **subprocess_args)
+    return result.stdout
 
 def configure_logger(debug: bool = False) -> None:
     level: int = logging.DEBUG if debug else logging.INFO
