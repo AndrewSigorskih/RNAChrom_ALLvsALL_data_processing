@@ -5,6 +5,8 @@ import logging
 from .DataProcessors import BaseProcessor
 from .utils import check_file_exists, configure_logger
 
+logger = logging.getLogger(name=__name__)
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
             formatter_class=argparse.RawTextHelpFormatter
@@ -28,10 +30,10 @@ class Program:
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
         configure_logger(args.verbose)
-        self.logger = logging.getLogger(name=__name__)
-        self.logger.debug(f'Started with arguments: {vars(args)}')
+        logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
+
         if self.mode == 'XRNA':
             raise NotImplementedError("Warning: XRNA collection is not implemented yet!")
             exit() # for when it will be implemented

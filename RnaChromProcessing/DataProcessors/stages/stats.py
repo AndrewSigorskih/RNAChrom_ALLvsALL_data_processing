@@ -43,7 +43,7 @@ class StatsCalc:
             "awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' "
             f"{dna_tmp_file} {rna_tmp_file}"
         )
-        result = run_get_stdout(count_cmd)
+        result = run_get_stdout(count_cmd, shell=True)
         return int(result)
 
     def count_in_fastqs(self, folder: str):
