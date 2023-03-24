@@ -93,7 +93,7 @@ class StatsCalc:
         # concurrently run and fill result dict
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             future_to_id = {
-                executor.submit(self.count_in_bam_pair, dna_file, rna_file) : rna_id
+                executor.submit(self.count_in_fastq_pair, dna_file, rna_file) : rna_id
                 for dna_file, rna_file, rna_id in zip(dna_input_files, rna_input_files, self.rna_ids)
             }
             for future in concurrent.futures.as_completed(future_to_id):
@@ -113,7 +113,7 @@ class StatsCalc:
                            for filename in rna_files]
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             future_to_id = {
-                executor.submit(self.count_in_fastq_pair, dna_file, rna_file, mode) : rna_id
+                executor.submit(self.count_in_bam_pair, dna_file, rna_file, mode) : rna_id
                 for dna_file, rna_file, rna_id in zip(dna_input_files, rna_input_files, self.rna_ids)
             }
             for future in concurrent.futures.as_completed(future_to_id):
