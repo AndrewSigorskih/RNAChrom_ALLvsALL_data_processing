@@ -40,11 +40,11 @@ def run_command(cmd: Union[List[str], str],
 
 def run_get_stdout(cmd: Union[List[str], str],
                 **subprocess_args: Any) -> str:
-    if isinstance(cmd, list):
-        cmd_str = " ".join(cmd)
-    else:
-        cmd_str = cmd
-    logger.debug(f'Running command: {cmd_str}')
+#    if isinstance(cmd, list):
+#        cmd_str = " ".join(cmd)
+#    else:
+#        cmd_str = cmd
+#    logger.debug(f'Running command: {cmd_str}')
     result = subprocess.run(cmd, capture_output=True,
                             text=True, **subprocess_args)
     return result.stdout
