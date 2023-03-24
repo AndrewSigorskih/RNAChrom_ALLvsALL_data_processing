@@ -98,7 +98,8 @@ class BaseProcessor:
                 logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
                 continue
             source_pth = os.path.join(self.work_dir.name, to_copy)
-            shutil.copytree(source_pth, self.output_dir, dirs_exist_ok=True)
+            dest_pth = os.path.join(self.output_dir, to_copy)
+            shutil.copytree(source_pth, dest_pth, dirs_exist_ok=True)
 
     def run(self):
         """Iteratively run all stages of pipeline and 
