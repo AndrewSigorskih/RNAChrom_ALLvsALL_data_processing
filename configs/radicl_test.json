@@ -18,6 +18,7 @@
     },
     "hisat": {
         "genome": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/mm10/mm10",
-        "known_splice": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/genes/gencode.vM32.ss"
+        "known_splice": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/genes/gencode.vM32.ss",
+        "hisat_threads": 8
     }
 }

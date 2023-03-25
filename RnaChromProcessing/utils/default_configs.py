@@ -22,5 +22,6 @@ trim_default_cfg = {
 hisat_default_cfg = {
     'cpus': None,
     'genome': None,
-    'known_splice': None
+    'known_splice': None,
+    'hisat_threads': 1
 }

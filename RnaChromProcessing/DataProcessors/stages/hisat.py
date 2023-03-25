@@ -15,6 +15,7 @@ class Hisat(BasicStage):
         self.tool_path: str = cfg.get('tool_path', shutil.which(self.tool))
         self.genome_path: str = cfg.get('genome', None)
         self.known_splice: str = cfg.get('known_splice', None)
+        self.hisat_threads: int = cfg.get('hisat_threads', 1)
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
         if not self.tool_path:
@@ -44,13 +45,13 @@ class Hisat(BasicStage):
         rna_out_file = rna_out_file.rstrip('.gz').rsplit('.', 1)[0]+ '.bam'
         # create cmd and run
         dna_cmd = (
-            f'{self.tool_path} -x {self.genome_path} --no-spliced-alignment '
-            f'-k 100 --no-softclip -U {dna_in_file} | samtools view -bSh > '
-            f'{dna_out_file}'
+            f'{self.tool_path} -x {self.genome_path} -p {self.hisat_threads} '
+            f'--no-spliced-alignment -k 100 --no-softclip -U {dna_in_file} | '
+            f'samtools view -bSh > {dna_out_file}'
         )
         rna_cmd = (
-            f'{self.tool_path} -x {self.genome_path} -k 100 --no-softclip '
-            f'--known-splicesite-infile {self.known_splice} --dta-cufflinks '
+            f'{self.tool_path} -x {self.genome_path} -p {self.hisat_threads} -k 100 '
+            f'--no-softclip --known-splicesite-infile {self.known_splice} --dta-cufflinks '
             f'--novel-splicesite-outfile {rna_out_file}.novel_splice '
             f'-U {rna_in_file} | samtools view -bSh > {rna_out_file}'
         )
