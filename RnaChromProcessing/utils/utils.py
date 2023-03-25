@@ -1,3 +1,5 @@
+import gzip
+import shutil
 import logging
 import os
 import subprocess
@@ -7,6 +9,12 @@ from typing import Any, List, Union
 
 LOGGING_FORMAT = '%(name)s | line %(lineno)-3d | %(levelname)-8s | %(message)s'
 logger = logging.getLogger(name=__name__)
+
+def gzip_file(src: str, dst: str, remove_src=True) -> None:
+    with open(src, 'rb') as infile, gzip.open(dst, 'wb') as outfile:
+        shutil.copyfileobj(infile, outfile)
+    if remove_src:
+        os.remove(src)
 
 def find_in_list(id: str, lst: List[str]):
     return next(x for x in lst if x.startswith(id))
