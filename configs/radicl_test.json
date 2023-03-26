@@ -1,6 +1,6 @@
 {
-    "rna_ids": ["SRR9201799", "SRR9201801"],
-    "dna_ids": ["SRR9201800", "SRR9201802"],
+    "rna_ids": ["SRR9201799", "SRR9201801", "SRR9201803", "SRR9201805", "SRR9201807"],
+    "dna_ids": ["SRR9201800", "SRR9201802", "SRR9201804", "SRR9201806", "SRR9201808"],
     "base_dir" : ".",
     "input_dir": "/home/asigorskikh/rnachrom/data/radicl/raw",
     "output_dir": "results",
