@@ -4,9 +4,10 @@
     "base_dir" : ".",
     "input_dir": "/home/asigorskikh/rnachrom/data/radicl/raw",
     "output_dir": "results",
-    "cpus": 2,
+    "cpus": 4,
     "keep" : ["contacts", "bam", "trim", "dedup"],
     "dedup": {
+        "cpus": 2,
         "tool": "fastuniq",
         "tool_path": "/home/asigorskikh/tools/fastuniq"
     },
