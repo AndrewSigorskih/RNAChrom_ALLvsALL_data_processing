@@ -42,7 +42,7 @@ class Program:
 
 # TODO ?? hide trimmomatic text blanket in tmp log file(s)
 # TODO add "grid" and "imargi" rsite-dealing strategies
-# TODO add hisat internal cpus argument for even-finer tuning
+# TODO [DONE] add hisat internal cpus argument for even-finer tuning
 # TODO add cpus argument for contacts building
 # TODO [DONE] add condition on whether exit from run_function if non-zero exitcode returned
 # TODO [DONE] make actual exitcode returnal from filter bams and bamtobed
