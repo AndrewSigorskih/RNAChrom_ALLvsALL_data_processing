@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 from .stages import AlignedToBed, BamFilter, Contacts,\
                     Dedup, Hisat, Rsites, Trim, StatsCalc
-from ..utils import exit_with_error, make_directory, run_command
+from ..utils import exit_with_error, make_directory, move_exist_ok
 from ..utils import dedup_default_cfg, rsites_default_cfg, \
                     trim_default_cfg, hisat_default_cfg
 
@@ -99,7 +99,8 @@ class BaseProcessor:
                 continue
             source_pth = os.path.join(self.work_dir.name, to_copy)
             dest_pth = os.path.join(self.output_dir, to_copy)
-            shutil.copytree(source_pth, dest_pth, dirs_exist_ok=True)
+            #shutil.copytree(source_pth, dest_pth, dirs_exist_ok=True)
+            move_exist_ok(source_pth, dest_pth)
 
     def run(self):
         """Iteratively run all stages of pipeline and 
