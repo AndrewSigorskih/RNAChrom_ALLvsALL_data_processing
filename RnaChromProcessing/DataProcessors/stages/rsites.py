@@ -69,7 +69,7 @@ class Rsites(BasicStage):
             os.rename(tmp_rna_outfile, rna_out_file)
 
     def _grid_like(self):
-        pass
+        raise NotImplementedError("GRID procedure is not implemented yet!")
 
     def _custom(self):
-        pass
+        raise NotImplementedError("Custom rsite-dealing script usage is not implemented yet!")
