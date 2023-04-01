@@ -151,5 +151,6 @@ class StatsCalc:
         self.count_contacts('contacts')
         # save result
         output_name = os.path.join(self.output_dir, 'stats.tsv')
-        pd.DataFrame.from_dict(self.result).to_csv(output_name, sep='\t',
-                                                   index=True, header=True)
+        result = pd.DataFrame.from_dict(self.result).sort_index()
+        result.to_csv(output_name, sep='\t',
+                      index=True, header=True)

@@ -1,0 +1,25 @@
+{
+    "rna_ids": ["SRR8206679_1", "SRR9900122_1"],
+    "dna_ids": ["SRR8206679_2", "SRR9900122_2"],
+    "base_dir" : ".",
+    "input_dir": "/home/asigorskikh/rnachrom/data/imargi/raw",
+    "output_dir": "results",
+    "cpus": 4,
+    "keep" : ["contacts", "bam", "rsites", "dedup"],
+    "dedup": {
+        "cpus": 2,
+        "tool": "fastuniq",
+        "tool_path": "/home/asigorskikh/tools/fastuniq"
+    },
+    "rsites": {
+        "type": "imargi"
+    },
+    "trim": {
+        "tool" : "trimmomatic"
+    },
+    "hisat": {
+        "genome": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/hg38/hg38",
+        "known_splice": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/genes/gencode.v43.ss",
+        "hisat_threads": 8
+    }
+}
