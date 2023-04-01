@@ -26,15 +26,19 @@ class Rsites(BasicStage):
             func = self._copy_files
         elif self.type == 'imargi':
             func = self._imargi_like
+        elif self.type == 'grid':
+            func = self._grid_like
+        elif self.type == 'custom':
+            func = self._custom
         else:  # unknown rsites managing strategy
             exit_with_error('Unknown restriction-site managing strategy!')
         # run chosen function
         self.run_function(func, dna_ids, rna_ids)
 
     def _imargi_like(dna_in_file: str,
-                    rna_in_file: str,
-                    dna_out_file: str,
-                    rna_out_file: str):
+                     rna_in_file: str,
+                     dna_out_file: str,
+                     rna_out_file: str):
         
         tmp_dna_outfile = dna_out_file + '.tmp'
         tmp_rna_outfile = rna_out_file + '.tmp'
