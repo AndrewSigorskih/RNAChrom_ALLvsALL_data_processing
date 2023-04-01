@@ -90,6 +90,7 @@ Config should contain several required fields and may contain several additional
 * "input_dir" : string. Required. Path to directory with input DNA and RNA files.
 * "output_dir" : string. Required. Path to directory to store results in. Will be created if doesnt exist.
 * "keep" : non-empty array of strings. Should contain names of steps that will have their results saved into "output_dir".
+    Supported values (can be listed in any order): ["dedup", "rsites", "trim", "hisat", "bam", "bed", "contacts"].
 * "cpus" : int > 0. Number of tasks to run simultaneously on each step. Default is 1.
 
 Most of the steps require several options, that are grouped into corresponding sub-configs:
@@ -195,3 +196,4 @@ Most of the steps require several options, that are grouped into corresponding s
 <a name="xrna"></a>
 ## X-RNA inference 
 
+Work in progress: this functional is not properly implemented yet!
