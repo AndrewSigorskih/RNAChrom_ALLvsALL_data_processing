@@ -35,10 +35,11 @@ class Rsites(BasicStage):
         # run chosen function
         self.run_function(func, dna_ids, rna_ids)
 
-    def _imargi_like(dna_in_file: str,
+    def _imargi_like(self,
+                     dna_in_file: str,
                      rna_in_file: str,
                      dna_out_file: str,
-                     rna_out_file: str):
+                     rna_out_file: str) -> int:
         
         tmp_dna_outfile = dna_out_file + '.tmp'
         tmp_rna_outfile = rna_out_file + '.tmp'
@@ -67,6 +68,7 @@ class Rsites(BasicStage):
             gzip_file(tmp_rna_outfile, rna_out_file)
         else:
             os.rename(tmp_rna_outfile, rna_out_file)
+        return 0
 
     def _grid_like(self):
         raise NotImplementedError("GRID procedure is not implemented yet!")

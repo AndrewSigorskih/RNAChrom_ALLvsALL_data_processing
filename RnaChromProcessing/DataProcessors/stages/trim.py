@@ -35,10 +35,10 @@ class Trim(BasicStage):
         self.run_function(func, dna_ids, rna_ids)
     
     def _run_trimmomatic(self,
-                    dna_in_file: str,
-                    rna_in_file: str,
-                    dna_out_file: str,
-                    rna_out_file: str):
+                         dna_in_file: str,
+                         rna_in_file: str,
+                         dna_out_file: str,
+                         rna_out_file: str) -> int:
         """run trimmomatic"""
         window = self.params['window']
         qual_th = self.params['qual_th']
