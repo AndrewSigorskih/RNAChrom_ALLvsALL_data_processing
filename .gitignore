@@ -4,6 +4,7 @@ test.py
 # Distribution / packaging
 *.egg-info/
 *__pycache__/
+build/
 
 # Jupyter Notebook
 .ipynb_checkpoints

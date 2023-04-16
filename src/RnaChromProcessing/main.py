@@ -4,6 +4,7 @@ import json
 from .DataProcessors import BaseProcessor
 from .utils import check_file_exists, configure_logger
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
             formatter_class=argparse.RawTextHelpFormatter
