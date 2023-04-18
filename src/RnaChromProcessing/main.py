@@ -32,7 +32,6 @@ class Program:
             print(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
-
         if self.mode == 'XRNA':
             raise NotImplementedError("Warning: XRNA collection is not implemented yet!")
             exit() # for when it will be implemented

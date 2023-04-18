@@ -44,7 +44,7 @@ class Rsites(BasicStage):
         tmp_dna_outfile = dna_out_file + '.tmp'
         tmp_rna_outfile = rna_out_file + '.tmp'
         # save DNA reads that start with CT or NT
-        dna_reads = pyfastx.Fastq(dna_in_file, build_index=False)
+        dna_reads = pyfastx.Fastq(dna_in_file, build_index=True)
         with open(tmp_dna_outfile, 'w') as f:
             for read in dna_reads:
                 if read.seq.startswith('NT') or read.seq.startswith('CT'):
@@ -52,7 +52,7 @@ class Rsites(BasicStage):
         # get RNA reads corresponding to saved DNA reads
         # remove first 2 bases from RNA reads
         dna_reads = pyfastx.Fastq(tmp_dna_outfile, build_index=True)
-        rna_reads = pyfastx.Fastq(rna_in_file, build_index=False)
+        rna_reads = pyfastx.Fastq(rna_in_file, build_index=True)
         with open(tmp_rna_outfile, 'w') as f:
             for read in rna_reads:
                 if read.id in dna_reads:
