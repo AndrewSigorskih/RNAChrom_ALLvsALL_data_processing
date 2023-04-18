@@ -17,7 +17,6 @@ class Rsites(BasicStage):
             self.cpus: int = cpus
         self.type: str = cfg.get('type', None)
 
-    
     def run(self,
             dna_ids: List[str],
             rna_ids: List[str]):

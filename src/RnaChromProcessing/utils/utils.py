@@ -7,7 +7,8 @@ import sys
 
 from typing import Any, List, Union
 
-LOGGING_FORMAT = '%(name)s | line %(lineno)-3d | %(levelname)-8s | %(message)s'
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
 logger = logging.getLogger(name=__name__)
 
 
@@ -21,7 +22,8 @@ def configure_logger(debug: bool = False) -> None:
     level: int = logging.DEBUG if debug else logging.INFO
     handler = logging.StreamHandler()
     handler.setLevel(level)
-    handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+    handler.setFormatter(logging.Formatter(fmt=LOGGING_FORMAT,
+                                           datefmt=DATE_FORMAT))
     logger.setLevel(level)
     logger.addHandler(handler)
 

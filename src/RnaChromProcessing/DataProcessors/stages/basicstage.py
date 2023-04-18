@@ -1,12 +1,14 @@
+import concurrent.futures
 import shutil
+import logging
 import os
 
-import concurrent.futures
 from typing import Callable, List
 
 from ...utils import exit_with_error, find_in_list
 
 suff_to_filter = ('.unpaired', '.novel_splice')
+logger = logging.getLogger()
 
 class BasicStage:
     def __init__(self,
@@ -46,6 +48,7 @@ class BasicStage:
         rna_output_files = [os.path.join(self.output_dir, filename)
                            for filename in rna_files]
         # run func in parallel (async)
+        logger.debug(f'Running {func.__name__} with {self.cpus} threads.')
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
                        for dna_inp, rna_inp, dna_out, rna_out in 
@@ -54,4 +57,3 @@ class BasicStage:
         if require_zero_code and any([x != 0 for x in results]):
             msg = f'One or several calls of {func.__name__} returned non-zero process exit code!'
             exit_with_error(msg)
-            
