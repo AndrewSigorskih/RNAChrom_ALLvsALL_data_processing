@@ -1,11 +1,19 @@
 import shutil
+import gzip
 import os
-from typing import Any, Dict, List
+from functools import partial
+from mimetypes import guess_type
+from typing import Any, Callable, Dict, IO, List
 
-import pyfastx
+from Bio import SeqIO
 
 from .basicstage import BasicStage
 from ...utils import gzip_file, exit_with_error, run_command
+
+
+def open_handle(filename: str) -> Callable[[str], IO]:
+    encoding = guess_type(filename)[1]
+    return partial(gzip.open, mode='rt') if encoding == 'gzip' else open
 
 
 class Rsites(BasicStage):
@@ -40,23 +48,26 @@ class Rsites(BasicStage):
                      dna_out_file: str,
                      rna_out_file: str) -> int:
         
+        '''Save DNA reads that start with CT or NT\n
+           Save RNA reads corresponding to saved DNA reads\n
+           Remove first 2 bases from RNA reads.\n
+           Reads in files should be synchronized.'''
         tmp_dna_outfile = dna_out_file + '.tmp'
         tmp_rna_outfile = rna_out_file + '.tmp'
-        # save DNA reads that start with CT or NT
-        dna_reads = pyfastx.Fastq(dna_in_file, build_index=True)
-        with open(tmp_dna_outfile, 'w') as f:
-            for read in dna_reads:
-                if read.seq.startswith('NT') or read.seq.startswith('CT'):
-                    print(read.raw, file=f, end='')
-        # get RNA reads corresponding to saved DNA reads
-        # remove first 2 bases from RNA reads
-        dna_reads = pyfastx.Fastq(tmp_dna_outfile, build_index=True)
-        rna_reads = pyfastx.Fastq(rna_in_file, build_index=True)
-        with open(tmp_rna_outfile, 'w') as f:
-            for read in rna_reads:
-                if read.id in dna_reads:
-                    read.seq = read.seq[2:]
-                    print(read.raw, file=f, end='')
+        _dna_open = open_handle(dna_in_file)
+        _rna_open = open_handle(rna_in_file)
+        with open(tmp_dna_outfile, 'w') as dna_out_handle,\
+             open(tmp_rna_outfile, 'w') as rna_out_handle,\
+             _dna_open(dna_in_file) as dna_in_handle,\
+             _rna_open(rna_in_file) as rna_in_handle:
+            for dna_read, rna_read in zip(SeqIO.parse(dna_in_handle, format='fastq'),
+                                          SeqIO.parse(rna_in_handle, format='fastq')):
+                if dna_read.seq.startswith('CT') or dna_read.seq.startswith('NT'):
+                    SeqIO.write(dna_read, handle=dna_out_handle, format='fastq')
+                    print('prev:', len(rna_read.seq), len(rna_read._per_letter_annotations['phred_quality']))
+                    rna_read = rna_read[2:]
+                    print('after:', len(rna_read.seq), len(rna_read._per_letter_annotations['phred_quality']))
+                    SeqIO.write(rna_read, handle=rna_out_handle, format='fastq')
         # deal with gz/txt outputs
         if dna_out_file.endswith('.gz'):
             gzip_file(tmp_dna_outfile, dna_out_file)
