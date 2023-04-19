@@ -24,6 +24,10 @@ class Rsites(BasicStage):
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
         self.type: str = cfg.get('type', None)
+        if self.type == 'custom':
+            self.tool_path: str = cfg.get('tool_path', None)
+            if not self.tool_path:
+               exit_with_error('Path to custom tool for rsite procedure is not specified!') 
 
     def run(self,
             dna_ids: List[str],
@@ -113,7 +117,12 @@ class Rsites(BasicStage):
         else:
             os.rename(tmp_rna_outfile, rna_out_file)
         return 0
-        
 
-    def _custom(self):
-        raise NotImplementedError("Custom rsite-dealing script usage is not implemented yet!")
+    def _custom(self,
+                dna_in_file: str,
+                rna_in_file: str,
+                dna_out_file: str,
+                rna_out_file: str) -> int:
+        cmd = [self.tool_path, dna_in_file, rna_in_file, dna_out_file, rna_out_file]
+        exit_code = run_command(cmd)
+        return exit_code
