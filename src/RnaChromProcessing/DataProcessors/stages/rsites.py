@@ -48,8 +48,7 @@ class Rsites(BasicStage):
                      dna_out_file: str,
                      rna_out_file: str) -> int:
         
-        '''Save DNA reads that start with CT or NT\n
-           Save RNA reads corresponding to saved DNA reads\n
+        '''Save read pair if DNA read starts with CT or NT\n
            Remove first 2 bases from RNA reads.\n
            Reads in files should be synchronized.'''
         tmp_dna_outfile = dna_out_file + '.tmp'
@@ -64,9 +63,7 @@ class Rsites(BasicStage):
                                           SeqIO.parse(rna_in_handle, format='fastq')):
                 if dna_read.seq.startswith('CT') or dna_read.seq.startswith('NT'):
                     SeqIO.write(dna_read, handle=dna_out_handle, format='fastq')
-                    print('prev:', len(rna_read.seq), len(rna_read._per_letter_annotations['phred_quality']))
                     rna_read = rna_read[2:]
-                    print('after:', len(rna_read.seq), len(rna_read._per_letter_annotations['phred_quality']))
                     SeqIO.write(rna_read, handle=rna_out_handle, format='fastq')
         # deal with gz/txt outputs
         if dna_out_file.endswith('.gz'):
@@ -80,8 +77,43 @@ class Rsites(BasicStage):
             os.rename(tmp_rna_outfile, rna_out_file)
         return 0
 
-    def _grid_like(self):
-        raise NotImplementedError("GRID procedure is not implemented yet!")
+    def _grid_like(self,
+                   dna_in_file: str,
+                   rna_in_file: str,
+                   dna_out_file: str,
+                   rna_out_file: str) -> int:
+        '''Save read pair if DNA reads end with AG
+           Add CT to the end of selected DNA reads
+           Reads in files should be synchronized.'''
+        tmp_dna_outfile = dna_out_file + '.tmp'
+        tmp_rna_outfile = rna_out_file + '.tmp'
+        _dna_open = open_handle(dna_in_file)
+        _rna_open = open_handle(rna_in_file)
+        with open(tmp_dna_outfile, 'w') as dna_out_handle,\
+             open(tmp_rna_outfile, 'w') as rna_out_handle,\
+             _dna_open(dna_in_file) as dna_in_handle,\
+             _rna_open(rna_in_file) as rna_in_handle:
+            for dna_read, rna_read in zip(SeqIO.parse(dna_in_handle, format='fastq'),
+                                          SeqIO.parse(rna_in_handle, format='fastq')):
+                if dna_read.seq.endswith('AG'):
+                    SeqIO.write(rna_read, handle=rna_out_handle, format='fastq')
+                    annotations = dict(dna_read.letter_annotations)
+                    annotations['phred_quality'] += annotations['phred_quality'][-2:]
+                    dna_read += 'CT'
+                    dna_read.letter_annotations = annotations
+                    SeqIO.write(dna_read, handle=dna_out_handle, format='fastq')
+        # deal with gz/txt outputs
+        if dna_out_file.endswith('.gz'):
+            gzip_file(tmp_dna_outfile, dna_out_file)
+        else:
+            os.rename(tmp_dna_outfile, dna_out_file)
+        
+        if rna_out_file.endswith('.gz'):
+            gzip_file(tmp_rna_outfile, rna_out_file)
+        else:
+            os.rename(tmp_rna_outfile, rna_out_file)
+        return 0
+        
 
     def _custom(self):
         raise NotImplementedError("Custom rsite-dealing script usage is not implemented yet!")
