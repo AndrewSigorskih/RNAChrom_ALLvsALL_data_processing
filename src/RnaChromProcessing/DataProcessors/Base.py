@@ -1,4 +1,3 @@
-import shutil
 import logging
 import os
 from tempfile import TemporaryDirectory
@@ -29,7 +28,7 @@ class BaseProcessor:
         os.chdir(self.base_dir)
         self.work_dir = TemporaryDirectory(dir=self.base_dir)
         self.setup_dirs()
-        # get stages-specific configs, maybe get default and update???
+        # get stages-specific configs: get default and update
         self.stages_from_cfgs(cfg)
 
     def validate_inputs(self):
@@ -99,7 +98,6 @@ class BaseProcessor:
                 continue
             source_pth = os.path.join(self.work_dir.name, to_copy)
             dest_pth = os.path.join(self.output_dir, to_copy)
-            #shutil.copytree(source_pth, dest_pth, dirs_exist_ok=True)
             move_exist_ok(source_pth, dest_pth)
 
     def run(self):

@@ -41,7 +41,7 @@ class Program:
         BaseProcessor(self.config).run()
 
 # TODO ?? hide trimmomatic text blanket in tmp log file(s)
-# TODO add "grid" and "imargi" rsite-dealing strategies
+# TODO [DONE] add "grid" and "imargi" rsite-dealing strategies
 # TODO [DONE] add hisat internal cpus argument for even-finer tuning
 # TODO add cpus argument for contacts building
 # TODO [DONE] add condition on whether exit from run_function if non-zero exitcode returned

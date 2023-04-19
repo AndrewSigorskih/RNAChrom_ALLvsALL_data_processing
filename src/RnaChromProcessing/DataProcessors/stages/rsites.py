@@ -1,4 +1,3 @@
-import shutil
 import gzip
 import os
 from functools import partial
@@ -11,7 +10,7 @@ from .basicstage import BasicStage
 from ...utils import gzip_file, exit_with_error, run_command
 
 
-def open_handle(filename: str) -> Callable[[str], IO]:
+def open_handle(filename: str) -> Callable[[str], Callable[[str], IO]]:
     encoding = guess_type(filename)[1]
     return partial(gzip.open, mode='rt') if encoding == 'gzip' else open
 
