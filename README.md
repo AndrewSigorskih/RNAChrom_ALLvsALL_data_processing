@@ -104,9 +104,9 @@ Most of the steps require several options, that are grouped into corresponding s
 
 * "rsites" : sub-config for restriction-site handling step. Supported options:
     * "type" : what action to perform on read pairs during this step. Default is "skip". Supported values:
-        * "imargi"
-        * "grid"
-        * "custom"
+        * "imargi" : Save read pair if DNA read starts with CT or NT and remove first 2 bases from RNA reads. Reads in files should be synchronized.
+        * "grid" : Save read pair if DNA read ends with AG. Add CT to the end of selected DNA reads (quality is copied from AG bases). Reads in files should be synchronized.
+        * "custom" : Use custom script provided by user.
         * "skip" : do not perform this step.
     * "tool_path" : Optional. Will be only considered if "custom" type of action is chosen for previous option. Path to user's script that will manage all operations on restriction sites for read pairs. Script should be executable and take exactly 4 positional arguments: `dna-input-file`, `rna-input-file`, `dna-output-file`, `rna-output-file`.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used.

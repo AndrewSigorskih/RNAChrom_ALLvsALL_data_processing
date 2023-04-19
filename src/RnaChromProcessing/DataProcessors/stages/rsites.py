@@ -86,8 +86,8 @@ class Rsites(BasicStage):
                    rna_in_file: str,
                    dna_out_file: str,
                    rna_out_file: str) -> int:
-        '''Save read pair if DNA reads end with AG
-           Add CT to the end of selected DNA reads
+        '''Save read pair if DNA reads end with AG\n
+           Add CT to the end of selected DNA reads\n
            Reads in files should be synchronized.'''
         tmp_dna_outfile = dna_out_file + '.tmp'
         tmp_rna_outfile = rna_out_file + '.tmp'
