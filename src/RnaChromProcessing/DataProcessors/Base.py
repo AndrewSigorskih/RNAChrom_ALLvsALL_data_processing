@@ -70,17 +70,17 @@ class BaseProcessor:
     def stages_from_cfgs(self, cfg: Dict[str, Any]):
         """For each stage, create corresponding routine object 
         based on default config and user input"""
-        dedup_default_cfg.update(cfg.get('dedup', {}))
-        self.dupremover: Dedup = Dedup(dedup_default_cfg,
-                                       self.input_dir, self.dedup_dir,
-                                       self.cpus)
         rsites_default_cfg.update(cfg.get('rsites', {}))
         self.rsitefilter: Rsites = Rsites(rsites_default_cfg,
-                                          self.dedup_dir, self.rsite_dir,
+                                          self.input_dir, self.rsite_dir,
                                           self.cpus)
+        dedup_default_cfg.update(cfg.get('dedup', {}))
+        self.dupremover: Dedup = Dedup(dedup_default_cfg,
+                                       self.rsite_dir, self.dedup_dir,
+                                       self.cpus)
         trim_default_cfg.update(cfg.get('trim', {}))
         self.trimmer: Trim = Trim(trim_default_cfg,
-                                  self.rsite_dir, self.trim_dir,
+                                  self.dedup_dir, self.trim_dir,
                                   self.cpus)
         hisat_default_cfg.update(cfg.get('hisat', {}))
         self.aligner: Hisat = Hisat(hisat_default_cfg,
@@ -108,8 +108,8 @@ class BaseProcessor:
         retrieve data"""
         # run pipeline
         os.chdir(self.work_dir.name)
-        self.dupremover.run(self.dna_ids, self.rna_ids)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
+        self.dupremover.run(self.dna_ids, self.rna_ids)
         self.trimmer.run(self.dna_ids, self.rna_ids)
         self.aligner.run(self.dna_ids, self.rna_ids)
         self.bamfilter.run(self.dna_ids, self.rna_ids)

@@ -48,7 +48,7 @@ class BasicStage:
         rna_output_files = [os.path.join(self.output_dir, filename)
                            for filename in rna_files]
         # run func in parallel (async)
-        logger.debug(f'Running {func.__name__} with {self.cpus} threads.')
+        logger.debug(f'Running function {func.__qualname__} with {self.cpus} threads.')
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
                        for dna_inp, rna_inp, dna_out, rna_out in 
