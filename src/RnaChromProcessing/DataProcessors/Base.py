@@ -101,6 +101,7 @@ class BaseProcessor:
                 continue
             source_pth = os.path.join(self.work_dir.name, to_copy)
             dest_pth = os.path.join(self.output_dir, to_copy)
+            make_directory(dest_pth)
             move_exist_ok(source_pth, dest_pth)
 
     def run(self):
@@ -118,7 +119,6 @@ class BaseProcessor:
         # calculate stats
         StatsCalc(self.output_dir, self.cpus,
                   self.dna_ids, self.rna_ids).run()
-        bop = input("Ready to move outputs?")
         # copy outputs
         os.chdir(self.base_dir)
         self.save_outputs()
