@@ -118,6 +118,7 @@ class BaseProcessor:
         # calculate stats
         StatsCalc(self.output_dir, self.cpus,
                   self.dna_ids, self.rna_ids).run()
+        bop = input("Ready to move outputs?")
         # copy outputs
         os.chdir(self.base_dir)
         self.save_outputs()
