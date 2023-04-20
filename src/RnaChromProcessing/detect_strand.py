@@ -1,7 +1,10 @@
 import argparse
+import logging
 
 from .DataProcessors import StrandCalc
 from .utils import check_file_exists, configure_logger
+
+logger = logging.getLogger("main")
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,9 +28,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    configure_logger(args.verbose)
-    check_file_exists(args.gtf_annotation)
+    configure_logger(logger, args.verbose)
+    logger.debug(f'Started with arguments: {vars(args)}')
+
     check_file_exists(args.genes)
+    check_file_exists(args.gtf_annotation)
+
     StrandCalc(input_dir=args.input_dir,
                gtf_annotation=args.gtf_annotation,
                genes=args.genes,

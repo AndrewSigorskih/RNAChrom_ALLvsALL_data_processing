@@ -5,6 +5,8 @@ import logging
 from .DataProcessors import BaseProcessor
 from .utils import check_file_exists, configure_logger
 
+logger = logging.getLogger("main")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -28,10 +30,9 @@ class Program:
         check_file_exists(args.config)
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
-        configure_logger(args.verbose)
+        configure_logger(logger, args.verbose)
         #if args.verbose:
             #print(f'Started with arguments: {vars(args)}')
-        logger = logging.getLogger(__name__)
         logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:

@@ -18,7 +18,7 @@ def check_file_exists(path: str) -> None:
         exit_with_error(message)
 
 
-def configure_logger(debug: bool = False) -> None:
+def configure_logger(logger: logging.Logger, debug: bool = False) -> None:
     level: int = logging.DEBUG if debug else logging.INFO
     handler = logging.StreamHandler()
     handler.setLevel(level)
