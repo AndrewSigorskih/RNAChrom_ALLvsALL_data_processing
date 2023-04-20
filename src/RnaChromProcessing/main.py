@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 
 from .DataProcessors import BaseProcessor
 from .utils import check_file_exists, configure_logger
@@ -28,8 +29,10 @@ class Program:
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
         configure_logger(args.verbose)
-        if args.verbose:
-            print(f'Started with arguments: {vars(args)}')
+        #if args.verbose:
+            #print(f'Started with arguments: {vars(args)}')
+        logger = logging.getLogger(__name__)
+        logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
         if self.mode == 'XRNA':

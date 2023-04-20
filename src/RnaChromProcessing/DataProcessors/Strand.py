@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 
 GTF_NAMES = ('chr', 'type', 'start', 'end', 'strand', 'attrs')
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 class StrandCalc:
     def __init__(self,
