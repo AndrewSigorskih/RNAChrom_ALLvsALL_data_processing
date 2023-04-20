@@ -50,9 +50,9 @@ class Program:
 # TODO [DONE] add condition on whether exit from run_function if non-zero exitcode returned
 # TODO [DONE] make actual exitcode returnal from filter bams and bamtobed
 # TODO [DONE?] make statistics calculation as separate step
-# TODO calculate actual strand of contacts rna parts and store in useful format
-# TODO remove requirements.txt and store versions in setup.cfg
-# TODO remove files that are not needed anymore
+# TODO [In progress] calculate actual strand of contacts rna parts and store in useful format
+# TODO [DONE] remove requirements.txt and store versions in setup.cfg
+# TODO remove files that are not needed anymore (stats directory)
 
 def main() -> None:
     Program().run()

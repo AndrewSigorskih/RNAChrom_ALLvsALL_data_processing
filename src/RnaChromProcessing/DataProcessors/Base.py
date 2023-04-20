@@ -22,6 +22,9 @@ class BaseProcessor:
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
         self.rna_ids: List[str] = cfg.get('rna_ids', [])
         self.keep: List[str] = cfg.get('keep', [])
+        if 'contacts' not in self.keep:
+            msg = f'contacts dir not found in "keep" array, resulting contacts files will not be saved!\n{self.keep=}'
+            logger.warning(msg)
         # spam errors
         self.validate_inputs()
         # create working directory

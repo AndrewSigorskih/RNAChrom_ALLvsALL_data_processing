@@ -47,7 +47,7 @@ class Dedup(BasicStage):
             exit_with_error('Fastuniq tool does not accept gzipped files!')
         with NamedTemporaryFile(mode='w', delete=False, dir='.') as f:
             tmpfilename = f.name
-            print(dna_in_file, rna_in_file, sep='\n', file=f)
+            print(rna_in_file, dna_in_file, sep='\n', file=f)
         command = (f'{self.tool_path} -i {tmpfilename} '
                     f'-o {dna_out_file} -p {rna_out_file}')
         return_code = run_command(command, shell=True)
