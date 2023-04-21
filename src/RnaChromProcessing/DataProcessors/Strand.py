@@ -21,7 +21,7 @@ class StrandCalc:
                     genes: str,
                     gtf_annotation: str) -> None:
         with open(genes, 'r') as f:
-            # gene_name "DDX11L2"; OR gene_id "ENSG00000290825.1"; for all listed genes
+            # will search for gene_name "DDX11L2"; OR gene_id "ENSG00000290825.1"; for all listed genes
             genes_list: str = '|'.join([f'"{line.strip()}";' for line in f])
         gene_annot = pd.read_csv(
             gtf_annotation, sep='\t', header=None, skiprows=5,
@@ -48,3 +48,5 @@ class StrandCalc:
             anti = dat[(dat[0]==ribgenes.at[item,0]) & (dat[5]!=ribgenes.at[item,6]) & (dat[1] < ribgenes.at[item,4]) & (dat[2] > ribgenes.at[item,3])].shape[0]
             res.at['imargi_'+name,item] = [same, anti]
     '''
+    # save several otputs
+    # save images (png and pdf)
