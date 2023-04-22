@@ -1,8 +1,10 @@
 import logging
+import os
 
 import pandas as pd
 
-GTF_NAMES = ('chr', 'type', 'start', 'end', 'strand', 'attrs')
+CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
+GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
 logger = logging.getLogger(__name__)
 
 class StrandCalc:
@@ -12,9 +14,13 @@ class StrandCalc:
                  genes: str,
                  output_dir: str,
                  prefix: str) -> None:
-        self.input_dir = input_dir
+        self.input_dir = input_dir  # not needed?
         self.output_dir = output_dir
         self.prefix = prefix
+        self.files = [
+            os.path.join(input_dir, file) for file in os.listdir(input_dir)
+            if file.endswith('.tab')  # subject to change based on mapping provided
+        ]
         self._load_genes(genes, gtf_annotation)
     
     def _load_genes(self,
@@ -33,11 +39,30 @@ class StrandCalc:
         gene_annot['idx'] = gene_annot['attrs'].apply(lambda x: x.split('gene_name')[1].split(';')[0].split('"')[1])
         gene_annot = gene_annot.set_index('idx')
         self.gene_annot: pd.DataFrame = gene_annot
-            
+
+    def calculate(self) -> None:
+        result = pd.DataFrame(data=None, columns=self.gene_annot.index, index=self.files)
+        for inp_file in self.files:
+            data = pd.read_csv(inp_file, sep='\t', usecols=CONTACTS_COLS)
+            for gene in result.columns:
+                mask = ((data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
+                        (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
+                        (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
+                )
+                same = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
+                anti = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
+                result.at[inp_file, gene] = (same, anti)
+        self.result: pd.DataFrame = result
+
 
     def run(self) -> None:
         # https://stackoverflow.com/questions/17322109/get-dataframe-row-count-based-on-conditions
-        pass
+        # calc results and store in table
+        # get json for further xrna properties
+        # make plots
+        # save outputs
+        self.calculate()
+        self.result.to_csv(f'{self.output_dir}/{self.prefix}.tsv', sep='\t')
     '''
     for name in names:
         dat = pd.read_csv(f'~/data/imargi/bed/{name}.rna.bed', sep='\t', header=None)
