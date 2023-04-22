@@ -5,7 +5,7 @@ import pandas as pd
 
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 class StrandCalc:
     def __init__(self,
@@ -43,6 +43,7 @@ class StrandCalc:
     def calculate(self) -> None:
         result = pd.DataFrame(data=None, columns=self.gene_annot.index, index=self.files)
         for inp_file in self.files:
+            logger.debug(f'started processing {inp_file}')
             data = pd.read_csv(inp_file, sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
                 mask = ((data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
@@ -50,7 +51,7 @@ class StrandCalc:
                         (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
                 )
                 same = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
-                anti = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
+                anti = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()
                 result.at[inp_file, gene] = (same, anti)
         self.result: pd.DataFrame = result
 

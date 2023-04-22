@@ -4,7 +4,7 @@ import logging
 from .DataProcessors import StrandCalc
 from .utils import check_file_exists, configure_logger
 
-logger = logging.getLogger("main")
+logger = logging.getLogger()
 
 
 def parse_args() -> argparse.Namespace:
