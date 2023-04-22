@@ -30,8 +30,8 @@ class StrandCalc:
         gene_annot = gene_annot[gene_annot['type'] == 'gene']
         gene_annot = gene_annot[gene_annot['attrs'].str.contains(genes_list)]
         logger.debug(f'{gene_annot.shape[0]} genes selected from annotation file.')
-        #ribgenes[8] = ribgenes[8].apply(lambda x: x.split('gene_name')[1].split(';')[0].split('"')[1])
-        #ribgenes.set_index(8, inplace=True)
+        gene_annot['idx'] = gene_annot['attrs'].apply(lambda x: x.split('gene_name')[1].split(';')[0].split('"')[1])
+        gene_annot = gene_annot.set_index('idx')
         self.gene_annot: pd.DataFrame = gene_annot
             
 

@@ -6,7 +6,9 @@ dedup_default_cfg = {
 
 rsites_default_cfg = {
     'cpus': None,
-    'type': 'skip'
+    'type': 'skip',
+    'rsite_bgn': 'AG',
+    'rsite_end': 'CT'
 }
 
 trim_default_cfg = {

@@ -142,7 +142,7 @@ class StatsCalc:
         """Calculate number of surviving pairs
         after each step"""
         # count in fastq folders
-        for folder in ('dedup', 'rsites', 'trim'):
+        for folder in ('rsites', 'dedup', 'trim'):
             self.count_in_fastqs(folder)
         # count BAM statistics
         self.count_in_bams('hisat', 'mapped')

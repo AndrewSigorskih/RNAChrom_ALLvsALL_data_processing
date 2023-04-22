@@ -36,7 +36,10 @@ class Rsites(BasicStage):
         if self.type == 'custom':
             self.tool_path: str = cfg.get('tool_path', None)
             if not self.tool_path:
-               exit_with_error('Path to custom tool for rsite procedure is not specified!') 
+               exit_with_error('Path to custom tool for rsite procedure is not specified!')
+        elif self.type == 'grid':
+            self.rsite_bgn: str = cfg.get('rsite_bgn')
+            self.rsite_end: str = cfg.get('rsite_end')
 
     def run(self,
             dna_ids: List[str],
@@ -159,6 +162,7 @@ class Rsites(BasicStage):
            Add CT to the end of selected DNA reads\n
            Assign quality values from terminal AG to novel CT\n
            Reads in files should be synchronized.'''
+        n_bases = len(self.rsite_end)
         _dna_out = output_handle(dna_out_file)
         _rna_out = output_handle(rna_out_file)
         with _dna_out(dna_out_file) as dna_out_handle,\
@@ -168,11 +172,11 @@ class Rsites(BasicStage):
                 pyfastx.Fastq(dna_in_file, build_index=False, full_name=True),
                 pyfastx.Fastq(rna_in_file, build_index=False, full_name=True)
             ):
-                if not dna_seq.endswith('AG'):
+                if not dna_seq.endswith(self.rsite_bgn):
                     continue
                 print(format_fastq(rna_name, rna_seq, rna_qual), file=rna_out_handle, end='')
-                dna_seq += 'CT'
-                dna_qual += dna_qual[-2:]
+                dna_seq += self.rsite_end
+                dna_qual += dna_qual[-n_bases:]
                 print(format_fastq(dna_name, dna_seq, dna_qual), file=dna_out_handle, end='')
         return 0
                 
