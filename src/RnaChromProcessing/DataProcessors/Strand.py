@@ -3,6 +3,8 @@ import os
 
 import pandas as pd
 
+from ..utils import exit_with_error
+
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
 logger = logging.getLogger()
@@ -35,23 +37,28 @@ class StrandCalc:
         )
         gene_annot = gene_annot[gene_annot['type'] == 'gene']
         gene_annot = gene_annot[gene_annot['attrs'].str.contains(genes_list)]
-        logger.debug(f'{gene_annot.shape[0]} genes selected from annotation file.')
+        if not (shape := gene_annot.shape[0]):
+            exit_with_error('Could not find any of the listed genes in annotation file!')
+        else:
+            logger.info(f'{shape} genes selected from annotation file.')
         gene_annot['idx'] = gene_annot['attrs'].apply(lambda x: x.split('gene_name')[1].split(';')[0].split('"')[1])
         gene_annot = gene_annot.set_index('idx')
         self.gene_annot: pd.DataFrame = gene_annot
+        print(gene_annot.head())
 
     def calculate(self) -> None:
         result = pd.DataFrame(data=None, columns=self.gene_annot.index, index=self.files)
         for inp_file in self.files:
-            logger.debug(f'started processing {inp_file}')
+            logger.debug(f'Started processing {inp_file}')
             data = pd.read_csv(inp_file, sep='\t', usecols=CONTACTS_COLS)
+            print(data.head())
             for gene in result.columns:
                 mask = ((data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                         (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
                         (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
                 )
-                same = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
-                anti = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()
+                same = sum(mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand']))
+                anti = sum(mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand']))
                 result.at[inp_file, gene] = (same, anti)
         self.result: pd.DataFrame = result
 
@@ -64,15 +71,5 @@ class StrandCalc:
         # save outputs
         self.calculate()
         self.result.to_csv(f'{self.output_dir}/{self.prefix}.tsv', sep='\t')
-    '''
-    for name in names:
-        dat = pd.read_csv(f'~/data/imargi/bed/{name}.rna.bed', sep='\t', header=None)
-        print(name, dat.shape[0])
-        dat[0] = dat[0].apply(lambda x: hg38_dict[x])
-        for item in ribgenes.index:
-            same = dat[(dat[0]==ribgenes.at[item,0]) & (dat[5]==ribgenes.at[item,6]) & (dat[1] < ribgenes.at[item,4]) & (dat[2] > ribgenes.at[item,3])].shape[0]
-            anti = dat[(dat[0]==ribgenes.at[item,0]) & (dat[5]!=ribgenes.at[item,6]) & (dat[1] < ribgenes.at[item,4]) & (dat[2] > ribgenes.at[item,3])].shape[0]
-            res.at['imargi_'+name,item] = [same, anti]
-    '''
     # save several otputs
     # save images (png and pdf)
