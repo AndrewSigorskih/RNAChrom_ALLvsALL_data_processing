@@ -62,10 +62,11 @@ class StatsCalc:
             )
             run_command(cmd, log_cmd=False, shell=True)
 
-        count_cmd =(
-            "awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' "
-            f"{dna_tmp_file} {rna_tmp_file}"
-        )
+        #count_cmd =(
+        #    "awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' "
+        #    f"{dna_tmp_file} {rna_tmp_file}"
+        #)
+        count_cmd = f"awk 'a[$0]++' {dna_tmp_file} {rna_tmp_file} | wc -l"
         result = run_get_stdout(count_cmd, log_cmd=False, shell=True)
         return int(result)
     
@@ -85,14 +86,16 @@ class StatsCalc:
                 cmd = (
                     f"samtools view -F 4 {infile} | "
                     "awk -F \"\\t\" '{print \"@\"$1}' | "
-                    "cut -d '.' -f2 | awk '{ a[$1]++ } END { for (b in a) { print b } }' "
+                    #"cut -d '.' -f2 | awk '{ a[$1]++ } END { for (b in a) { print b } }' " # change to "sort -u"
+                    "cut -d '.' -f2 | sort -u "
                     f"> {outfile}"
                 )
             elif mode == 'mapped2mism':
                 cmd = (
                     f"samtools view -F 4 {infile} | grep -E 'XM:i:[0-2]\s.*' | "
                     "awk -F \"\\t\" '{print \"@\"$1}' | cut -d '.' -f2 | "
-                    "awk '{ a[$1]++ } END { for (b in a) { print b } }' "
+                    #"awk '{ a[$1]++ } END { for (b in a) { print b } }' "
+                    "sort -u "
                     f'> {outfile}'
                 )
             else:
