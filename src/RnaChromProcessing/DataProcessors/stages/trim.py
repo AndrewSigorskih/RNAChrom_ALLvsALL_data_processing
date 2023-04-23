@@ -1,6 +1,7 @@
 import shutil
 
 from typing import Any, Dict, List
+from subprocess import DEVNULL
 
 from .basicstage import BasicStage
 from ...utils import exit_with_error, run_command
@@ -54,5 +55,5 @@ class Trim(BasicStage):
             f'{rna_out_file} {rna_out_file}.unpaired '
             f'SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}'
         )
-        return_code = run_command(command, shell=True)
+        return_code = run_command(command, shell=True, stdout=DEVNULL)
         return return_code
