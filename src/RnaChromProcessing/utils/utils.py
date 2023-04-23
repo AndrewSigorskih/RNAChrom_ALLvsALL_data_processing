@@ -74,23 +74,27 @@ def move_exist_ok(src_dir: str, dest_dir: str):
 
 
 def run_command(cmd: Union[List[str], str],
+                log_cmd: bool = True,
                 **subprocess_args: Any) -> int:
-    if isinstance(cmd, list):
-        cmd_str = " ".join(cmd)
-    else:
-        cmd_str = cmd
-    logger.debug(f'Running command: {cmd_str}')
+    if log_cmd:
+        print_cmd(cmd)
     return_code: int = subprocess.run(cmd, **subprocess_args).returncode
     return return_code
 
 
 def run_get_stdout(cmd: Union[List[str], str],
-                **subprocess_args: Any) -> str:
+                   log_cmd: bool = True,
+                   **subprocess_args: Any) -> str:
+    if log_cmd:
+        print_cmd(cmd)
+    result = subprocess.run(cmd, capture_output=True,
+                            text=True, **subprocess_args)
+    return result.stdout
+
+
+def print_cmd(cmd: Union[List[str], str]) -> None:
     if isinstance(cmd, list):
         cmd_str = " ".join(cmd)
     else:
         cmd_str = cmd
     logger.debug(f'Running command: {cmd_str}')
-    result = subprocess.run(cmd, capture_output=True,
-                            text=True, **subprocess_args)
-    return result.stdout
