@@ -9,7 +9,7 @@ from typing import Any, List, Union
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
-logger = logging.getLogger(name=__name__)
+logger = logging.getLogger()
 
 
 def check_file_exists(path: str) -> None:

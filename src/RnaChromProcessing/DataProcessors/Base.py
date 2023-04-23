@@ -9,7 +9,7 @@ from ..utils import exit_with_error, make_directory, move_exist_ok
 from ..utils import dedup_default_cfg, rsites_default_cfg, \
                     trim_default_cfg, hisat_default_cfg
 
-logger = logging.getLogger(name=__name__)
+logger = logging.getLogger()
 SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
 
 class BaseProcessor:

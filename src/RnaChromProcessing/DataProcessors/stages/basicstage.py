@@ -8,7 +8,7 @@ from typing import Callable, List
 from ...utils import exit_with_error, find_in_list
 
 suff_to_filter = ('.unpaired', '.novel_splice')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 class BasicStage:
     def __init__(self,
