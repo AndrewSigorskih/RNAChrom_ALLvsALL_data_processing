@@ -6,6 +6,7 @@ from typing import Dict, List
 import pandas as pd
 
 from ..utils import check_file_exists, exit_with_error, find_in_list, make_directory
+from ..plots import rna_strand_barplot, set_style_white
 
 CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp_groups')
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
@@ -51,6 +52,7 @@ class StrandCalc:
                 self.files_map[f'{group}_{file_id}'] = filename
         if not self.files_map:
             exit_with_error('Could not find any if the listed files in input directory!')
+        logger.info(f'{len(self.files_map)} files found in input directory')
     
     def _load_genes(self,
                     genes: str,
@@ -87,14 +89,30 @@ class StrandCalc:
                 same = sum(mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand']))
                 anti = sum(mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand']))
                 result.at[name, gene] = (same, anti)
-        self.result: pd.DataFrame = result
+        self.raw_result: pd.DataFrame = result
+
+    def counts_to_values(self) -> None:
+        same_wins = lambda x: x[0] > x[1]
+        anti_wins = lambda x: x[1] > x[0]
+        self.result = pd.DataFrame(data=None, index=self.raw_result.index)
+        self.result['same'] = self.raw_result.apply(lambda row: row.apply(same_wins).sum(),
+                                                    axis=1)
+        self.result['anti'] = self.raw_result.apply(lambda row: row.apply(anti_wins).sum(),
+                                                    axis=1)
+        
+        mask = (self.result['same'] - self.result['anti'])/(self.result['same'] + self.result['anti'])
+        self.result['strand'] = 'UNKNOWN'
+        self.result.loc[mask > 0.75, 'strand'] = 'SAME'
+        self.result.loc[mask < -0.75, 'strand'] = 'ANTI'
+
 
     def run(self) -> None:
         # calc results and store in table
-        # get json for further xrna properties
-        # make plots
-        # save outputs
         self.calculate()
-        self.result.to_csv(f'{self.output_dir}/{self.prefix}.tsv', sep='\t')
-    # save several otputs
-    # save images (png and pdf)
+        self.counts_to_values()
+        # save outputs
+        self.result.to_csv(f'{self.output_dir}/{self.prefix}_wins.tsv', sep='\t')
+        self.raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
+        # make plots
+        set_style_white()
+        rna_strand_barplot(self.result, self.output_dir, self.prefix)
