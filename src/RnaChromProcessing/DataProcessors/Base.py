@@ -21,7 +21,7 @@ class BaseProcessor:
         self.output_dir: str = cfg.get('output_dir', None)
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
         self.rna_ids: List[str] = cfg.get('rna_ids', [])
-        self.keep: List[str] = cfg.get('keep', [])
+        self.keep: List[str] = cfg.get('keep', ['bam', 'contacts'])
         if 'contacts' not in self.keep:
             msg = f'contacts dir not found in "keep" array, resulting contacts files will not be saved!\n{self.keep=}'
             logger.warning(msg)

@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
 * contacts: build contacts data from provided raw FASTQ files
 * XRNA: attempt to infer X-RNAs from provided contacts and BAM files.''')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                        help='Log debug information adout each step.')
+                        help='Log debug information about each step.')
     return parser.parse_args()
 
 class Program:

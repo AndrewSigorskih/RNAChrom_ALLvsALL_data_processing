@@ -14,7 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('-c', '--config', required=True,
                         help='Configuration file.')
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                        help='Log debug information adout each step.')
+                        help='Log debug information about each step.')
     return parser.parse_args()
     
 
