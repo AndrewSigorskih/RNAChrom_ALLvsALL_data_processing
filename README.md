@@ -3,7 +3,7 @@
 Package for processing data of several "ALL-vs-ALL" RNA-Chromatin interactions capturing experiments, e.g. RADICL, GRID, iMARGI, CHAR, etc.
 
 ## Table of Contents
-1. [Overwiew](#overview)
+1. [Overview](#overview)
 2. [Installation](#installation)
     1. [Required software](#software1)
     2. [Setting up virtual environment](#venv)
@@ -67,7 +67,7 @@ The *rnachromprocessing* pipeline expects reads in paired files to be synchroniz
 
 Chromosome names in genome and gene annotation should be the same. We also recommend to remove mitochondrial and "Unplaced" sequences from genome fasta. This can be easily achieved using tools like [seqkit](https://bioinf.shenwei.me/seqkit/): for example, command `seqkit grep -vrp "^chrUn" file.fa > clean.fa` will  remove all unplaced chromosome fragments from genome file.
 
-Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from genome annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See more [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
+Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from genome annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
 
 ## rnachromprocessing
 
@@ -252,7 +252,7 @@ Supported arguments:
 -v, --verbose       Log debug information about each step to stdout.
 ```
 
-**Config examples and selections of large ribosome subunit proteins genes for human and mouse can be found in `configs/strand` directory.**
+**Examples of configs and genes lists for human and mouse datasets can be found in `configs/strand` directory.**
 
 <a name="strandconfig"></a>
 ### Config contents

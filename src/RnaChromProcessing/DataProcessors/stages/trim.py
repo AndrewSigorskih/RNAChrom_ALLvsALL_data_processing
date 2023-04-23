@@ -55,5 +55,5 @@ class Trim(BasicStage):
             f'{rna_out_file} {rna_out_file}.unpaired '
             f'SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}'
         )
-        return_code = run_command(command, shell=True, stdout=DEVNULL)
+        return_code = run_command(command, shell=True, stdout=DEVNULL, stderr=DEVNULL)
         return return_code
