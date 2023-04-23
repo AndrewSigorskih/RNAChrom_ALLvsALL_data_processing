@@ -39,7 +39,10 @@ def exit_with_error(message: str = '') -> None:
 def find_in_list(id: str, lst: List[str]):
     """A simple helper to find file from
     list of files regardless of extension"""
-    return next(x for x in lst if x.startswith(id))
+    try:
+        return next(x for x in lst if x.startswith(id))
+    except StopIteration:
+        return None
 
 
 def gzip_file(src: str, dst: str, remove_src=True) -> None:

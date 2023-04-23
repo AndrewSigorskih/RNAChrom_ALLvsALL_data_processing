@@ -1,0 +1,16 @@
+{
+    "input_dir": "results/contacts",
+    "output_dir": "output_strand",
+    "gtf_annotation": "/mnt/lustre/asigorskikh/rnachrom/test_processing/data/genes/gencode.vM32.annotation.gtf",
+    "genes_list": "/mnt/lustre/asigorskikh/rnachrom/RNAChrom_ALLvsALL_data_processing/configs/gencode_vM32_rpl_genes.txt",
+    "prefix": "mouse_strand",
+    "exp_groups": {
+        "radicl": [
+            "SRR9201799",
+            "SRR9201801",
+            "SRR9201803",
+            "SRR9201805",
+            "SRR9201807"
+        ]
+    }
+}

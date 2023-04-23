@@ -1,29 +1,56 @@
+import json
 import logging
 import os
+from typing import Dict, List
 
 import pandas as pd
 
-from ..utils import exit_with_error
+from ..utils import check_file_exists, exit_with_error, find_in_list, make_directory
 
+CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp_groups')
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
 logger = logging.getLogger()
 
 class StrandCalc:
     def __init__(self,
-                 input_dir: str,
-                 gtf_annotation: str,
-                 genes: str,
-                 output_dir: str,
-                 prefix: str) -> None:
-        self.input_dir = input_dir  # not needed?
-        self.output_dir = output_dir
-        self.prefix = prefix
-        self.files = [
-            os.path.join(input_dir, file) for file in os.listdir(input_dir)
-            if file.endswith('.tab')  # subject to change based on mapping provided
-        ]
-        self._load_genes(genes, gtf_annotation)
+                 config_file: str) -> None:
+        
+        with open(config_file, 'r') as f:
+            config: dict = json.load(f)
+
+        # check config contents
+        missing = []
+        for field in CONFIG_FIELDS:
+            if field not in config.keys():
+                missing.append(field)
+        if missing:
+            exit_with_error(f'Required fields not found in config: {", ".join(missing)}')
+        
+        # check files exist and load annotation data
+        check_file_exists(config['genes_list'])
+        check_file_exists(config['gtf_annotation'])
+        self._load_genes(config['genes_list'], config['gtf_annotation'])
+
+        # set variables
+        self.prefix: str = config.get('prefix', 'strand')
+        self.input_dir: str = config['input_dir']
+        self.output_dir: str = config['output_dir']
+        make_directory(self.output_dir)
+
+        # check for files
+        self.files_map: Dict[str, str] = {}
+        exp_groups: Dict[str, List[str]] = config['exp_groups']
+        files_list = os.listdir(self.input_dir)
+        for group, id_list in exp_groups.items():
+            for file_id in id_list:
+                filename = find_in_list(file_id, files_list)
+                if not filename:
+                    logger.warning(f'{file_id} not found in input directory, skipping..')
+                    continue
+                self.files_map[f'{group}_{file_id}'] = filename
+        if not self.files_map:
+            exit_with_error('Could not find any if the listed files in input directory!')
     
     def _load_genes(self,
                     genes: str,
@@ -44,14 +71,14 @@ class StrandCalc:
         gene_annot['idx'] = gene_annot['attrs'].apply(lambda x: x.split('gene_name')[1].split(';')[0].split('"')[1])
         gene_annot = gene_annot.set_index('idx')
         self.gene_annot: pd.DataFrame = gene_annot
-        print(gene_annot.head())
 
     def calculate(self) -> None:
-        result = pd.DataFrame(data=None, columns=self.gene_annot.index, index=self.files)
-        for inp_file in self.files:
-            logger.debug(f'Started processing {inp_file}')
-            data = pd.read_csv(inp_file, sep='\t', usecols=CONTACTS_COLS)
-            print(data.head())
+        result = pd.DataFrame(data=None,
+                              columns=self.gene_annot.index,
+                              index=self.files_map.keys())
+        for name, file in self.files_map.items():
+            logger.debug(f'Started processing {file}')
+            data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
                 mask = ((data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                         (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
@@ -59,12 +86,10 @@ class StrandCalc:
                 )
                 same = sum(mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand']))
                 anti = sum(mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand']))
-                result.at[inp_file, gene] = (same, anti)
+                result.at[name, gene] = (same, anti)
         self.result: pd.DataFrame = result
 
-
     def run(self) -> None:
-        # https://stackoverflow.com/questions/17322109/get-dataframe-row-count-based-on-conditions
         # calc results and store in table
         # get json for further xrna properties
         # make plots
