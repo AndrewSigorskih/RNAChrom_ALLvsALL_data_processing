@@ -60,14 +60,14 @@ class StatsCalc:
                 f'{cat} {infile} | sed -n  "1~4p" | sed "s/@//g"  | '
                 f'cut -d " " -f 1 | cut -d "." -f 2 > {outfile}'
             )
-            run_command(cmd, log_cmd=False, shell=True)
+            run_command(cmd, shell=True)
 
         #count_cmd =(
         #    "awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' "
         #    f"{dna_tmp_file} {rna_tmp_file}"
         #)
         count_cmd = f"awk 'a[$0]++' {dna_tmp_file} {rna_tmp_file} | wc -l"
-        result = run_get_stdout(count_cmd, log_cmd=False, shell=True)
+        result = run_get_stdout(count_cmd, shell=True)
         return int(result)
     
     def count_in_bam_pair(self,
@@ -139,7 +139,7 @@ class StatsCalc:
         rna_files = (find_in_list(id, filenames) for id in self.rna_ids)
         rna_input_files = [os.path.join(folder, filename)
                            for filename in rna_files]
-        func = lambda file, *_: int(run_get_stdout(f'wc -l < {file}', log_cmd=False, shell=True)) - 1
+        func = lambda file, *_: int(run_get_stdout(f'wc -l < {file}', shell=True)) - 1
         self.run_function(func, folder, 
                           rna_input_files, repeat('', len(rna_input_files)))
 

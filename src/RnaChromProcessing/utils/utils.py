@@ -10,7 +10,7 @@ from typing import Any, List, Union
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
 logger = logging.getLogger()
-
+VERBOSE = 5
 
 def check_file_exists(path: str) -> None:
     if not (os.path.exists(path) and (os.path.getsize(path) > 0)):
@@ -18,8 +18,9 @@ def check_file_exists(path: str) -> None:
         exit_with_error(message)
 
 
-def configure_logger(logger: logging.Logger, debug: bool = False) -> None:
-    level: int = logging.DEBUG if debug else logging.INFO
+def configure_logger(logger: logging.Logger, verbose: int = 0) -> None:
+    level: int = logging.INFO if not verbose else logging.DEBUG if verbose == 1 else VERBOSE
+    logging.addLevelName(5, "VERBOSE")
     handler = logging.StreamHandler()
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter(fmt=LOGGING_FORMAT,
@@ -77,27 +78,23 @@ def move_exist_ok(src_dir: str, dest_dir: str):
 
 
 def run_command(cmd: Union[List[str], str],
-                log_cmd: bool = True,
                 **subprocess_args: Any) -> int:
-    if log_cmd:
-        print_cmd(cmd)
+    log_cmd(cmd)
     return_code: int = subprocess.run(cmd, **subprocess_args).returncode
     return return_code
 
 
 def run_get_stdout(cmd: Union[List[str], str],
-                   log_cmd: bool = True,
                    **subprocess_args: Any) -> str:
-    if log_cmd:
-        print_cmd(cmd)
+    log_cmd(cmd)
     result = subprocess.run(cmd, capture_output=True,
                             text=True, **subprocess_args)
     return result.stdout
 
 
-def print_cmd(cmd: Union[List[str], str]) -> None:
+def log_cmd(cmd: Union[List[str], str]) -> None:
     if isinstance(cmd, list):
         cmd_str = " ".join(cmd)
     else:
         cmd_str = cmd
-    logger.debug(f'Running command: {cmd_str}')
+    logger.log(VERBOSE, f'Running command: {cmd_str}')

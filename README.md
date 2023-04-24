@@ -95,7 +95,9 @@ Supported arguments:
 -h, --help          show help message and exit
 -c CONFIG, --config CONFIG
                     Configuration file in json format (required).
--v, --verbose       Log debug information about each step to stdout.
+-v, --verbose       Verbosity level. By default little to none information is printed.
+                    Use -v once to increase information logs about each step, and -vv to 
+                    print every command that is being run.
 ```
 
 All inputs and parameters are passed using the </i>config</i> argument -- a path to existing file in a <b>.json</b> format.
@@ -250,7 +252,9 @@ Supported arguments:
 -h, --help          show help message and exit
 -c CONFIG, --config CONFIG
                     Configuration file in json format (required).
--v, --verbose       Log debug information about each step to stdout.
+-v, --verbose       Verbosity level. By default little to none information is printed.
+                    Use -v once to increase information logs about each step, and -vv to 
+                    print every command that is being run.
 ```
 
 **Examples of configs and genes lists for human and mouse datasets can be found in `configs/strand` directory.**

@@ -19,8 +19,10 @@ def parse_args() -> argparse.Namespace:
                         help='''Action to be performed during run:
 * contacts: build contacts data from provided raw FASTQ files
 * XRNA: attempt to infer X-RNAs from provided contacts and BAM files.''')
-    parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                        help='Log debug information about each step.')
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='''Verbosity level. By default little to none information is printed.
+                        Use -v once to increase information logs about each step, and -vv to 
+                        print every command that is being run.''')
     return parser.parse_args()
 
 class Program:
@@ -31,8 +33,6 @@ class Program:
         with open(args.config, 'r') as f:
             self.config: dict = json.load(f)
         configure_logger(logger, args.verbose)
-        #if args.verbose:
-            #print(f'Started with arguments: {vars(args)}')
         logger.debug(f'Started with arguments: {vars(args)}')
 
     def run(self) -> None:
