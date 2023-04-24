@@ -137,8 +137,8 @@ class StatsCalc:
         self.result[folder] = {}
         filenames: List[str] = [x for x in os.listdir(folder)]
         rna_files = (find_in_list(id, filenames) for id in self.rna_ids)
-        rna_input_files = (os.path.join(folder, filename)
-                           for filename in rna_files)
+        rna_input_files = [os.path.join(folder, filename)
+                           for filename in rna_files]
         func = lambda file, *_: int(run_get_stdout(f'wc -l < {file}', log_cmd=False, shell=True)) - 1
         self.run_function(func, folder, 
                           rna_input_files, repeat('', len(rna_input_files)))
@@ -150,8 +150,8 @@ class StatsCalc:
         for folder in ('rsites', 'dedup', 'trim'):
             self.count_in_fastqs(folder)
         # count BAM statistics
-        self.count_in_bams('hisat', 'mapped')
-        self.count_in_bams('hisat', 'mapped2mism')
+        #self.count_in_bams('hisat', 'mapped')
+        #self.count_in_bams('hisat', 'mapped2mism')
         # count in contacts
         self.count_contacts('contacts')
         # save result

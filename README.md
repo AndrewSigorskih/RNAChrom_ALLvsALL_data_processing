@@ -127,7 +127,7 @@ Most of the steps require several options, that are grouped into corresponding s
         * "skip" : do not perform this step.
     * "rsite_bgn": beginning of restriction site that will be used in "grid"-like processing. Default "AG".
     * "rsite_end": Missing end of restriction site that will be used in "grid"-like processing. Default "CT".
-    * "tool_path" : Optional. Will be only considered if "custom" type of action is chosen for previous option. Path to user's script that will manage all operations on restriction sites for read pairs. Script should be executable and take exactly 4 positional arguments: `dna-input-file`, `rna-input-file`, `dna-output-file`, `rna-output-file`.
+    * "tool_path" : Optional. Will be only considered if "custom" type of action is chosen for "type" option. Path to user's script that will manage all operations on restriction sites for read pairs. Script should be executable and take exactly 4 positional arguments: `dna-input-file`, `rna-input-file`, `dna-output-file`, `rna-output-file`.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used.
 
 * "dedup" : sub-config for deduplication step. Supported values:
@@ -142,6 +142,7 @@ Most of the steps require several options, that are grouped into corresponding s
         * "trimmomatic"
         * "skip" : do not perform trimming step.
     * "params" : Optional. Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
+    * "tool_path" : Optional. Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in "type" option.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used.
 
 * "hisat" : sub-config for alignment step. Supported options:

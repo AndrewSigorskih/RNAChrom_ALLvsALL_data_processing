@@ -29,6 +29,16 @@ class BasicStage:
         shutil.copy(rna_in_file, rna_out_file)
         return 0
     
+    def _symlink_files(self,
+                    dna_in_file: str,
+                    rna_in_file: str,
+                    dna_out_file: str,
+                    rna_out_file: str) -> int:
+        """create symlinks instead of copying"""
+        os.symlink(dna_in_file, dna_out_file)
+        os.symlink(rna_in_file, rna_out_file)
+        return 0
+    
     def run_function(self,
                      func: Callable[[str, str, str, str], int],
                      dna_ids: List[str],

@@ -41,7 +41,6 @@ class Contacts(BasicStage):
         dna['id'] = dna['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
         rna['id'] = rna['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
         rna = pd.merge(rna, dna, on='id', how='inner')
-        del dna
         rna = rna.drop(['rna_score', 'dna_score'], axis=1)
         rna.to_csv(output, sep='\t', index=False, header=True)
         return 0
