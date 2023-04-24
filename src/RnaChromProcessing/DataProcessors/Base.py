@@ -72,8 +72,9 @@ class BaseProcessor:
         based on default config and user input"""
         rsites_default_cfg.update(cfg.get('rsites', {}))
         self.rsitefilter: Rsites = Rsites(rsites_default_cfg,
+                                          ('rsites' in self.keep),
                                           self.input_dir, self.rsite_dir,
-                                          self.cpus, to_keep=('rsites' in self.keep))
+                                          self.cpus)
         dedup_default_cfg.update(cfg.get('dedup', {}))
         self.dupremover: Dedup = Dedup(dedup_default_cfg,
                                        self.rsite_dir, self.dedup_dir,
