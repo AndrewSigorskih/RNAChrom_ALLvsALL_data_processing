@@ -21,6 +21,8 @@ class BaseProcessor:
         self.output_dir: str = cfg.get('output_dir', None)
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
         self.rna_ids: List[str] = cfg.get('rna_ids', [])
+        self.stats = cfg.get('stats', 'default')
+        self.stats_prefix = cfg.get('stats_prefix', 'stats')
         self.keep: List[str] = cfg.get('keep', ['bam', 'contacts'])
         if 'contacts' not in self.keep:
             msg = f'contacts dir not found in "keep" array, resulting contacts files will not be saved!\n{self.keep=}'
@@ -49,6 +51,8 @@ class BaseProcessor:
         # other important inputs
         if (not self.rna_ids) or (not self.dna_ids):
             exit_with_error('Input file ids not specified!')
+        if len(self.rna_ids) != len(self.dna_ids):
+            exit_with_error('DNA and RNA ids arrays have different length!')
         if not self.keep:
             exit_with_error('Empty keep list!')
     
@@ -111,6 +115,7 @@ class BaseProcessor:
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
+        logger.info(f'Started processing of {len(self.rna_ids)} pairs of files.')
         os.chdir(self.work_dir.name)
         self.rsitefilter.run(self.dna_ids, self.rna_ids)
         self.dupremover.run(self.dna_ids, self.rna_ids)
@@ -126,8 +131,9 @@ class BaseProcessor:
         gc.collect()
         x2 = input('gc collected smth\n')
         # calculate stats
-        StatsCalc(self.output_dir, self.cpus,
-                  self.dna_ids, self.rna_ids).run()
+        StatsCalc(self.output_dir, self.cpus, self.stats,
+                  self.stats_prefix, self.dna_ids, self.rna_ids).run()
         # copy outputs
         os.chdir(self.base_dir)
         self.save_outputs()
+        logger.info("Done.")

@@ -12,6 +12,7 @@ CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
 logger = logging.getLogger()
+logging.getLogger('matplotlib.font_manager').disabled = True # disable matplotlib spam
 
 class StrandCalc:
     def __init__(self,

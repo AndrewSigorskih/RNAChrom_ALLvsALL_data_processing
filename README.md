@@ -110,13 +110,15 @@ Config should contain several required fields and may contain several additional
 ### Config contents
 
 "Global" options:
-* "rna_ids" : non-empty array of strings. Must contain names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799.fastq.gz</i> id is SRR9201799.
+* "rna_ids" : non-empty array of strings. Must contain names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
 * "dna_ids" : non-empty array of strings.  Must contain names of files with DNA parts of reads, synchronized with rna_ids array.
 * "base_dir" : string. Optional. Directory to run analysis in (one or several temporal directories will be created in this directory). Path should exist if provided. If not provided, current working directory will be taken.
 * "input_dir" : string. Required. Path to directory with input DNA and RNA files.
 * "output_dir" : string. Required. Path to directory to store results in. Will be created if doesnt exist.
 * "keep" : non-empty array of strings. Should contain names of steps that will have their results saved into "output_dir".
     Supported values (can be listed in any order): ["rsites", "dedup", "trim", "hisat", "bam", "bed", "contacts"]. By default only "bam" and "contacts" steps are saved.
+* "stats": either "skip", "default" or "full". Optional. If "skip" value is chosen no passing reads statistic will be collected. Default behaviour is calculating number of **pairs** of reads that passed rsite, dedup and trim steps as well as resulting number of contacts. "full" mode will also calculate number of pairs of reads that were mapped  to reference genome regardless of any filtration and number of mapped reads that had 2 or less mismatches, hovewer running this mode will take a lot of extra time.
+* "stats_prefix" : string. Optional, default value "stats". Prefix name for table with passing reads statistic.
 * "cpus" : int > 0. Number of tasks to run simultaneously on each step. Default is 1.
 
 Most of the steps require several options, that are grouped into corresponding sub-configs:
@@ -153,6 +155,9 @@ Most of the steps require several options, that are grouped into corresponding s
     * "tool_path" : Optional. Path to hisat2 main executable if not available via PATH.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used.
     * "hisat_threads" : int > 0. How many threads hisat will use **for every** simultaneously-run task. (Value to pass to hisat's `-p` option). Default 1.
+
+* "contacts" : sub-config for contacts tables building step. Supported options:
+    * "cpus" : int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used. Building contacts tables may require a lot of RAM (~10G per table with 20 million contacts) so we advice against running big number of simultaneous tasks for this step.
 
 <a name="minimalconfig"></a>
 ### Minimal config example
@@ -223,10 +228,13 @@ Most of the steps require several options, that are grouped into corresponding s
 <a name="processingoutputs"></a>
 ### Outputs
 
-Tables in tsv format. Columns:
-* 'id': read pair unique ID.
-* 'rna_chr', 'rna_bgn', 'rna_end', 'rna_strand', 'rna_cigar': RNA read information from corresponfing bed file.
-* 'dna_chr', 'dna_bgn', 'dna_end', 'dna_strand', 'dna_cigar': DNA read information from corresponfing bed file.
+* **output_dir**/contacts/*.tab:
+    Tables in tsv format named after RNA files. Columns:
+    * 'id': read pair unique ID.
+    * 'rna_chr', 'rna_bgn', 'rna_end', 'rna_strand', 'rna_cigar': RNA read information from corresponfing bed file.
+    * 'dna_chr', 'dna_bgn', 'dna_end', 'dna_strand', 'dna_cigar': DNA read information from corresponfing bed file.
+
+* **output_dir/stats_prefix**.tsv: Table with passing reads statistic.
 
 
 ## detect-strand

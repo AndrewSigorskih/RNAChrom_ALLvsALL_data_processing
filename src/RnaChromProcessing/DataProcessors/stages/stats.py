@@ -10,19 +10,28 @@ from .basicstage import suff_to_filter
 from ...utils import find_in_list, run_command, run_get_stdout
 
 logger = logging.getLogger()
+how_variants = ('skip', 'default', 'full')
 
 class StatsCalc:
     def __init__(self, 
                  output_dir: str,
                  cpus: int,
+                 how: str,
+                 prefix: str,
                  dna_ids: List[str],
                  rna_ids: List[str]):
         self.output_dir: str = output_dir
         self.cpus: int = cpus
         self.dna_ids = dna_ids
         self.rna_ids = rna_ids
+        self.prefix = prefix
         self.result = {}
         os.makedirs('stats', exist_ok=True)
+        if how not in how_variants:
+            logger.warning(f'Unknown option for read statistics calcultaion: {how}. Switching to default.')
+            self.how = 'default'
+        else:
+            self.how = how
 
     def run_function(self,
                      func: Callable[[str, str, Optional[str]], int],
@@ -143,15 +152,19 @@ class StatsCalc:
         """Calculate number of surviving pairs
         after each step"""
         # count in fastq folders
+        if self.how == 'skip':
+            logger.debug('Skipping read statistics calculation step')
+            return
         for folder in ('rsites', 'dedup', 'trim'):
             self.count_in_fastqs(folder)
         # count BAM statistics
-        #self.count_in_bams('hisat', 'mapped')
-        #self.count_in_bams('hisat', 'mapped2mism')
+        if self.how == 'full':
+            self.count_in_bams('hisat', 'mapped')
+            self.count_in_bams('hisat', 'mapped2mism')
         # count in contacts
         self.count_contacts('contacts')
         # save result
-        output_name = os.path.join(self.output_dir, 'stats.tsv')
+        output_name = os.path.join(self.output_dir, f'{self.prefix}.tsv')
         result = pd.DataFrame.from_dict(self.result).sort_index()
         result.to_csv(output_name, sep='\t',
                       index=True, header=True)
