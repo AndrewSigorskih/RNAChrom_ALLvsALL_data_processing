@@ -3,11 +3,11 @@ import os
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
 
+from .default_configs import dedup_default_cfg, rsites_default_cfg, \
+                    trim_default_cfg, hisat_default_cfg, contacts_default_cfg
 from .stages import AlignedToBed, BamFilter, Contacts,\
                     Dedup, Hisat, Rsites, Trim, StatsCalc
 from ..utils import exit_with_error, make_directory, move_exist_ok
-from ..utils import dedup_default_cfg, rsites_default_cfg, \
-                    trim_default_cfg, hisat_default_cfg
 
 logger = logging.getLogger()
 SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
@@ -91,7 +91,9 @@ class BaseProcessor:
                                    self.cpus)
         self.bamtobed = AlignedToBed(self.bam_dir, self.bed_dir,
                                      self.cpus)
-        self.contactsmerger = Contacts(self.bed_dir, self.contacts_dir,
+        contacts_default_cfg.update(cfg.get('contacts', {}))
+        self.contactsmerger = Contacts(contacts_default_cfg,
+                                       self.bed_dir, self.contacts_dir,
                                        self.cpus)
         
     def save_outputs(self):

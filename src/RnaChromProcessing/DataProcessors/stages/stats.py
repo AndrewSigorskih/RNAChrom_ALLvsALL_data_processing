@@ -62,10 +62,6 @@ class StatsCalc:
             )
             run_command(cmd, shell=True)
 
-        #count_cmd =(
-        #    "awk 'FNR==NR{array[$0]; next} ($0 in array) { count++ } END { print count } ' "
-        #    f"{dna_tmp_file} {rna_tmp_file}"
-        #)
         count_cmd = f"awk 'a[$0]++' {dna_tmp_file} {rna_tmp_file} | wc -l"
         result = run_get_stdout(count_cmd, shell=True)
         return int(result)

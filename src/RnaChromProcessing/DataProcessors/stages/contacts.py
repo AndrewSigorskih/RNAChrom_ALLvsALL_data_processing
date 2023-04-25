@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -15,9 +15,12 @@ RNA_COLUMN_NAMES = [
 ]
 
 class Contacts(BasicStage):
-    def __init__(self, 
+    def __init__(self,
+                 cfg: Dict[str, Any],
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if (cpus := cfg.get('cpus', None)):
+            self.cpus: int = cpus
 
     def run(self,
             dna_ids: List[str],

@@ -48,7 +48,8 @@ class Rsites(BasicStage):
             rna_ids: List[str]):
         """Manage restriction sites filtration"""
         if self.type == 'skip':
-            func = self._copy_files if self.to_keep else self._symlink_files
+            #func = self._copy_files if self.to_keep else self._symlink_files
+            func = self._copy_files
         elif self.type == 'imargi':
             func = self._imargi_like
         elif self.type == 'grid':

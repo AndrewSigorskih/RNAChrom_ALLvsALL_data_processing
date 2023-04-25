@@ -27,3 +27,7 @@ hisat_default_cfg = {
     'known_splice': None,
     'hisat_threads': 1
 }
+
+contacts_default_cfg = {
+    'cpus': None
+}
