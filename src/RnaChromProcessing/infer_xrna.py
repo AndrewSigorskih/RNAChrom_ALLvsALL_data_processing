@@ -1,8 +1,7 @@
 import argparse
-import json
 import logging
 
-from .DataProcessors import BaseProcessor
+
 from .utils import check_file_exists, configure_logger
 
 logger = logging.getLogger()
@@ -19,22 +18,15 @@ def parse_args() -> argparse.Namespace:
                         Use -v once to increase information logs about each step, and -vv to 
                         print every command that is being run.''')
     return parser.parse_args()
-
-# TODO do something about stats being so slow
-# TODO add cpus argument for contacts building
-# TODO [In progress] calculate actual strand of contacts rna parts and store in useful format
-# TODO remove files that are not needed anymore (stats directory)
+    
 
 def main() -> None:
     args = parse_args()
     configure_logger(logger, args.verbose)
     logger.debug(f'Started with arguments: {vars(args)}')
-
     check_file_exists(args.config)
-    with open(args.config, 'r') as f:
-        config: dict = json.load(f)
 
-    BaseProcessor(config).run()
+    raise NotImplementedError('X-RNA inference not implemented yet!')
     
 
 if __name__ == '__main__':

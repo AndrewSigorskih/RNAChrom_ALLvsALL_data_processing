@@ -118,10 +118,11 @@ class BaseProcessor:
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
         # DEBUG 
-        x1 = input('memory check?')
+        x1 = input('memory check?\n')
         import gc
+        del self.contactsmerger
         gc.collect()
-        x2 = input('gc collected smth')
+        x2 = input('gc collected smth\n')
         # calculate stats
         StatsCalc(self.output_dir, self.cpus,
                   self.dna_ids, self.rna_ids).run()
