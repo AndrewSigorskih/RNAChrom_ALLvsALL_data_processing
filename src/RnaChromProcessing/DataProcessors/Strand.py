@@ -11,7 +11,9 @@ from ..plots import rna_strand_barplot, set_style_white
 CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp_groups')
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
+
 logger = logging.getLogger('strand')
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class StrandCalc:
     def __init__(self,
@@ -86,8 +88,8 @@ class StrandCalc:
                         (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
                         (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
                 )
-                same = sum(mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand']))
-                anti = sum(mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand']))
+                same: int = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
+                anti: int = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()
                 result.at[name, gene] = (same, anti)
         self.raw_result: pd.DataFrame = result
 
@@ -116,3 +118,4 @@ class StrandCalc:
         # make plots
         set_style_white()
         rna_strand_barplot(self.result, self.output_dir, self.prefix)
+        logger.info('Done.')
