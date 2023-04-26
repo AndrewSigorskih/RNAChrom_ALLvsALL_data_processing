@@ -20,12 +20,6 @@ def parse_args() -> argparse.Namespace:
                         print every command that is being run.''')
     return parser.parse_args()
 
-# TODO [DONE] do something about stats being so slow
-# TODO [DONE] add cpus argument for contacts building
-# TODO [DONE] calculate actual strand of contacts rna parts and store in useful format
-# TODO [DONE] remove files that are not needed anymore (stats directory)
-# TODO [FAILED] verify symlink creation works correctly
-# TODO test GRID data and remove biopython-based outdated rsite solution
 
 def main() -> None:
     args = parse_args()

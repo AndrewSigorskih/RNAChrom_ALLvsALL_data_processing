@@ -27,6 +27,8 @@ def main() -> None:
     check_file_exists(args.config)
 
     StrandCalc(args.config).run()
+
+# TODO plots ylim = -nGenes:+nGenes
     
 
 if __name__ == '__main__':

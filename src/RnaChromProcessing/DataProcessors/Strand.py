@@ -117,5 +117,6 @@ class StrandCalc:
         self.raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
         # make plots
         set_style_white()
-        rna_strand_barplot(self.result, self.output_dir, self.prefix)
+        rna_strand_barplot(self.result, self.gene_annot.shape[0],
+                           self.output_dir, self.prefix)
         logger.info('Done.')

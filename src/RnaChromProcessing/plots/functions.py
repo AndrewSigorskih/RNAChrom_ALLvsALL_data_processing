@@ -24,10 +24,13 @@ def set_style_white() -> None:
 
 
 def rna_strand_barplot(wins: pd.DataFrame,
+                       total_genes: int,
                        out_dir: str,
                        prefix: str) -> None:
+    # init figure
     fig, ax = plt.subplots()
     fig.set_size_inches(11.7, 8.27)
+    ax.set_ylim(-total_genes-2, total_genes+2)
     # variables
     labels = wins.index
     x = np.arange(len(labels))  # the label locations
@@ -52,7 +55,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
         negrects += ax.bar(i, -wins.iat[i, 1], width, color=colors[i], alpha=.5)
     # labels and legend
     ax.set_ylabel('Numbers of wins', fontsize=20)
-    ax.set_title(f'Numbers of wins and losses', fontsize=16)
+    ax.set_title(f'Numbers of wins and losses\nout of {total_genes} genes', fontsize=16)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=90)
     plt.legend(handles=patches, fontsize=14)
