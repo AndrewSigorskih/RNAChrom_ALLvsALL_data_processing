@@ -28,13 +28,11 @@ def format_fastq(name: str, seq: str, qual: str) -> str:
 class Rsites(BasicStage):
     def __init__(self, 
                  cfg: Dict[str, Any],
-                 to_keep: bool,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
         self.type: str = cfg.get('type', None)
-        self.to_keep = to_keep
         if self.type == 'custom':
             self.tool_path: str = cfg.get('tool_path', None)
             if not self.tool_path:
@@ -48,7 +46,6 @@ class Rsites(BasicStage):
             rna_ids: List[str]):
         """Manage restriction sites filtration"""
         if self.type == 'skip':
-            #func = self._copy_files if self.to_keep else self._symlink_files
             func = self._copy_files
         elif self.type == 'imargi':
             func = self._imargi_like

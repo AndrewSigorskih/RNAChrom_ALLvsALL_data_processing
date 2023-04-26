@@ -76,7 +76,6 @@ class BaseProcessor:
         based on default config and user input"""
         rsites_default_cfg.update(cfg.get('rsites', {}))
         self.rsitefilter: Rsites = Rsites(rsites_default_cfg,
-                                          ('rsites' in self.keep),
                                           self.input_dir, self.rsite_dir,
                                           self.cpus)
         dedup_default_cfg.update(cfg.get('dedup', {}))
@@ -124,12 +123,6 @@ class BaseProcessor:
         self.bamfilter.run(self.dna_ids, self.rna_ids)
         self.bamtobed.run(self.dna_ids, self.rna_ids)
         self.contactsmerger.run(self.dna_ids, self.rna_ids)
-        # DEBUG 
-        x1 = input('memory check?\n')
-        import gc
-        del self.contactsmerger
-        gc.collect()
-        x2 = input('gc collected smth\n')
         # calculate stats
         StatsCalc(self.output_dir, self.cpus, self.stats,
                   self.stats_prefix, self.dna_ids, self.rna_ids).run()
