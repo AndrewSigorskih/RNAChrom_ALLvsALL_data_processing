@@ -1,10 +1,10 @@
 {
-    "rna_ids": ["SRR8206679_1", "SRR9900122_1"],
-    "dna_ids": ["SRR8206679_2", "SRR9900122_2"],
+    "rna_ids": ["SRR12462453_1", "SRR8206679_1", "SRR9900122_1"],
+    "dna_ids": ["SRR12462453_2", "SRR8206679_2", "SRR9900122_2"],
     "base_dir" : ".",
     "input_dir": "/home/asigorskikh/rnachrom/data/imargi/raw",
     "output_dir": "results",
-    "cpus": 4,
+    "cpus": 3,
     "keep" : ["contacts", "bam", "rsites", "dedup"],
     "dedup": {
         "cpus": 2,
