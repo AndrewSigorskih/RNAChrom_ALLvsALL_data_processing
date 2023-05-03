@@ -1,6 +1,6 @@
 # RNAChrom_ALLvsALL_data_processing
 
-Package for processing data of several "ALL-vs-ALL" RNA-Chromatin interactions capturing experiments, e.g. RADICL, GRID, iMARGI, CHAR, etc.
+Package for processing data of several "ALL-vs-ALL" RNA-Chromatin interactions capturing experiments, e.g. [RADICL](https://pubmed.ncbi.nlm.nih.gov/32094342/), [GRID](https://pubmed.ncbi.nlm.nih.gov/31175345/), [iMARGI](https://pubmed.ncbi.nlm.nih.gov/30718424/), [CHAR](https://pubmed.ncbi.nlm.nih.gov/29648534/), etc.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -40,11 +40,11 @@ Basic dependencies:
 
 This package also requires several bioinformatic tools to run.
 
-* samtools ver 1.11 or higher (should be available via PATH variable)
-* bedtools (should be available via PATH variable)
-* hisat2
-* any of the supported trimming tools (trimmomatic, ...)
-* any of the supported deduplication tools (fastuniq, ...)
+* [samtools](http://www.htslib.org/) ver 1.11 or higher (should be available via PATH variable)
+* [bedtools](https://bedtools.readthedocs.io/en/latest/) (should be available via PATH variable)
+* [hisat2](http://daehwankimlab.github.io/hisat2/)
+* any of the supported trimming tools ([trimmomatic](https://academic.oup.com/bioinformatics/article/30/15/2114/2390096), ...)
+* any of the supported deduplication tools ([fastuniq](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052249), ...)
 
 <a name="venv"></a>
 ### Setting up virtual environment (recommended)
@@ -62,12 +62,12 @@ pip install .
 ```
 
 <a name="genomeprep"></a>
-### Data preparation.
+### Data preparation
 The *rnachromprocessing* pipeline expects reads in paired files to be synchronized, i.e. for every index i read number i from rna.fastq file and read number i from dna.fastq file have same id. If you download data from SRA archive using fasterq-dump make sure to use `--split-3` flag.
 
-Chromosome names in genome and gene annotation should be the same. We also recommend to remove mitochondrial and "Unplaced" sequences from genome fasta. This can be easily achieved using tools like [seqkit](https://bioinf.shenwei.me/seqkit/): for example, command `seqkit grep -vrp "^chrUn" file.fa > clean.fa` will  remove all unplaced chromosome fragments from genome file.
+Chromosome names in genome and gene annotation should be the same. We also recommend to remove mitochondrial and "Unplaced/Unlocalized" sequences from genome fasta. This can be easily achieved using tools like [seqkit](https://bioinf.shenwei.me/seqkit/): for example, command `seqkit grep -vrp "^chrUn" file.fa > clean.fa` will remove all such chromosome fragments from genome file.
 
-Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from genome annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
+Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from gene annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
 
 ## rnachromprocessing
 
@@ -110,11 +110,11 @@ Config should contain several required fields and may contain several additional
 ### Config contents
 
 "Global" options:
-* "rna_ids" : non-empty array of strings. Must contain names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
-* "dna_ids" : non-empty array of strings.  Must contain names of files with DNA parts of reads, synchronized with rna_ids array.
+* "rna_ids" : non-empty array of strings. **Must** contain names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
+* "dna_ids" : non-empty array of strings.  **Must** contain names of files with DNA parts of reads, synchronized with rna_ids array.
 * "base_dir" : string. Optional. Directory to run analysis in (one or several temporal directories will be created in this directory). Path should exist if provided. If not provided, current working directory will be taken.
-* "input_dir" : string. Required. Path to directory with input DNA and RNA files.
-* "output_dir" : string. Required. Path to directory to store results in. Will be created if doesnt exist.
+* "input_dir" : string. **Required**. Path to directory with input DNA and RNA files.
+* "output_dir" : string. **Required**. Path to directory to store results in. Will be created if doesnt exist.
 * "keep" : non-empty array of strings. Should contain names of steps that will have their results saved into "output_dir".
     Supported values (can be listed in any order): ["rsites", "dedup", "trim", "hisat", "bam", "bed", "contacts"]. By default only "bam" and "contacts" steps are saved.
 * "stats": either "skip", "default" or "full". Optional. If "skip" value is chosen no passing reads statistic will be collected. Default behaviour is calculating number of **pairs** of reads that passed rsite, dedup and trim steps as well as resulting number of contacts. "full" mode will also calculate number of pairs of reads that were mapped  to reference genome regardless of any filtration and number of mapped reads that had 2 or less mismatches, hovewer running this mode will take a lot of extra time.
@@ -136,7 +136,7 @@ Most of the steps require several options, that are grouped into corresponding s
 
 * "dedup" : sub-config for deduplication step. Supported values:
     * "tool" : what deduplication tool to use. Default is "fastuniq". Supported options:
-        * "fastuniq" : use [fastuniq](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052249) tool.
+        * "fastuniq" : use fastuniq tool.
         * "skip" : do not perform deduplication step.
     * "tool_path" : Optional. Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
@@ -191,9 +191,8 @@ Most of the steps require several options, that are grouped into corresponding s
 
 ```
 {
-    "rna_ids": [],
-    "dna_ids": [],
-    "schema": "radicl",
+    "rna_ids": ["SRR12462453_1", "SRR8206679_1", "SRR8206680_1", "SRR9900121_1", "SRR9900122_1"],
+    "dna_ids": ["SRR12462453_2", "SRR8206679_2", "SRR8206680_2", "SRR9900121_2", "SRR9900122_2"],
     "base_dir" : ".",
     "input_dir": "./fastq",
     "output_dir": "results",
@@ -242,7 +241,7 @@ Most of the steps require several options, that are grouped into corresponding s
 This program takes contacts files from previous step as input and checks whether orientation of RNA parts of contacts was inverted or lost during sequencing.
 
 The following procedure is performed:
-* User provides gene annotation file in GTF format and file with a list of selected genes. This file can contain gene names or gene ids from 9th field of gene annotation file.
+* User provides gene annotation file in GTF format and file with a list of selected genes. This list can contain gene names or gene ids (from 9th field of gene annotation file).
 * For each contacts file, a subset of contacts RNA parts aligning with selected genes is selected.
 * For each gene, the correponding contacts pile is divided into two parts: the ones with their strand matching the gene strand and the ones from the opposite strand. Pairs of values for each file for each gene are stored in the `raw_counts.tsv` file.
 * For each file, genes "vote" for strand: numbers of "wins" for gene strand and opposite strand are obtained. Cases when both strands had exactly the same number of contacts or when no contacts at all are ommited.
@@ -274,7 +273,7 @@ Supported arguments:
 * "output_dir": path to directory to store outputs in. Will be created if not exist.
 * "gtf_annotation": path to gene annotation file in GTF format.
 * "genes_list": path to a file with selected genes names (or ids), one per line
-* "prefix": prefix name for all output files. Default  is "strand".
+* "prefix": **Optional.** prefix name for all output files. Default  is "strand".
 * "exp_groups": sub-config with lists of input file ids divided by groups (experiment types, for example). See config examples for more information.
 
 <a name="xrna"></a>
