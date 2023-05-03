@@ -76,12 +76,14 @@ The main routine performs several consecutive steps of data processing as follow
 1. Restriction sites handling. Filtering reads by starting bases and/or finishing the fragmented restriction site. Several "procedure presets" are available for this step based on previous papers, however users can also use their own scripts by passing those as innputs (see "Config contents" section for more information).
 2. Dedupication step. PCR duplicates are identified and removed.
 3. Trimming. Trimming of the input fastq files by quality. The default behaviour for this step is using Trimmomatic with parameters **SLIDINGWINDOW:5:26 MINLEN:15**.
-4. Mapping RNA and DNA reads to reference genome separately using the Hisat2 software.
+4. Mapping RNA and DNA reads to reference genome separately using the Hisat2 software:
+    * **--no-spliced-alignment -k 100 --no-softclip** parameters for DNA read parts,
+    * **--dta-cufflinks -k 100 --no-softclip --known-splicesite-infile** for RNA read parts.
 5. Filtering resulting bam files: only reads that were uniquely mapped with 2 or fewer mismatches will pass this stage.
 6. Converting filtered bam files to bed and joining them into a resulting contacts table.
 7. Overall statistics calculation: how many pairs of reads survived each step.
 
-Each step from 1 to 3 can be skipped. The pipeine interface provides opportunity to fine-tune the behaviour for almost each step, but for running defaults the user's input can be minimalistic.
+Each step from 1 to 3 can be skipped. The pipeine interface provides opportunity to fine-tune the behaviour for almost each step, hovewer in case of running with defaults the user's input can be minimalistic.
 
 <a name="processingusage"></a>
 ### Usage
