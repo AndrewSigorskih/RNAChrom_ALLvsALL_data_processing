@@ -1,3 +1,5 @@
+SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
+
 dedup_default_cfg = {
     'tool': 'fastuniq',
     'params': [],

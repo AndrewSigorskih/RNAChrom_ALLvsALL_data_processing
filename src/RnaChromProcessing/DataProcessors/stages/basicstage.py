@@ -5,10 +5,13 @@ import os
 
 from typing import Callable, List
 
-from ...utils import exit_with_error, find_in_list
+from ...utils import find_in_list
 
 suff_to_filter = ('.unpaired', '.novel_splice')
 logger = logging.getLogger()
+
+class StageFailedError(RuntimeError):
+    pass
 
 class BasicStage:
     def __init__(self,
@@ -57,7 +60,7 @@ class BasicStage:
                            for filename in dna_files]
         rna_output_files = [os.path.join(self.output_dir, filename)
                            for filename in rna_files]
-        # run func in parallel (async)
+        # run func in parallel (threads)
         logger.debug(f'Running function {func.__qualname__} with {self.cpus} threads.')
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
@@ -66,4 +69,5 @@ class BasicStage:
             results = [future.result() for future in concurrent.futures.as_completed(futures)]
         if require_zero_code and any([x != 0 for x in results]):
             msg = f'One or several calls of {func.__name__} returned non-zero process exit code!'
-            exit_with_error(msg)
+            #exit_with_error(msg)
+            raise StageFailedError(msg)
