@@ -78,7 +78,4 @@ def rna_strand_barplot(wins: pd.DataFrame,
     ax.axhline(color='grey')
     fig.tight_layout()
     plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
-    plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='pdf')
-    #plt.savefig("wins.png",  dpi=300, bbox_inches = "tight", facecolor='white', transparent=False)
-    #plt.show()
-
+    plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')

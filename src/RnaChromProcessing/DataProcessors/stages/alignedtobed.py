@@ -22,8 +22,8 @@ class AlignedToBed(BasicStage):
                         rna_out_file: str):
         """actual bam to bed conversion function"""
         # change file extensions from NAME.bam to NAME.bed
-        dna_out_file = dna_out_file.rsplit('.', 1)[0]+ '.bed'
-        rna_out_file = rna_out_file.rsplit('.', 1)[0]+ '.bed'
+        dna_out_file = dna_out_file.rsplit('.', 1)[0] + '.bed'
+        rna_out_file = rna_out_file.rsplit('.', 1)[0] + '.bed'
         exit_codes = []
         for infile, outfile in ((dna_in_file, dna_out_file),
                                 (rna_in_file, rna_out_file)):

@@ -1,7 +1,8 @@
 import argparse
+import json
 import logging
 
-
+from .XRNA import XRNAProcessor
 from .utils import check_file_exists, configure_logger
 
 logger = logging.getLogger()
@@ -24,9 +25,12 @@ def main() -> None:
     args = parse_args()
     configure_logger(logger, args.verbose)
     logger.debug(f'Started with arguments: {vars(args)}')
+    
     check_file_exists(args.config)
+    with open(args.config, 'r') as f:
+        config: dict = json.load(f)
 
-    raise NotImplementedError('X-RNA inference not implemented yet!')
+    XRNAProcessor(config).run()
     
 
 if __name__ == '__main__':

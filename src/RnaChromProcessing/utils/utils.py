@@ -20,7 +20,7 @@ def check_file_exists(path: str) -> None:
 
 def configure_logger(logger: logging.Logger, verbose: int = 0) -> None:
     level: int = logging.INFO if not verbose else logging.DEBUG if verbose == 1 else VERBOSE
-    logging.addLevelName(5, "VERBOSE")
+    logging.addLevelName(VERBOSE, "VERBOSE")
     handler = logging.StreamHandler()
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter(fmt=LOGGING_FORMAT,
