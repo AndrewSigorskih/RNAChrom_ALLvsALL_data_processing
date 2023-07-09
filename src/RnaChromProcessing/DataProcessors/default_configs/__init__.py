@@ -31,5 +31,7 @@ hisat_default_cfg = {
 }
 
 contacts_default_cfg = {
-    'cpus': None
+    'cpus': None,
+    'mode': 'fast',
+    'chunksize': 1_000_000
 }

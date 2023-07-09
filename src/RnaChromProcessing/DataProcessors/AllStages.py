@@ -97,17 +97,15 @@ class AllStagesProcessor(BaseProcessor):
         try:
             self.rsitefilter.run(self.dna_ids, self.rna_ids)
             self.dupremover.run(self.dna_ids, self.rna_ids)
-            if 'rsites' not in self.keep:
+            if (self.stats == 'skip') and ('rsites' not in self.keep):
                 rmtree(self.rsite_dir)
             self.trimmer.run(self.dna_ids, self.rna_ids)
-            if 'dedup' not in self.keep:
+            if (self.stats == 'skip') and ('dedup' not in self.keep):
                 rmtree(self.dedup_dir)
             self.aligner.run(self.dna_ids, self.rna_ids)
-            if 'trim' not in self.keep:
-                rmtree(self.trim_dir)
-            self.bamfilter.run(self.dna_ids, self.rna_ids)
-            if 'hisat' not in self.keep:
+            if (self.stats == 'skip') and ('trim' not in self.keep):
                 rmtree(self.hisat_dir)
+            self.bamfilter.run(self.dna_ids, self.rna_ids)
             self.bamtobed.run(self.dna_ids, self.rna_ids)
             self.contactsmerger.run(self.dna_ids, self.rna_ids)
         except Exception as e:

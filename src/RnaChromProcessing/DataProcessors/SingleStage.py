@@ -1,7 +1,7 @@
 import logging
 import os
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .Base import BaseProcessor
 from .default_configs import dedup_default_cfg, rsites_default_cfg,\

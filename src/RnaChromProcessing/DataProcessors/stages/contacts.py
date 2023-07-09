@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from .basicstage import BasicStage
+from ...utils import exit_with_error
 
 DNA_COLUMNS = {
     'dna_chr': str, 'dna_bgn': np.uint32, 'dna_end': np.uint32,
@@ -15,6 +16,8 @@ RNA_COLUMNS = {
     'id': str, 'rna_score': np.uint16, 'rna_strand': str, 'rna_cigar': str
 }
 
+MODES = ('fast', 'low-mem')
+
 class Contacts(BasicStage):
     def __init__(self,
                  cfg: Dict[str, Any],
@@ -22,13 +25,18 @@ class Contacts(BasicStage):
         super().__init__(*args, **kwargs)
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
+        if ((mode := cfg.get('mode')) in MODES):
+            self.mode: str = mode
+        else:
+            exit_with_error(f'Unknown operation mode for "contacts" stage: {mode=}')
+        if self.mode == 'low-mem':
+            self._chunksize: int = cfg.get('chunksize')
 
     def run(self,
             dna_ids: List[str],
             rna_ids: List[str]):
         """make contacts file from two bed files"""
-        #func = self._make_contacts
-        func = self._make_contacts_chunks
+        func = self._make_contacts if self.mode == 'fast' else self._make_contacts_chunks
         self.run_function(func, dna_ids, rna_ids)
     
     def _make_contacts(self,
@@ -65,7 +73,7 @@ class Contacts(BasicStage):
         result_chunks = []
         for chunk in pd.read_csv(rna_in_file, sep='\t', header=None,
                                  names=RNA_COLUMNS.keys(), dtype=RNA_COLUMNS,
-                                 chunksize=50_000):
+                                 chunksize=self._chunksize):
             chunk['id'] = chunk['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
             result_chunks.append(pd.merge(dna, chunk, on='id', how='inner'))
         result = pd.concat(result_chunks)
