@@ -1,8 +1,19 @@
 from typing import Any, Dict, List
 
+import numpy as np
 import pandas as pd
 
 from .basicstage import BasicStage
+
+DNA_COLUMNS = {
+    'dna_chr': str, 'dna_bgn': np.uint32, 'dna_end': np.uint32,
+    'id': str, 'dna_score': np.uint16, 'dna_strand': str, 'dna_cigar': str
+}
+
+RNA_COLUMNS = {
+    'rna_chr': str, 'rna_bgn': np.uint32, 'rna_end': np.uint32,
+    'id': str, 'rna_score': np.uint16, 'rna_strand': str, 'rna_cigar': str
+}
 
 DNA_COLUMN_NAMES = [
     'dna_chr', 'dna_bgn', 'dna_end', 'id',
@@ -38,9 +49,9 @@ class Contacts(BasicStage):
          # prepare names for putput and temporal files
         output = rna_out_file.rsplit('.', 1)[0]+ '.tab'
         dna = pd.read_csv(dna_in_file, sep='\t', header=None,
-                          names=DNA_COLUMN_NAMES)
+                          names=DNA_COLUMNS.keys(), dtype=DNA_COLUMNS)
         rna = pd.read_csv(rna_in_file, sep='\t', header=None,
-                          names=RNA_COLUMN_NAMES)
+                          names=RNA_COLUMNS.keys(), dtype=RNA_COLUMNS)
         dna['id'] = dna['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
         rna['id'] = rna['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
         rna = pd.merge(rna, dna, on='id', how='inner')

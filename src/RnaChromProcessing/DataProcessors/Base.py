@@ -16,12 +16,12 @@ class BaseProcessor(ABC):
         self.dna_ids: List[str] = cfg.get('dna_ids', [])
         self.rna_ids: List[str] = cfg.get('rna_ids', [])
         # spam errors
-        self.validate_inputs()
+        self._validate_inputs()
         # create working directory
         os.chdir(self.base_dir)
         self.work_dir = TemporaryDirectory(dir=self.base_dir)
 
-    def validate_inputs(self):
+    def _validate_inputs(self):
         """Basic input sanity check"""
         # input dir: check name
         if not self.input_dir:
