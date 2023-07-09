@@ -23,8 +23,12 @@ class AllStagesProcessor(BaseProcessor):
         if not self.keep or not isinstance(self.keep, list):
             exit_with_error(f'Incorrect input for a keep list: {self.keep}')
         if 'contacts' not in self.keep:
-            msg = f'contacts dir not found in "keep" array, resulting contacts files will not be saved!\n{self.keep=}'
+            msg = (
+                '"contacts" dir is not specified in "keep" array!\n'
+                'Appending it anyway so that resulting tables will not be lost.'
+            )
             logger.warning(msg)
+            self.keep.append('contacts')
         # setup workdir hierarchy
         self.setup_dirs()
         # get stages-specific configs: get default and update

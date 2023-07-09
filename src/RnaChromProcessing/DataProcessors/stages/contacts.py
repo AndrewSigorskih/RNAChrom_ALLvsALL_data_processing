@@ -15,16 +15,6 @@ RNA_COLUMNS = {
     'id': str, 'rna_score': np.uint16, 'rna_strand': str, 'rna_cigar': str
 }
 
-DNA_COLUMN_NAMES = [
-    'dna_chr', 'dna_bgn', 'dna_end', 'id',
-    'dna_score', 'dna_strand', 'dna_cigar'
-]
-
-RNA_COLUMN_NAMES = [
-    'rna_chr', 'rna_bgn', 'rna_end', 'id',
-    'rna_score', 'rna_strand', 'rna_cigar'
-]
-
 class Contacts(BasicStage):
     def __init__(self,
                  cfg: Dict[str, Any],
@@ -37,17 +27,18 @@ class Contacts(BasicStage):
             dna_ids: List[str],
             rna_ids: List[str]):
         """make contacts file from two bed files"""
-        func = self._make_contacts
+        #func = self._make_contacts
+        func = self._make_contacts_chunks
         self.run_function(func, dna_ids, rna_ids)
     
     def _make_contacts(self,
                       dna_in_file: str,
                       rna_in_file: str,
                       _: str,  # ignore dna out file
-                      rna_out_file: str):
+                      rna_out_file: str) -> int:
         """read 2 bed files, produce 1 combined contacts file"""
-         # prepare names for putput and temporal files
-        output = rna_out_file.rsplit('.', 1)[0]+ '.tab'
+         # prepare names for output and temporal files
+        output = rna_out_file.rsplit('.', 1)[0] + '.tab'
         dna = pd.read_csv(dna_in_file, sep='\t', header=None,
                           names=DNA_COLUMNS.keys(), dtype=DNA_COLUMNS)
         rna = pd.read_csv(rna_in_file, sep='\t', header=None,
@@ -57,4 +48,27 @@ class Contacts(BasicStage):
         rna = pd.merge(rna, dna, on='id', how='inner')
         rna = rna.drop(['rna_score', 'dna_score'], axis=1)
         rna.to_csv(output, sep='\t', index=False, header=True)
+        return 0
+    
+    def _make_contacts_chunks(self,
+                      dna_in_file: str,
+                      rna_in_file: str,
+                      _: str,  # ignore dna out file
+                      rna_out_file: str) -> int:
+        # https://stackoverflow.com/questions/58441517/merging-dataframe-chunks-in-pandas
+        """read 2 bed files in a memory-efficient way, produce 1 combined contacts file"""
+         # prepare names for output and temporal files
+        output = rna_out_file.rsplit('.', 1)[0] + '.tab'
+        dna = pd.read_csv(dna_in_file, sep='\t', header=None,
+                          names=DNA_COLUMNS.keys(), dtype=DNA_COLUMNS)
+        dna['id'] = dna['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
+        result_chunks = []
+        for chunk in pd.read_csv(rna_in_file, sep='\t', header=None,
+                                 names=RNA_COLUMNS.keys(), dtype=RNA_COLUMNS,
+                                 chunksize=50_000):
+            chunk['id'] = chunk['id'].apply(lambda x: x.split('.')[1] if '.' in x else x)
+            result_chunks.append(pd.merge(dna, chunk, on='id', how='inner'))
+        result = pd.concat(result_chunks)
+        result = result.drop(['rna_score', 'dna_score'], axis=1)
+        result.to_csv(output, sep='\t', index=False, header=True)
         return 0
