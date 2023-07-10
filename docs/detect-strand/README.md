@@ -1,6 +1,7 @@
+<a name="head"></a>
 # detect-strand
 
-This program takes contacts files from previous step as input and checks whether orientation of RNA parts of contacts was inverted or lost during sequencing.
+This program takes contacts files from produced py rnachromprocessing as input and checks whether orientation of RNA parts of contacts was inverted or lost during sequencing.
 
 ## Table of Contents
 1. [Usage](#strandusage)
@@ -41,3 +42,5 @@ Supported arguments:
 * "genes_list": path to a file with selected genes names (or ids), one per line
 * "prefix": **Optional.** prefix name for all output files. Default  is "strand".
 * "exp_groups": sub-config with lists of input file ids divided by groups (experiment types, for example). See config examples for more information.
+
+[Back to top](#head)
