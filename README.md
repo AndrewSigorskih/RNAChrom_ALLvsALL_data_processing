@@ -240,6 +240,8 @@ Most of the steps require several options, that are grouped into corresponding s
 
 ## detect-strand
 
+[LINK](docs/detect-strand/README.md)
+
 This program takes contacts files from previous step as input and checks whether orientation of RNA parts of contacts was inverted or lost during sequencing.
 
 The following procedure is performed:
