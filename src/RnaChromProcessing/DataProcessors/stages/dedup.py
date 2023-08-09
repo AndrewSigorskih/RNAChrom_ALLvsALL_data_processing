@@ -14,12 +14,12 @@ class Dedup(BasicStage):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tool: str = cfg.get('tool', None)
-        self.params: List[str] = cfg.get('params', [])
+        if not self.tool:
+            exit_with_error('Deduplication tool not specified!')
+        self.params: Dict[str, Any] = cfg.get('params', {})
         self.tool_path: str = cfg.get('tool_path', shutil.which(self.tool))
         if (cpus := cfg.get('cpus', None)):
             self.cpus: int = cpus
-        if not self.tool:
-            exit_with_error('Deduplication tool not specified!')
         if not self.tool_path:
             exit_with_error(f'Cannot deduce path to {self.tool} executable!')
 
@@ -32,16 +32,18 @@ class Dedup(BasicStage):
             func = self._copy_files
         elif self.tool == 'fastuniq':
             func = self._run_fastuniq
+        elif self.tool == 'fastq-dupaway':
+            func = self._run_fqdupaway
         else:  # unknown tool
             exit_with_error(f'Unknown deduplication tool: {self.tool}!')
         # run chosen function
         self.run_function(func, dna_ids, rna_ids)
 
     def _run_fastuniq(self,
-                    dna_in_file: str,
-                    rna_in_file: str,
-                    dna_out_file: str,
-                    rna_out_file: str):
+                      dna_in_file: str,
+                      rna_in_file: str,
+                      dna_out_file: str,
+                      rna_out_file: str) -> int:
         """run fastuniq"""
         if (dna_in_file.endswith('.gz')) or (rna_in_file.endswith('.gz')):
             exit_with_error('Fastuniq tool does not accept gzipped files!')
@@ -52,4 +54,17 @@ class Dedup(BasicStage):
                     f'-o {rna_out_file} -p {dna_out_file}')
         return_code = run_command(command, shell=True)
         os.remove(tmpfilename)
+        return return_code
+    
+    def _run_fqdupaway(self,
+                       dna_in_file: str,
+                       rna_in_file: str,
+                       dna_out_file: str,
+                       rna_out_file: str) -> int:
+        memlimit = str(self.params.get('memlimit', '2048'))
+        command = (
+            f'{self.tool_path} -i {rna_in_file} -u {dna_in_file} '
+            f'-o {rna_out_file} -p {dna_out_file} -m {memlimit}'
+        )
+        return_code = run_command(command, shell=True)
         return return_code

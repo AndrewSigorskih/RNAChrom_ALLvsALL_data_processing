@@ -38,7 +38,8 @@ This package also requires several bioinformatic tools to run.
 * [bedtools](https://bedtools.readthedocs.io/en/latest/) (should be available via PATH variable)
 * [hisat2](http://daehwankimlab.github.io/hisat2/)
 * any of the supported trimming tools ([trimmomatic](https://academic.oup.com/bioinformatics/article/30/15/2114/2390096), ...)
-* any of the supported deduplication tools ([fastuniq](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052249), ...)
+* any of the supported deduplication tools ([fastuniq](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052249), 
+                                            [fastq-dupaway](https://github.com/AndrewSigorskih/fastq-dupaway), ...)
 
 <a name="venv"></a>
 ### Setting up virtual environment (recommended)
@@ -62,6 +63,9 @@ The *rnachromprocessing* pipeline expects reads in paired files to be synchroniz
 Chromosome names in genome and gene annotation should be the same. We also recommend to remove mitochondrial and "Unplaced/Unlocalized" sequences from genome fasta. This can be easily achieved using tools like [seqkit](https://bioinf.shenwei.me/seqkit/): for example, command `seqkit grep -vrp "^chrUn" file.fa > clean.fa` will remove all such chromosome fragments from genome file.
 
 Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from gene annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
+
+<a name="tools"></a>
+## List of available tools
 
 ### [rnachromprocessing](docs/rnachromprocessing/README.md)
 

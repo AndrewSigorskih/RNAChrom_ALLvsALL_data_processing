@@ -77,8 +77,11 @@ Most of the steps require several options, that are grouped into corresponding s
 * "dedup" : sub-config for deduplication step. Supported values:
     * "tool" : what deduplication tool to use. Default is "fastuniq". Supported options:
         * "fastuniq" : use fastuniq tool.
+        * "fastq-dupaway": use our memory-efficient deduplication tool "fastq-dupaway".
         * "skip" : do not perform deduplication step.
     * "tool_path" : Optional. Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
+    * "params" : Optional. sub-config with parameters to be passed to deduplication tool(s). Supported fields:
+        * "memlimit": int in range [500, 10240]. Supported by fastq-dupaway tool. Memory limit in megabytes for every call of fastq-dupaway to use.
     * "cpus": int > 0. Optional. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
 
 * "trim" : sub-config for trimming step. Supported options:
@@ -100,7 +103,7 @@ Most of the steps require several options, that are grouped into corresponding s
     * "cpus" : int > 0. Optional. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used. Building contacts tables may require a lot of RAM (~10G per table with 20 million contacts) so we advice against running big number of simultaneous tasks for this step.
     * "mode": memory-efficienct toggling option. Default is "fast". Supported values:
         * "fast" : load all data in ram at once.
-        * "low-mem" : process data ina  slower fashion, but more RAM-friendly.
+        * "low-mem" : process data in a slower fashion, but more RAM-friendly.
 
 <a name="minimalconfig"></a>
 ### Minimal config example
