@@ -36,11 +36,13 @@ Supported arguments:
 <a name="strandconfig"></a>
 ### Config contents
 
-* "input_dir": path to input directory with contacts tables.
-* "output_dir": path to directory to store outputs in. Will be created if not exist.
-* "gtf_annotation": path to gene annotation file in GTF format.
-* "genes_list": path to a file with selected genes names (or ids), one per line
-* "prefix": **Optional.** prefix name for all output files. Default  is "strand".
-* "exp_groups": sub-config with lists of input file ids divided by groups (experiment types, for example). See config examples for more information.
+Field name|Required|Description
+---|---|---
+input_dir|Yes|path to input directory with contacts tables.
+output_dir|Yes|path to directory to store outputs in. Will be created if not exist.
+gtf_annotation|Yes|path to gene annotation file in GTF format.
+genes_list|Yes|path to a file with selected genes names (or ids), one per line.
+prefix|No|prefix name for all output files. Default  is "strand".
+exp_groups|Yes|sub-config with lists of input file ids divided by groups (experiment types, for example). See config examples for more information.
 
 [Back to top](#head)
