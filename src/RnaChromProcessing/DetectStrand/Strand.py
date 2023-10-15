@@ -51,7 +51,7 @@ class StrandCalc:
                 if not filename:
                     logger.warning(f'{file_id} not found in input directory, skipping..')
                     continue
-                self.files_map[f'{group}_{file_id}'] = filename
+                self.files_map[f'{group}${file_id}'] = filename
         if not self.files_map:
             exit_with_error('Could not find any if the listed files in input directory!')
         logger.info(f'{len(self.files_map)} files found in input directory')
@@ -84,9 +84,10 @@ class StrandCalc:
             logger.debug(f'Started processing {file}')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
-                mask = ((data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
-                        (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
-                        (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
+                mask = (
+                    (data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
+                    (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
+                    (data['rna_end'] >= self.gene_annot.at[gene, 'bgn'])
                 )
                 same: int = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
                 anti: int = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()

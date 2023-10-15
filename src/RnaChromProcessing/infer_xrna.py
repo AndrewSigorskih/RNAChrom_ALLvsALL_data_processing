@@ -30,7 +30,7 @@ def main() -> None:
     with open(args.config, 'r') as f:
         config: dict = json.load(f)
 
-    XRNAProcessor(config).run()
+    XRNAProcessor(**config).run()
     
 
 if __name__ == '__main__':

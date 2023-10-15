@@ -2,33 +2,62 @@ import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, field_validator, PositiveInt
+
+from .DataPreprocessing import HisatTool, PreprocessingPipeline
+from .PoolExecutor import PoolExecutor
+from .StringtiePipeline import StringtieTool
+from ..utils import exit_with_error
 
 logger = logging.getLogger()
 
-class XRNAProcessor:
-    def __init__(self,
-                 cfg: Dict[str, Any]):
-        # get basic parameters
-        self.cpus: int = cfg.get('cpus', 1)
-        self.base_dir: Path = Path(cfg.get('base_dir', os.getcwd())).resolve()
-        self.fq_input_dir: Optional[Path] =\
-            Path(cfg.get('input_dir')) if 'input_dir' in cfg else None
-        self.bam_input_dir: Optional[Path] =\
-            Path(cfg.get('bam_input_dir')) if 'bam_input_dir' in cfg else None
-        #???????
-         # spam errors
+
+class XRNAProcessor(BaseModel):
+    cpus: Optional[PositiveInt] = 1
+    base_dir: Path
+    input_dir: Path
+    output_dir: Path
+
+    annot_gtf: Path # take all annot files in one sub config?
+
+    rna_ids: List[str]
+    hisat: HisatTool
+    stringtie: StringtieTool
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # spam errors
         self._validate_inputs()
-        # create working directory
+        # working dir
         os.chdir(self.base_dir)
         self.work_dir = TemporaryDirectory(dir=self.base_dir)
+        # other members
+        work_pth = Path(self.work_dir.name)
+        executor = PoolExecutor(self.cpus)
+        self.preprocessing = PreprocessingPipeline(
+            work_pth, executor, self.hisat, self.rna_ids
+        )
 
+    @field_validator('base_dir', 'input_dir', 'output_dir')
+    @classmethod
+    def resolve_path(cls, pth: str) -> Path:
+        return Path(pth).resolve()
+    
     def _validate_inputs(self):
         """Basic input sanity check"""
-        pass
-    
+        if not self.base_dir.exists():
+            self.base_dir.mkdir(parents=True)
+        if not self.input_dir.exists():
+            exit_with_error('Input directory does not exist!')
+        if not self.output_dir.exists():
+            self.output_dir.mkdir(parents=True)   
+
     def run(self):
         pass
+
+
         # reference:
             # save in bed format
         # contacts:
