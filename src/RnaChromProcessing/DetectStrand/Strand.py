@@ -86,6 +86,8 @@ class StrandCalc:
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
                 print(self.gene_annot.at[gene, 'bgn'], type(self.gene_annot.at[gene, 'bgn']))
+                print(type(data['rna_chr']))
+                print(data['rna_chr'][:10])
                 mask = (
                     (data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                     (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
