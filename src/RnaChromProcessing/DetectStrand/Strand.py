@@ -76,10 +76,12 @@ class StrandCalc:
         result = pd.DataFrame(data=None,
                               columns=self.gene_annot.index,
                               index=pd.MultiIndex.from_tuples(self.files_map.keys()))
+        print(result)
         for index, file in self.files_map.items():
             logger.debug(f'Started processing {file}')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
+                print(self.gene_annot.at[gene, 'bgn'])
                 mask = (
                     (data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                     (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
