@@ -10,6 +10,9 @@ from ..plots import rna_strand_barplot, set_style_white
 CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp_groups')
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 GTF_NAMES = ('chr', 'type', 'bgn', 'end', 'strand', 'attrs')
+GTF_TYPES = {
+   'chr': str, 'type': str, 'bgn': int, 'end': int, 'strand': str, 'attrs': str
+}
 
 logger = logging.getLogger('strand')
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -60,7 +63,7 @@ class StrandCalc:
             genes_list: str = '|'.join([f'"{line.strip()}";' for line in f])
         gene_annot = pd.read_csv(
             gtf_annotation, sep='\t', header=None, skiprows=5,
-            usecols=[0,2,3,4,6,8], names=GTF_NAMES
+            usecols=[0,2,3,4,6,8], names=GTF_TYPES.keys(), dtype=GTF_TYPES
         )
         gene_annot = gene_annot[gene_annot['type'] == 'gene']
         gene_annot = gene_annot[gene_annot['attrs'].str.contains(genes_list)]
@@ -76,12 +79,13 @@ class StrandCalc:
         result = pd.DataFrame(data=None,
                               columns=self.gene_annot.index,
                               index=pd.MultiIndex.from_tuples(self.files_map.keys()))
+        print(self.gene_annot)
         print(result)
         for index, file in self.files_map.items():
             logger.debug(f'Started processing {file}')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
-                print(self.gene_annot.at[gene, 'bgn'])
+                print(self.gene_annot.at[gene, 'bgn'], type(self.gene_annot.at[gene, 'bgn']))
                 mask = (
                     (data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                     (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
