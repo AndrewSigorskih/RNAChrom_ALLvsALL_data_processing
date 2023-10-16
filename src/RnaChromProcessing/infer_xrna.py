@@ -1,9 +1,8 @@
 import argparse
-import json
 import logging
 
 from .XRNA import XRNAProcessor
-from .utils import check_file_exists, configure_logger
+from .utils import configure_logger, load_config
 
 logger = logging.getLogger()
 
@@ -26,10 +25,7 @@ def main() -> None:
     configure_logger(logger, args.verbose)
     logger.debug(f'Started with arguments: {vars(args)}')
     
-    check_file_exists(args.config)
-    with open(args.config, 'r') as f:
-        config: dict = json.load(f)
-
+    config = load_config(args.config)
     XRNAProcessor(**config).run()
     
 

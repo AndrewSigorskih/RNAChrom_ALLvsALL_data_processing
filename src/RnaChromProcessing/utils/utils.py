@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-from typing import Any, List, Union
+from typing import Any, Dict, List, Union
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
@@ -52,6 +52,20 @@ def gzip_file(src: str, dst: str, remove_src=True) -> None:
         shutil.copyfileobj(infile, outfile)
     if remove_src:
         os.remove(src)
+
+def load_config(path: str) -> Dict:
+    """loads config file in json or yaml format"""
+    check_file_exists(path)
+    with open(path, 'r') as f:
+        if path.endswith('.json'):
+            import json
+            config = json.load(f)
+        elif path.endswith('.yml') or path.endswith('.yaml'):
+            import yaml
+            config = yaml.safe_load(f)
+        else:
+            raise ValueError(f'Unknown config file extension: {path}. Only json and yml/yaml formats are supported!')
+    return config
 
 
 def make_directory(path: str, exist_ok: bool = True) -> None:

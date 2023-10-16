@@ -1,7 +1,6 @@
-import json
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pandas as pd
 
@@ -17,15 +16,12 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 class StrandCalc:
     def __init__(self,
-                 config_file: str) -> None:
+                 config: Dict) -> None:
         
-        with open(config_file, 'r') as f:
-            config: dict = json.load(f)
-
         # check config contents
         missing = []
         for field in CONFIG_FIELDS:
-            if field not in config.keys():
+            if field not in config:
                 missing.append(field)
         if missing:
             exit_with_error(f'Required fields not found in config: {", ".join(missing)}')
@@ -42,7 +38,7 @@ class StrandCalc:
         make_directory(self.output_dir)
 
         # check for files
-        self.files_map: Dict[str, str] = {}
+        self.files_map: Dict[Tuple[str, str], str] = {}
         exp_groups: Dict[str, List[str]] = config['exp_groups']
         files_list = os.listdir(self.input_dir)
         for group, id_list in exp_groups.items():
@@ -51,7 +47,7 @@ class StrandCalc:
                 if not filename:
                     logger.warning(f'{file_id} not found in input directory, skipping..')
                     continue
-                self.files_map[f'{group}${file_id}'] = filename
+                self.files_map[(group, file_id)] = filename
         if not self.files_map:
             exit_with_error('Could not find any if the listed files in input directory!')
         logger.info(f'{len(self.files_map)} files found in input directory')
@@ -79,8 +75,8 @@ class StrandCalc:
     def calculate(self) -> None:
         result = pd.DataFrame(data=None,
                               columns=self.gene_annot.index,
-                              index=self.files_map.keys())
-        for name, file in self.files_map.items():
+                              index=pd.MultiIndex.from_tuples(self.files_map.keys()))
+        for index, file in self.files_map.items():
             logger.debug(f'Started processing {file}')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
             for gene in result.columns:
@@ -91,7 +87,7 @@ class StrandCalc:
                 )
                 same: int = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
                 anti: int = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()
-                result.at[name, gene] = (same, anti)
+                result.at[index, gene] = (same, anti)
         self.raw_result: pd.DataFrame = result
 
     def counts_to_values(self) -> None:
