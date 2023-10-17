@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 from ..utils import check_file_exists, exit_with_error, find_in_list, make_directory
+from ..utils.run_utils import VERBOSE
 from ..plots import rna_strand_barplot, set_style_white
 
 CONFIG_FIELDS = ('input_dir', 'output_dir', 'gtf_annotation', 'genes_list', 'exp_groups')
@@ -76,14 +77,11 @@ class StrandCalc:
         result = pd.DataFrame(data=None,
                               columns=self.gene_annot.index,
                               index=pd.MultiIndex.from_tuples(self.files_map.keys()))
-        print(self.gene_annot)
-        print(result)
         for index, file in self.files_map.items():
-            logger.debug(f'Started processing {file}')
+            logger.debug(f'Started processing {file}..')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)
+            logger.debug(f'{data.shape[0]} reads found.')
             for gene in result.columns:
-                print(self.gene_annot.at[gene, 'bgn'], type(self.gene_annot.at[gene, 'bgn']))
-                print(data['rna_end'][:10])
                 mask = (
                     (data['rna_chr'] == self.gene_annot.at[gene, 'chr']) &
                     (data['rna_bgn'] <= self.gene_annot.at[gene, 'end']) &
@@ -91,6 +89,7 @@ class StrandCalc:
                 )
                 same: int = (mask & (data['rna_strand'] == self.gene_annot.at[gene, 'strand'])).sum()
                 anti: int = (mask & (data['rna_strand'] != self.gene_annot.at[gene, 'strand'])).sum()
+                logger.log(VERBOSE, f'Gene {gene}: {same} reads on same strand, {anti} on antisence.')
                 result.at[index, gene] = (same, anti)
         self.raw_result: pd.DataFrame = result
 

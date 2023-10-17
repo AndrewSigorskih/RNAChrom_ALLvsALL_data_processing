@@ -70,7 +70,7 @@ class SingleStageProcessor(BaseProcessor):
         
     def run(self):
         """Run selected stage and save result"""
-        logger.info(f'Started processing of {len(self.rna_ids)} pairs of files.')
+        logger.info(f'Started processing {len(self.rna_ids)} pairs of files.')
         os.chdir(self.work_dir.name)
         self.stage_runner.run(self.dna_ids, self.rna_ids)
         os.chdir(self.base_dir)

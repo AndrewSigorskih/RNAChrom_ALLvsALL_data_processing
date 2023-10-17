@@ -7,17 +7,21 @@ import seaborn as sns
 def set_style_white() -> None:
     sns.set_style('white')
     sns.set_palette('husl')
-    plt.rc('font',  
-           serif = 'Ubuntu',
-           monospace = 'Ubuntu Mono',
-           size = 10)
-    plt.rc('axes', 
-           labelsize = 16,
-           labelweight = 'bold',
-           labelpad = 10,
-           titlesize = 22,
-           titlepad = 10,
-           titleweight = 'bold')
+    plt.rc(
+        'font',  
+        serif = 'Ubuntu',
+        monospace = 'Ubuntu Mono',
+        size = 10
+    )
+    plt.rc(
+        'axes', 
+        labelsize = 16,
+        labelweight = 'bold',
+        labelpad = 10,
+        titlesize = 22,
+        titlepad = 10,
+        titleweight = 'bold'
+    )
     plt.rcParams['xtick.labelsize'] = 14
     plt.rcParams['ytick.labelsize'] = 14
     plt.rcParams['legend.fontsize'] = 14
@@ -32,10 +36,11 @@ def rna_strand_barplot(wins: pd.DataFrame,
     fig.set_size_inches(11.7, 8.27)
     ax.set_ylim(-total_genes-2, total_genes+2)
     # variables
-    labels = wins.index
-    x = np.arange(len(labels))  # the label locations
+    index = wins.index
     width = 0.5  # the width of the bars
-    groups = pd.Series([x.split('_')[0] for x in labels])
+    groups = index.get_level_values(0)
+    labels = ["_".join(x) for x in index.to_flat_index()]
+    x = np.arange(len(labels))  # the label locations
     # groups coloring
     colors =[]
     patches=[]
@@ -45,8 +50,9 @@ def rna_strand_barplot(wins: pd.DataFrame,
         patches.append(
             mpatches.Patch(
                 color=palette[i], 
-                label=name)
+                label=name
             )
+        )
     # plot bars
     rects = []
     negrects = []

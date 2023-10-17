@@ -92,7 +92,7 @@ class AllStagesProcessor(BaseProcessor):
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
-        logger.info(f'Started processing of {len(self.rna_ids)} pairs of files.')
+        logger.info(f'Started processing {len(self.rna_ids)} pairs of files.')
         os.chdir(self.work_dir.name)
         try:
             self.rsitefilter.run(self.dna_ids, self.rna_ids)

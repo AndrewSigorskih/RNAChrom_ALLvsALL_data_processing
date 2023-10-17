@@ -2,10 +2,10 @@ import concurrent.futures
 import logging
 from typing import Any, Callable, List
 
+from ..utils.errors import StageFailedError
+
 logger = logging.getLogger()
 
-class StageFailedError(RuntimeError):
-    pass
 
 class PoolExecutor:
     def __init__(self,

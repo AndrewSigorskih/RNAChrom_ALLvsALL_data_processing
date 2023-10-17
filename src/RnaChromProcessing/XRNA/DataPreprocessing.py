@@ -1,17 +1,25 @@
+import logging
 import shutil
+from functools import partial
 from os import listdir
 from pathlib import Path
 from typing import List, Optional
 from typing_extensions import Annotated
 
-from pydantic import BaseModel, Field, FieldValidationInfo, field_validator
+import pandas as pd
+from pydantic import BaseModel, Field, field_validator
 
 from .PoolExecutor import PoolExecutor
-from ..utils import exit_with_error, find_in_list, run_command
+from ..utils import (
+    exit_with_error, find_in_list, run_command, validate_tool_path
+)
 
 PREPROCESS_STAGES = (
     'filter_contacts', 'filter_fastq', 'revc_fastq', 'align', 'sorted_bams'
 )
+
+logger = logging.getLogger()
+
 
 class HisatTool(BaseModel):
     genome_path: Path
@@ -21,11 +29,9 @@ class HisatTool(BaseModel):
 
     @field_validator('tool_path')
     @classmethod
-    def handle_tool_path(cls, val: Optional[str], info: FieldValidationInfo) -> Path:
-        val = val or shutil.which('hisat2')
-        if not val:
-            exit_with_error('Cannot deduce path to hisat2 executable!')
-        return Path(val)
+    def validate_hisat2_path(cls, val: Optional[Path]) -> Path:
+        val_fn = partial(validate_tool_path, tool_name='hisat2')
+        return val_fn(val)
 
     def run(self,
             in_file: Path,
@@ -51,23 +57,51 @@ class PreprocessingPipeline:
         self.file_ids = file_ids
         for subdir_name in PREPROCESS_STAGES:
             subdir = work_pth / subdir_name
-            subdir.mkdir()
             setattr(self, subdir_name, subdir)
-    
-    def _revc_fastq(self,
+            subdir.mkdir()
+
+    def _rev_compl(self,
                     in_file: Path,
                     out_file: Path) -> int:
         pass
 
-    def run_revc_fastq(self):
-        pass
+    def run_revc_fastq(self,
+                       strand_info_pth: Path) -> None:
+        strand_info = pd.read_table(strand_info_pth, sep='\t',
+                                    index_col=[0,1])
+        if ((unknown_num := (strand_info.strand=='UNKNOWN').sum()) > 0):
+            logger.info(f'Discarding {unknown_num} files with unknown true strand..')
+        same_strand = strand_info[strand_info.strand == 'SAME'].index.get_level_values(1)
+        anti_strand = strand_info[strand_info.strand == 'ANTI'].index.get_level_values(1)
+
+        same_strand = same_strand[same_strand.isin(self.file_ids)]
+        anti_strand = anti_strand[anti_strand.isin(self.file_ids)]
+
+        fnames = listdir(self.filter_fastq)
+        files_to_move = [find_in_list(name, fnames) for name in same_strand]
+        files_to_revc = [find_in_list(name, fnames) for name in anti_strand]
+
+        logger.debug(f'{len(files_to_move)} files with correct strand.')
+        self.executor.run_function(
+            shutil.move,
+            [self.filter_fastq / name for name in files_to_move],
+            [self.revc_fastq / name for name in files_to_move],
+            require_zero_code=False
+        )
+
+        logger.debug(f'{len(files_to_revc)} files with incorrect strand, applying reverse-complement..')
+        self.executor.run_function(
+            self._rev_compl,
+            [self.filter_fastq / name for name in files_to_revc],
+            [self.revc_fastq / name for name in files_to_revc]
+        )
 
     def run_hisat(self) -> None:
         fnames = listdir(self.revc_fastq)
-        inputs = (
-            self.revc_fastq / find_in_list(name, fnames) 
+        inputs = [
+            self.revc_fastq / find_in_list(name, fnames)
             for name in self.file_ids
-        )
+        ]
         outputs = [self.align / f'{name}.bam' for name in self.file_ids]
         self.executor.run_function(
             self.hisat_tool.run,
