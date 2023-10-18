@@ -77,9 +77,10 @@ class AllStagesProcessor(BaseProcessor):
                                        self.bed_dir, self.contacts_dir,
                                        self.cpus)
         
-    def save_outputs(self):
+    def save_outputs(self, save_all: bool = False):
         """copy everything needed to out dir"""
-        for to_copy in self.keep:
+        save_list = SUBDIR_LIST if save_all else self.keep
+        for to_copy in save_list:
             if to_copy not in SUBDIR_LIST:
                 logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
                 continue

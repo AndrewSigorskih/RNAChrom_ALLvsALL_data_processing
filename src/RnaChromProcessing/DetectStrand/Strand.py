@@ -74,9 +74,14 @@ class StrandCalc:
         self.gene_annot: pd.DataFrame = gene_annot
 
     def calculate(self) -> None:
-        result = pd.DataFrame(data=None,
-                              columns=self.gene_annot.index,
-                              index=pd.MultiIndex.from_tuples(self.files_map.keys()))
+        result = pd.DataFrame(
+            data=None,
+            columns=self.gene_annot.index,
+            index=pd.MultiIndex.from_tuples(
+                self.files_map.keys(),
+                names=['group', 'id']
+            )
+        )
         for index, file in self.files_map.items():
             logger.debug(f'Started processing {file}..')
             data = pd.read_csv(f'{self.input_dir}/{file}', sep='\t', usecols=CONTACTS_COLS)

@@ -69,7 +69,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
     ax.axes.get_yaxis().set_ticks([])
     
     # exact numbers over rects
-    def autolabel(rects,neg=1):
+    def autolabel(rects, neg=1):
         """Attach a text label above each bar in *rects*, displaying its height."""
         for rect in rects:
             height = round(rect.get_height(),2)
@@ -79,7 +79,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
                     textcoords='offset points',
                     ha='center', va='bottom')
     autolabel(rects)
-    autolabel(negrects,-3)
+    autolabel(negrects, -3)
     # save
     ax.axhline(color='grey')
     fig.tight_layout()

@@ -2,10 +2,11 @@ import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from pydantic import BaseModel, field_validator, PositiveInt
 
+from .AnnotInfo import AnnotInfo
 from .DataPreprocessing import HisatTool, PreprocessingPipeline
 from .PoolExecutor import PoolExecutor
 from .StringtiePipeline import StringtieTool
@@ -15,14 +16,15 @@ logger = logging.getLogger()
 
 
 class XRNAProcessor(BaseModel):
-    cpus: Optional[PositiveInt] = 1
     base_dir: Path
-    input_dir: Path
+    bed_input_dir: Path
+    fq_input_dir: Path
     output_dir: Path
+    cpus: Optional[PositiveInt] = 1
 
-    annot_gtf: Path # take all annot files in one sub config?
+    rna_ids: Set[str]
+    annotation: AnnotInfo
 
-    rna_ids: List[str]
     hisat: HisatTool
     stringtie: StringtieTool
 
@@ -36,8 +38,9 @@ class XRNAProcessor(BaseModel):
         # other members
         work_pth = Path(self.work_dir.name)
         executor = PoolExecutor(self.cpus)
+        self.annotation.prepare_annotation(work_pth)
         self.preprocessing = PreprocessingPipeline(
-            work_pth, executor, self.hisat, self.rna_ids
+            work_pth, executor, self.hisat
         )
 
     @field_validator('base_dir', 'input_dir', 'output_dir')
@@ -55,27 +58,13 @@ class XRNAProcessor(BaseModel):
             self.output_dir.mkdir(parents=True)   
 
     def run(self):
-        pass
+        prepared_bams = self.preprocessing.run(
+            self.rna_ids, self.bed_input_dir, self.fq_input_dir, self.annotation
+        )
 
 
-        # reference:
-            # save in bed format
-        # contacts:
-            # filter against reference (bedtools?)
-            # save lists of good ids
-        # fq inputs:
-            # revcompl
-            # filter by id lists
-            # align using hisat
-            # filter bams
-        # bam inputs
-            # filter by lists of good ids
+        
         # all bams:
-            # merge technical replics
-            # sort bams
             # split strand and xs tag?????
             # assemble stringtie
             # stringtie merge
-
-
-    # https://pyfastx.readthedocs.io/en/latest/usage.html#reverse-and-complement-sequence

@@ -1,24 +1,92 @@
 import logging
 import shutil
+from collections import defaultdict
 from functools import partial
 from os import listdir
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple, Set
 from typing_extensions import Annotated
 
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
+from .AnnotInfo import AnnotInfo, SampleInfo
 from .PoolExecutor import PoolExecutor
 from ..utils import (
-    exit_with_error, find_in_list, run_command, validate_tool_path
+    find_in_list, run_command, validate_tool_path
 )
+logger = logging.getLogger()
 
 PREPROCESS_STAGES = (
-    'filter_contacts', 'filter_fastq', 'revc_fastq', 'align', 'sorted_bams'
+    'filter_bed', 'filter_fastq', 'revc_fastq', 'align', 'merge_bams', 'sort_bams'
 )
 
-logger = logging.getLogger()
+
+def _update_samples_files(file_dir: Path,
+                          field_name: str,
+                          samples: List[SampleInfo]) -> None:
+    files = listdir(file_dir)
+    for sample in samples:
+        file_path = find_in_list(sample.sample_id, files)
+        if not file_path:
+            logging.warning(f'Could not find file {sample.sample_id} in {file_dir}!')
+            continue
+        sample.update_field(field_name, file_path)
+
+
+def _filter_bed(annot_bed: Path,
+                sample: SampleInfo) -> int:
+    # require same or opposite strandness
+    strand_flag = '-s' if sample.true_strand else '-S'
+    counts_file = sample.lst_file.with_suffix('.counts')
+    coverage_cmd = (
+        f'bedtools coverage -a {sample.bed_file} -b {annot_bed} '
+        f'{strand_flag} -counts > {counts_file}'
+    )
+    return_code = run_command(coverage_cmd, shell=True)
+    if return_code != 0:
+        return return_code # will be managed by PoolExecutor
+    result = pd.read_csv(counts_file, sep='\t', header=None, usecols=[3, 6])
+    result = result[result[6]== 0][3]
+    #result = '@' + result.apply(str) # for grep!
+    result.to_csv(sample.lst_file, header=False, index=False)
+    counts_file.unlink()
+
+# https://github.com/lh3/seqtk
+def _filter_fq_by_ids(inputs: Tuple[Path, Path],
+                      out_file: Path) -> int:
+    in_fq, in_lst = inputs
+    cmd = f'seqtk subseq {in_fq} {in_lst} > {out_file}'
+    return_code = run_command(cmd, shell=True)
+    return return_code
+
+
+def _revc_fastq(sample: SampleInfo,
+                out_file: Path) -> int:
+    if sample.true_strand:
+        shutil.move(sample.fq_file, out_file)
+        return_code = 0
+    else:
+        cmd = f'seqtk seq -r {sample.fq_file} > {out_file}'
+        return_code = run_command(cmd, shell=True)
+    sample.update_field('fq_file', out_file)
+    return return_code
+
+def _merge_bams(in_files: Iterable[Path],
+                out_file: Path):
+    cmd = (
+        f'samtools merge {out_file} '
+        f'{"".join(file for file in in_files)}'
+    )
+    return_code = run_command(cmd)
+    return return_code
+
+
+def _sort_bams(in_file: Path,
+               out_file: Path) -> int:
+    cmd = ['samtools', 'sort', str(in_file), '-o', str(out_file)]
+    return_code = run_command(cmd)
+    return return_code
 
 
 class HisatTool(BaseModel):
@@ -50,79 +118,112 @@ class PreprocessingPipeline:
     def __init__(self,
                  work_pth: Path,
                  executor: PoolExecutor,
-                 hisat: HisatTool,
-                 file_ids: List[str]):
+                 hisat: HisatTool):
         self.executor = executor
         self.hisat_tool = hisat
-        self.file_ids = file_ids
         for subdir_name in PREPROCESS_STAGES:
             subdir = work_pth / subdir_name
             setattr(self, subdir_name, subdir)
             subdir.mkdir()
 
-    def _rev_compl(self,
-                    in_file: Path,
-                    out_file: Path) -> int:
-        pass
+    def run_filter_bed(self,
+                       annot_bed: Path,
+                       samples_list: List[SampleInfo]) -> None:
+        for sample in samples_list:
+            sample.update_field(
+                'lst_file',
+                self.filter_bed / f'{sample.sample_id}.lst'
+            )
+        annot_inputs = [annot_bed for _ in range(samples_list)]
+        self.executor.run_function(
+            _filter_bed,
+            annot_inputs, samples_list
+        )
+
+    def run_filter_fastq(self,
+                         samples_list: List[SampleInfo]) -> None:
+        inputs = [
+            (sample.fq_file, sample.lst_file) for sample in samples_list
+        ]
+        outputs = [
+            self.filter_fastq / f'{sample.sample_id}.fastq' for sample in samples_list
+        ]
+        self.executor.run_function(
+            _filter_fq_by_ids,
+            inputs, outputs
+        )
+        for sample, output in zip(samples_list, outputs):
+            sample.update_field('fq_file', output)
 
     def run_revc_fastq(self,
-                       strand_info_pth: Path) -> None:
-        strand_info = pd.read_table(strand_info_pth, sep='\t',
-                                    index_col=[0,1])
-        if ((unknown_num := (strand_info.strand=='UNKNOWN').sum()) > 0):
-            logger.info(f'Discarding {unknown_num} files with unknown true strand..')
-        same_strand = strand_info[strand_info.strand == 'SAME'].index.get_level_values(1)
-        anti_strand = strand_info[strand_info.strand == 'ANTI'].index.get_level_values(1)
-
-        same_strand = same_strand[same_strand.isin(self.file_ids)]
-        anti_strand = anti_strand[anti_strand.isin(self.file_ids)]
-
-        fnames = listdir(self.filter_fastq)
-        files_to_move = [find_in_list(name, fnames) for name in same_strand]
-        files_to_revc = [find_in_list(name, fnames) for name in anti_strand]
-
-        logger.debug(f'{len(files_to_move)} files with correct strand.')
-        self.executor.run_function(
-            shutil.move,
-            [self.filter_fastq / name for name in files_to_move],
-            [self.revc_fastq / name for name in files_to_move],
-            require_zero_code=False
-        )
-
-        logger.debug(f'{len(files_to_revc)} files with incorrect strand, applying reverse-complement..')
-        self.executor.run_function(
-            self._rev_compl,
-            [self.filter_fastq / name for name in files_to_revc],
-            [self.revc_fastq / name for name in files_to_revc]
-        )
-
-    def run_hisat(self) -> None:
-        fnames = listdir(self.revc_fastq)
-        inputs = [
-            self.revc_fastq / find_in_list(name, fnames)
-            for name in self.file_ids
+                       samples_list: List[SampleInfo]) -> None:
+        outputs = [
+            self.revc_fastq / f'{sample.sample_id}.fastq' for sample in samples_list
         ]
-        outputs = [self.align / f'{name}.bam' for name in self.file_ids]
+        self.executor.run_function(
+            _revc_fastq,
+            samples_list, outputs
+        )
+
+    def run_hisat(self,
+                  samples_list: List[SampleInfo]) -> None:
+
+        outputs = [
+            self.align / f'{sample.sample_id}.bam' for sample in samples_list
+        ]
         self.executor.run_function(
             self.hisat_tool.run,
-            inputs, outputs
+            [sample.fq_file for sample in samples_list],
+            outputs
         )
+        for sample, output in zip(samples_list, outputs):
+            sample.update_field('bam_file', output)
 
-    def _sort_bams(self,
-                   in_file: Path,
-                   out_file: Path) -> int:
-        cmd = f'samtools sort {in_file} -o {out_file}'
-        return_code = run_command(cmd, shell=True)
-        return return_code
-    
-    def run_sort_bams(self) -> None:
-        fnames = listdir(self.align)
-        inputs = [self.align / name for name in fnames]
-        outputs = [self.sorted_bams / name for name in fnames]
+    def run_merge_bams(self,
+                       replics_dct: Dict[str, List[SampleInfo]]) -> None:
+        # maybe too overcomplicated, ensuring same order:
+        inputs, outputs = [], []
+        for group, samples in replics_dct.items():
+            outputs.append(self.merge_bams / f'{group}.bam')
+            inputs.append(sample.bam_file for sample in samples)
         self.executor.run_function(
-            self._sort_bams,
-            inputs, outputs
+            _merge_bams,
+            inputs, outputs,
         )
 
-    def run(self) -> None:
-        pass
+    def run_sort_bams(self,
+                      replics_dct: Dict[str, List[SampleInfo]]) -> None:
+        inputs = [self.merge_bams / f'{group}.bam' for group in replics_dct]
+        outputs = [self.sort_bams / f'{group}.bam' for group in replics_dct]
+        self.executor.run_function(
+            _sort_bams,
+            inputs, outputs
+        )
+        self.results = outputs
+
+    def run(self,
+            file_ids: Set[str],
+            bed_in_dir: Path,
+            fq_in_dir: Path,
+            annot_info: AnnotInfo) -> List[Path]:
+        # here we do not check for inconsistency between fq and bed files
+        # since both these dirs came from rnachromprocessing pipeline run
+        samples_list = [
+            x for x in annot_info.samples if x.sample_id in file_ids          
+        ]
+        _update_samples_files(bed_in_dir, 'bed_file', samples_list)
+        _update_samples_files(fq_in_dir, 'fq_file', samples_list)
+        samples_list = [item for item in samples_list if item.inputs_ok()]
+        logger.info(f'Started processing {len(samples_list)} files.')
+
+        self.run_filter_bed(annot_info.annot_bed, samples_list)
+        self.run_filter_fastq(samples_list)
+        self.run_revc_fastq(samples_list)
+        self.run_hisat(samples_list)
+        # time to merge biological replicas
+        replics_dct = defaultdict(list)
+        for sample in samples_list:
+            replics_dct[sample.sample_group].append(sample)
+        self.run_merge_bams(replics_dct)
+        self.run_sort_bams(replics_dct)
+        return self.results
