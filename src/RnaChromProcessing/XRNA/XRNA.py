@@ -45,7 +45,7 @@ class XRNAProcessor(BaseModel):
             work_pth, executor, self.hisat
         )
 
-    @field_validator('base_dir', 'input_dir', 'output_dir')
+    @field_validator('base_dir', 'fq_input_dir', 'bed_input_dir', 'output_dir')
     @classmethod
     def resolve_path(cls, pth: str) -> Path:
         return Path(pth).resolve()

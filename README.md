@@ -48,11 +48,15 @@ It is highly recommended to install package using in a virtual environment. This
 
 <a name="install1"></a>
 ### Clone and install package
-Clone repository from github and install:
+Clone repository from github and install. All non-python dependencies are listed in the <b>environment.yml</b> file. We highly recommend using [mamba](https://anaconda.org/conda-forge/mamba) for faster ensironment setup, however installation via vanilla conda is also possible:
 
-```
+```bash
 git clone https://github.com/AndrewSigorskih/RNAChrom_ALLvsALL_data_processing.git
 cd RNAChrom_ALLvsALL_data_processing
+# set up virtual environment
+mamba env create -f environment.yml
+conda activate rnachrom-test
+# install package with dependincies
 pip install .
 ```
 
