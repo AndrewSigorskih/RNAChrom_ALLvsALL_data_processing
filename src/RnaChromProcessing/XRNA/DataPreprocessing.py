@@ -46,6 +46,7 @@ def _filter_bed(annot_bed: Path,
     return_code = run_command(coverage_cmd, shell=True)
     if return_code != 0:
         return return_code # will be managed by PoolExecutor
+    # TODO process by chunks?
     result = pd.read_csv(counts_file, sep='\t', header=None, usecols=[3, 6])
     result = result[result[6]== 0][3]
     #result = '@' + result.apply(str) # for grep!

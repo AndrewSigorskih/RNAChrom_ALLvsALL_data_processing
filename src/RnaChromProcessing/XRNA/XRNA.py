@@ -1,8 +1,8 @@
 import logging
 import os
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any, Dict, List, Optional, Set
+from tempfile import TemporaryDirectory, mkdtemp
+from typing import Optional, Set
 
 from pydantic import BaseModel, field_validator, PositiveInt
 
@@ -16,10 +16,10 @@ logger = logging.getLogger()
 
 
 class XRNAProcessor(BaseModel):
-    base_dir: Path
     bed_input_dir: Path
     fq_input_dir: Path
     output_dir: Path
+    base_dir: Optional[Path] = Path('.').resolve()
     cpus: Optional[PositiveInt] = 1
 
     rna_ids: Set[str]
@@ -34,9 +34,11 @@ class XRNAProcessor(BaseModel):
         self._validate_inputs()
         # working dir
         os.chdir(self.base_dir)
-        self.work_dir = TemporaryDirectory(dir=self.base_dir)
+        #self.work_dir = TemporaryDirectory(dir=self.base_dir)
+        self.work_dir = mkdtemp(dir=self.base_dir)
         # other members
-        work_pth = Path(self.work_dir.name)
+        #work_pth = Path(self.work_dir.name)
+        work_pth = Path(self.work_dir)
         executor = PoolExecutor(self.cpus)
         self.annotation.prepare_annotation(work_pth)
         self.preprocessing = PreprocessingPipeline(
@@ -61,10 +63,16 @@ class XRNAProcessor(BaseModel):
         prepared_bams = self.preprocessing.run(
             self.rna_ids, self.bed_input_dir, self.fq_input_dir, self.annotation
         )
-
+        print(f'prepared BAM files: {prepared_bams}')
 
         
-        # all bams:
-            # split strand and xs tag?????
+        # stringtie pipeline:
+            # split strand and xs tag????? we try w/o it and also try enhanced hisat index
             # assemble stringtie
             # stringtie merge
+            # merge intervals (bedtools)
+            # name XRNAs
+            # do they overlap genes? filter out
+            # closest gene
+            # expression estimate
+            # plots _)

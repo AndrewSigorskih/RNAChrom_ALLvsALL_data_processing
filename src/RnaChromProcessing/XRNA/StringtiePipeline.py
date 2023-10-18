@@ -1,12 +1,13 @@
 import shutil
+from functools import partial
 from pathlib import Path
 from typing import Optional
 from typing_extensions import Annotated
 
-from .PoolExecutor import PoolExecutor
-from ..utils import exit_with_error, run_command
+from pydantic import BaseModel, Field, field_validator
 
-from pydantic import BaseModel, Field, FieldValidationInfo, field_validator
+from .PoolExecutor import PoolExecutor
+from ..utils import run_command, validate_tool_path
 
 
 class StringtieTool(BaseModel):
@@ -15,11 +16,9 @@ class StringtieTool(BaseModel):
     
     @field_validator('tool_path')
     @classmethod
-    def handle_tool_path(cls, val: Optional[str], info: FieldValidationInfo) -> Path:
-        val = val or shutil.which('stringtie')
-        if not val:
-            exit_with_error('Cannot deduce path to stringtie executable!')
-        return Path(val)
+    def validate_stringtie_path(cls, val: Optional[Path]) -> Path:
+        val_fn = partial(validate_tool_path, tool_name='stringtie')
+        return val_fn(val)
     
 
     def run_stringtie(self,
@@ -37,4 +36,9 @@ class StringtieTool(BaseModel):
         run_command(cmd, shell=True)
 
 class StringtiePipeline:
-    pass
+    def __init__(self,
+                 work_pth: Path,
+                 executor: PoolExecutor,
+                 stringtie: StringtieTool):
+        self.executor = executor
+        self.stringtie_tool = stringtie
