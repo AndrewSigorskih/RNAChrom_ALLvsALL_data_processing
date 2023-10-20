@@ -62,9 +62,10 @@ class Dedup(BasicStage):
                        dna_out_file: str,
                        rna_out_file: str) -> int:
         memlimit = str(self.params.get('memlimit', '2048'))
+        comparison = self.params.get('compare', 'tight')
         command = (
             f'{self.tool_path} -i {rna_in_file} -u {dna_in_file} '
-            f'-o {rna_out_file} -p {dna_out_file} -m {memlimit}'
+            f'-o {rna_out_file} -p {dna_out_file} -m {memlimit} --compare-seq {comparison}'
         )
         return_code = run_command(command, shell=True)
         return return_code

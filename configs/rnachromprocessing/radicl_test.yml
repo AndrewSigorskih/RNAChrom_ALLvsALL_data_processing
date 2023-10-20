@@ -1,0 +1,31 @@
+rna_ids:
+- SRR9201799
+- SRR9201801
+dna_ids:
+- SRR9201800
+- SRR9201802
+base_dir: .
+input_dir: /gpfs/asigorskikh/data/radicl/gz
+output_dir: results
+cpus: 8
+keep:
+- contacts
+- bed
+- trim
+dedup:
+    cpus: 2
+    tool: fastq-dupaway
+    params:
+        memlimit: 10240
+        compare: loose
+rsites:
+    type: skip
+trim:
+    tool: trimmomatic
+hisat:
+    genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
+    hisat_threads: 4
+contacts:
+    cpus: 2
+stats_prefix: radicl
