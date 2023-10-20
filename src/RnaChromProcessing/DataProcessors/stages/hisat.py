@@ -1,5 +1,5 @@
 import shutil
-
+from os import remove
 from typing import Any, Dict, List
 
 from .basicstage import BasicStage
@@ -57,4 +57,5 @@ class Hisat(BasicStage):
         )
         return_code_1 = run_command(dna_cmd, shell=True)
         return_code_2 = run_command(rna_cmd, shell=True)
+        remove(f'{rna_out_file}.novel_splice')
         return (return_code_1 or return_code_2)
