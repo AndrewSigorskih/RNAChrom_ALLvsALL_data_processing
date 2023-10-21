@@ -1,19 +1,25 @@
 rna_ids:
 - SRR9201799
 - SRR9201801
+- SRR9201803
+- SRR9201805
+- SRR9201807
 dna_ids:
 - SRR9201800
 - SRR9201802
+- SRR9201804
+- SRR9201806
+- SRR9201808
 base_dir: .
 input_dir: /gpfs/asigorskikh/data/radicl/gz
 output_dir: results
-cpus: 8
+cpus: 16
 keep:
 - contacts
 - bed
 - trim
 dedup:
-    cpus: 2
+    cpus: 4
     tool: fastq-dupaway
     params:
         memlimit: 10240
@@ -21,11 +27,13 @@ dedup:
 rsites:
     type: skip
 trim:
+    cpus: 5
     tool: trimmomatic
 hisat:
+    cpus: 2
     genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
     known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
-    hisat_threads: 4
+    hisat_threads: 8
 contacts:
     cpus: 2
 stats_prefix: radicl

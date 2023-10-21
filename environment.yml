@@ -70,6 +70,7 @@ dependencies:
   - samtools=1.18=h50ea8bc_1
   - seqtk=1.4=he4a0461_1
   - setuptools=68.2.2=pyhd8ed1ab_0
+  - stringtie=2.2.1=h6b7c446_4
   - tk=8.6.13=h2797004_0
   - trimmomatic=0.39=hdfd78af_2
   - tzdata=2023c=h71feb2d_0

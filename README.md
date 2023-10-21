@@ -53,10 +53,12 @@ Clone repository from github and install. All non-python dependencies are listed
 ```bash
 git clone https://github.com/AndrewSigorskih/RNAChrom_ALLvsALL_data_processing.git
 cd RNAChrom_ALLvsALL_data_processing
-# set up virtual environment
+# set up virtual environment with all bioinformatics tools
+# (provided you use conda as your package manager and have already 
+# installed mamba and/or conda-libmamba-solver in base environment)
 mamba env create -f environment.yml
 conda activate rnachrom-test
-# install package with dependincies
+# install package with all its python dependincies
 pip install .
 ```
 
