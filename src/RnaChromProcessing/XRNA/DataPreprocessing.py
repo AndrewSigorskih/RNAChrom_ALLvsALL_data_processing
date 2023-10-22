@@ -27,11 +27,11 @@ def _update_samples_files(file_dir: Path,
                           samples: List[SampleInfo]) -> None:
     files = listdir(file_dir)
     for sample in samples:
-        file_path = find_in_list(sample.sample_id, files)
-        if not file_path:
+        file_name = find_in_list(sample.sample_id, files)
+        if not file_name:
             logging.warning(f'Could not find file {sample.sample_id} in {file_dir}!')
             continue
-        sample.update_field(field_name, file_path)
+        sample.update_field(field_name, file_dir / file_name)
 
 
 def _filter_bed(annot_bed: Path,
