@@ -92,7 +92,7 @@ Field name|Required|Description
 tool|No|What deduplication tool to use. Default is "fastuniq". Supported options:<br>- "fastuniq" : use fastuniq tool.<br>- "fastq-dupaway": use our memory-efficient deduplication tool "fastq-dupaway".<br>- "skip" : do not perform deduplication step.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
 cpus|No| int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
-params|No|Sub-config with parameters to be passed to deduplication tool(s). Supported fields:<br>- "memlimit": int in range [500, 10240]. Supported by fastq-dupaway tool. Memory limit in megabytes for every call of fastq-dupaway to use.
+tool_params|No|Sub-config with parameters to be passed to deduplication tool(s). Supported fields:<br>- "memlimit": int in range [500, 10240]. Supported by fastq-dupaway tool. Memory limit in megabytes for every call of fastq-dupaway to use.
 
 #### trim stage subconfig:
 
@@ -103,7 +103,7 @@ Field name|Required|Description
 tool|No|What trimming tool to use. Default is "trimmomatic". Supported options:<br>- "trimmomatic"<br>- "skip" : do not perform trimming step.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
 cpus|No|int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
-params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
+tool_params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
 
 #### hisat stage subconfig:
 
@@ -165,7 +165,6 @@ mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<
     "dedup": {
         "tool": "fastuniq",
         "tool_path": "/path/to/fastuniq",
-        "params": [],
         "cpus": 2
     },
     "rsites": {
@@ -174,7 +173,7 @@ mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<
     "trim": {
         "tool" : "trimmomatic",
         "tool_path" : "path/to/trimmomatic/jar",
-        "params": {
+        "tool_params": {
             "window": 5,
             "qual_th": 26,
             "minlen": 15

@@ -41,7 +41,7 @@ class XRNAProcessor(BaseModel):
         work_pth = Path(self.work_dir)
         executor = PoolExecutor(self.cpus)
         self.annotation.prepare_annotation(work_pth)
-        self.preprocessing = PreprocessingPipeline(
+        self.preprocessing = PreprocessingPipeline( # this will drop error
             work_pth, executor, self.hisat
         )
 

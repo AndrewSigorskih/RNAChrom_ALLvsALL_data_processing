@@ -64,10 +64,14 @@ pip install .
 
 <a name="genomeprep"></a>
 ### Data preparation
+
+#### Paired-end reads order
 The *rnachromprocessing* pipeline expects reads in paired files to be synchronized, i.e. for every index i read number i from rna.fastq file and read number i from dna.fastq file have same id. If you download data from SRA archive using fasterq-dump make sure to use `--split-3` flag.
 
+#### Filtering genome fasta
 Chromosome names in genome and gene annotation should be the same. We also recommend to remove mitochondrial and "Unplaced/Unlocalized" sequences from genome fasta. This can be easily achieved using tools like [seqkit](https://bioinf.shenwei.me/seqkit/): for example, command `seqkit grep -vrp "^chrUn" file.fa > clean.fa` will remove all such chromosome fragments from genome file.
 
+#### Genome indexing
 Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from gene annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
 
 <a name="tools"></a>
