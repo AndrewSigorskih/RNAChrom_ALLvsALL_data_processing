@@ -55,8 +55,10 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         """Basic input sanity check"""
         if not self.base_dir.exists():
             self.base_dir.mkdir(parents=True)
-        if not self.input_dir.exists():
-            exit_with_error('Input directory does not exist!')
+        if not self.bed_input_dir.exists():
+            exit_with_error('Bed input directory does not exist!')
+        if not self.fq_input_dir.exists():
+            exit_with_error('Fastq input directory does not exist!')
         if not self.output_dir.exists():
             self.output_dir.mkdir(parents=True)   
 
