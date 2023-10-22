@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 from typing import Optional, Set
 
-from pydantic import BaseModel, field_validator, PositiveInt
+from pydantic import BaseModel, Extra, PositiveInt, field_validator
 
 from .AnnotInfo import AnnotInfo
 from .DataPreprocessing import HisatTool, PreprocessingPipeline
@@ -15,7 +15,7 @@ from ..utils import exit_with_error
 logger = logging.getLogger()
 
 
-class XRNAProcessor(BaseModel):
+class XRNAProcessor(BaseModel, extra=Extra.allow):
     bed_input_dir: Path
     fq_input_dir: Path
     output_dir: Path
@@ -41,9 +41,10 @@ class XRNAProcessor(BaseModel):
         work_pth = Path(self.work_dir)
         executor = PoolExecutor(self.cpus)
         self.annotation.prepare_annotation(work_pth)
-        self.preprocessing = PreprocessingPipeline( # this will drop error
+        self.preprocessing = PreprocessingPipeline(
             work_pth, executor, self.hisat
         )
+        #TODO set self.xrna_pipeline here
 
     @field_validator('base_dir', 'fq_input_dir', 'bed_input_dir', 'output_dir')
     @classmethod

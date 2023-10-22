@@ -31,12 +31,12 @@ class SampleInfo:
 
 
 class AnnotInfo(BaseModel):
-    annot_gtf: Path
+    gtf_annotation: Path
     strand_info: Path
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        check_file_exists(self.annot_gtf)
+        check_file_exists(self.gtf_annotation)
         check_file_exists(self.strand_info)
         self._read_strand_info()
 
@@ -67,7 +67,7 @@ class AnnotInfo(BaseModel):
         self._annot_bed: Path = work_pth / 'gene_annotation.bed'
         tmp_bed: Path = work_pth / 'tmp_annotation.bed'
         # gtf to bed conversion
-        genes = pd.read_csv('test.gtf', skiprows=5, sep='\t', 
+        genes = pd.read_csv(self.gtf_annotation, skiprows=5, sep='\t', 
                             header=None, usecols=[0,2,3,4,6,8])
         genes = genes[genes[2] == 'gene']
         genes[8] = genes[8].apply(lambda x: x.split(";")[0].split(" ")[-1].strip('""'))
