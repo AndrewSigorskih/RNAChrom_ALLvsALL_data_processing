@@ -19,8 +19,8 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
     bed_input_dir: Path
     fq_input_dir: Path
     output_dir: Path
-    base_dir: Optional[Path] = Path('.').resolve()
-    cpus: Optional[PositiveInt] = 1
+    base_dir: Path = Path('.').resolve()
+    cpus: PositiveInt = 1
 
     rna_ids: Set[str]
     annotation: AnnotInfo

@@ -4,6 +4,9 @@ gtf_annotation: /gpfs/asigorskikh/data/genes/gencode.vM32.annotation.gtf
 genes_list: /gpfs/asigorskikh/soft/RNAChrom_ALLvsALL_data_processing/configs/strand/gencode_vM32_rpl_genes.txt
 prefix: mouse_strand
 exp_groups:
+    grid:
+    - SRR5035944
+    - SRR5035946
     radicl_mES_1FA:
     - SRR9201799
     - SRR9201801
