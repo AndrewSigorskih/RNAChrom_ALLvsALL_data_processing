@@ -135,7 +135,7 @@ class PreprocessingPipeline:
                 'lst_file',
                 self.filter_bed / f'{sample.sample_id}.lst'
             )
-        annot_inputs = [annot_bed for _ in range(samples_list)]
+        annot_inputs = [annot_bed for _ in range(len(samples_list))]
         self.executor.run_function(
             _filter_bed,
             annot_inputs, samples_list
