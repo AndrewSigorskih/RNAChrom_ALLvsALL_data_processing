@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
-from pydantic import BaseModel, SkipValidation
+from pydantic import BaseModel
 
 from ..utils import check_file_exists, exit_with_error, run_command
 
@@ -33,7 +33,7 @@ class SampleInfo:
 class AnnotInfo(BaseModel):
     gtf_annotation: Path
     strand_info: Path
-    samples: SkipValidation[List[SampleInfo]]
+    samples: List[SampleInfo] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
