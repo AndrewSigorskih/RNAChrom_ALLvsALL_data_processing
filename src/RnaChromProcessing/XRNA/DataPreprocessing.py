@@ -77,10 +77,10 @@ def _revc_fastq(sample: SampleInfo,
     sample.update_field('fq_file', out_file)
     return return_code
 
-def _merge_bams(in_files: Iterable[Path],
+def _merge_bams(in_files: Iterable[str],
                 out_file: Path):
     cmd = [
-        'samtools', 'merge', '-o', out_file,
+        'samtools', 'merge', '-o', str(out_file),
         *in_files
     ]
     return_code = run_command(cmd)
