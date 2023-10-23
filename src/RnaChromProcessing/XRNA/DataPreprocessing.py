@@ -17,6 +17,7 @@ from ..utils import (
 )
 logger = logging.getLogger()
 
+CHUNKSIZE=10_000_000
 PREPROCESS_STAGES = (
     'filter_bed', 'filter_fastq', 'revc_fastq', 'align', 'merge_bams', 'sort_bams'
 )
@@ -46,12 +47,18 @@ def _filter_bed(annot_bed: Path,
     return_code = run_command(coverage_cmd, shell=True)
     if return_code != 0:
         return return_code # will be managed by PoolExecutor
-    # TODO process by chunks?
-    result = pd.read_csv(counts_file, sep='\t', header=None, usecols=[3, 6])
-    result = result[result[6] == 0][3]
+    # process resulting table by chunks
+    for chunk in pd.read_csv(counts_file, sep='\t', header=None,
+                             usecols=[3, 7], chunksize=CHUNKSIZE):
+        chunk = chunk[chunk[7] == 0][3]
+        #chunk = '@' + chunk.apply(str)
+        chunk.to_csv(sample.lst_file, header=False, index=False, mode='a')
+    #result = pd.read_csv(counts_file, sep='\t', header=None, usecols=[3, 7])
+    #result = result[result[7] == 0][3]
     #result = '@' + result.apply(str) # for grep!
-    result.to_csv(sample.lst_file, header=False, index=False)
+    #result.to_csv(sample.lst_file, header=False, index=False)
     counts_file.unlink()
+    return 0
 
 # https://github.com/lh3/seqtk
 def _filter_fq_by_ids(inputs: Tuple[Path, Path],
