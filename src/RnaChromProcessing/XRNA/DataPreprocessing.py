@@ -113,7 +113,7 @@ class HisatTool(BaseModel):
         cmd = (
             f'{self.tool_path} -x {self.genome_path} -p {self.hisat_threads} -k 100 '
             f'--no-softclip --known-splicesite-infile {self.known_splice} --dta-cufflinks '
-            f'-U {in_file} | samtools view -F 4 -bSh > {out_file}'
+            f'-U {in_file} --rna-strandness F | samtools view -F 4 -bSh > {out_file}'
         )
         return_code = run_command(cmd, shell=True)
         return return_code
@@ -190,7 +190,7 @@ class PreprocessingPipeline:
         inputs, outputs = [], []
         for group, samples in replics_dct.items():
             outputs.append(self.merge_bams / f'{group}.bam')
-            inputs.append(sample.bam_file for sample in samples)
+            inputs.append(str(sample.bam_file) for sample in samples)
         self.executor.run_function(
             _merge_bams,
             inputs, outputs,
