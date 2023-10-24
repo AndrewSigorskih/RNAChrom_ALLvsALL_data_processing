@@ -9,7 +9,7 @@ from pydantic import BaseModel, Extra, PositiveInt, field_validator
 from .AnnotInfo import AnnotInfo
 from .DataPreprocessing import HisatTool, PreprocessingPipeline
 from .PoolExecutor import PoolExecutor
-from .StringtiePipeline import StringtieTool
+from .StringtiePipeline import StringtieTool, StringtiePipeline
 from ..utils import exit_with_error
 
 logger = logging.getLogger()
@@ -44,7 +44,9 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         self.preprocessing = PreprocessingPipeline(
             work_pth, executor, self.hisat
         )
-        #TODO set self.xrna_pipeline here
+        self.pipeline = StringtiePipeline(
+            work_pth, executor, self.stringtie
+        )
 
     @field_validator('base_dir', 'fq_input_dir', 'bed_input_dir', 'output_dir')
     @classmethod
@@ -67,7 +69,7 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
             self.rna_ids, self.bed_input_dir, self.fq_input_dir, self.annotation
         )
         print(f'prepared BAM files: {prepared_bams}')
-
+        self.pipeline.run(prepared_bams, self.annotation)
         
         # stringtie pipeline:
             # split strand and xs tag????? we try w/o it and also try enhanced hisat index
