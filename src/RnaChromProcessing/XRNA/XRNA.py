@@ -70,14 +70,12 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         )
         print(f'prepared BAM files: {prepared_bams}')
         self.pipeline.run(prepared_bams, self.annotation)
+        logger.info('Done.')
         
         # stringtie pipeline:
-            # split strand and xs tag????? we try w/o it and also try enhanced hisat index
-            # assemble stringtie
-            # stringtie merge
             # merge intervals (bedtools)
-            # name XRNAs
             # do they overlap genes? filter out
+            # name XRNAs
             # closest gene
             # expression estimate
             # plots _)

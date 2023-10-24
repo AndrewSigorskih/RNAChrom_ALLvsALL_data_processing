@@ -1,7 +1,7 @@
 import logging
 import subprocess
 
-from typing import Any, List, Union
+from typing import Any, Iterable, List, Union
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
@@ -44,9 +44,9 @@ def run_get_stdout(cmd: Union[List[str], str],
     return result.stdout
 
 
-def log_cmd(cmd: Union[List[str], str]) -> None:
+def log_cmd(cmd: Union[Iterable[Any], str]) -> None:
     if isinstance(cmd, list):
-        cmd_str = " ".join(cmd)
+        cmd_str = " ".join(str(x) for x in cmd)
     else:
         cmd_str = cmd
     logger.log(VERBOSE, f'Running command: {cmd_str}')

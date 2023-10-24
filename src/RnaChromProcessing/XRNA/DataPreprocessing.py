@@ -80,7 +80,7 @@ def _revc_fastq(sample: SampleInfo,
 def _merge_bams(in_files: Iterable[str],
                 out_file: Path):
     cmd = [
-        'samtools', 'merge', '-o', str(out_file),
+        'samtools', 'merge', '-o', out_file,
         *in_files
     ]
     return_code = run_command(cmd)
@@ -190,7 +190,7 @@ class PreprocessingPipeline:
         inputs, outputs = [], []
         for group, samples in replics_dct.items():
             outputs.append(self.merge_bams / f'{group}.bam')
-            inputs.append(str(sample.bam_file) for sample in samples)
+            inputs.append(sample.bam_file for sample in samples)
         self.executor.run_function(
             _merge_bams,
             inputs, outputs,

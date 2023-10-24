@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 from typing_extensions import Annotated
 
+import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 from .AnnotInfo import AnnotInfo
@@ -48,6 +49,7 @@ class StringtieTool(BaseModel):
         return_code = run_command(cmd, shell=True)
         return return_code
 
+
 class StringtiePipeline:
     def __init__(self,
                  work_pth: Path,
@@ -80,15 +82,46 @@ class StringtiePipeline:
     
     def run_stringtie_merge(self,
                             raw_gtfs: List[Path]) -> None:
-        assembly_lst = self.stringtie_merge / 'assembly.lst'
+        assembly_lst: Path = self.stringtie_merge / 'assembly.lst'
         with open(assembly_lst, 'w') as f:
             print(*raw_gtfs, sep='\n', file=f)
-        merged_file = self.stringtie_merge / 'merged.gtf'
+        merged_file: Path = self.stringtie_merge / 'merged.gtf'
         self.stringtie_tool.run_stringtie_merge(assembly_lst, merged_file)
-        #assembly_lst.unlink()
+        assembly_lst.unlink()
+
+    def handle_intervals(self,
+                         bed_annot: Path) -> None:
+        raw_gtf: Path = self.stringtie_merge / 'merged.gtf'
+        raw_bed: Path = self.bed_transforms / 'raw.bed'
+        nonoverlap_bed: Path = self.bed_transforms / 'non-overlap.bed'
+        counts_bed: Path = self.bed_transforms / 'overlaps.bed'
+        true_x_bed: Path = self.bed_transforms / 'xrnas.bed'
+        # gtf -> sorted bed
+        tab = pd.read_csv(
+            raw_gtf, sep='\t', header=None, skiprows=2, usecols=[0,2,3,4,5,6,7]
+        )
+        tab = tab[tab[2] == 'transcript']
+        tab = tab[[0,3,4,7,5,6]].sort_values(by=[0,3], inplace=False)
+        tab.to_csv(raw_bed, sep='\t', index=False, header=False)
+        # sorted bed -> merge overlaps
+        cmd = f'bedtools merge -s -c 6 -o distinct -i {raw_bed} > {nonoverlap_bed}'
+        run_command(cmd, shell=True)
+        # merge overlaps -> intersections w/ annotation
+        cmd = (
+            f'bedtools coverage -a {nonoverlap_bed} -b {bed_annot} '
+            f'-s -counts > {counts_bed}'
+        )
+        run_command(cmd, shell=True)
+        # intersections w/ annotation -> filter out
+        
+
+        
+
+
 
     def run(self,
             input_bams: List[Path],
             annot_info: AnnotInfo) -> None:
         raw_gtfs = self.run_stringtie(input_bams, annot_info.gtf_annotation)
         self.run_stringtie_merge(raw_gtfs)
+        self.handle_intervals(annot_info.annot_bed)
