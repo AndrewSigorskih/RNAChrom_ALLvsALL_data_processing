@@ -42,7 +42,7 @@ class StringtieTool(BaseModel):
                             assembly_list: Path,
                             output_file: Path) -> None:
         cmd = (
-            f'{self.tool_path} merge -p {self.stringtie_threads} '
+            f'{self.tool_path} --merge -p {self.stringtie_threads} '
             f'-o {output_file} {assembly_list}'
         )
         return_code = run_command(cmd, shell=True)
