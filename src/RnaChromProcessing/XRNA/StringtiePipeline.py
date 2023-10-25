@@ -9,6 +9,7 @@ import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 from .AnnotInfo import AnnotInfo
+from .Labeller import Labeller
 from .PoolExecutor import PoolExecutor
 from ..utils import exit_with_error, run_command, run_get_stdout, validate_tool_path
 
@@ -99,7 +100,7 @@ class StringtiePipeline:
         raw_bed: Path = self.bed_transforms / 'raw.bed'
         nonoverlap_bed: Path = self.bed_transforms / 'non-overlap.bed'
         counts_bed: Path = self.bed_transforms / 'counts.bed'
-        xrnas: Path = self.xrna / 'xrna.tab'
+        xrnas: Path = self.xrna / 'xrna.bed'
         # gtf -> sorted bed
         gtf_header = ['chr', 'type', 'start', 'end', 'score', 'strand', 'misc']
         tab = pd.read_csv(
@@ -135,12 +136,44 @@ class StringtiePipeline:
         merged_counts = run_get_stdout(f'wc -l < {nonoverlap_bed}', shell=True)
         final_counts = tab.shape[0]
         logger.debug(
-            f'{raw_counts} raw stringtie transcripts, {merged_counts} '
+            f'{raw_counts.strip()} raw stringtie transcripts, {merged_counts.strip()} '
             f'merged intervals, {final_counts} dont overlap with annotation.'
         )
         # cleanup
         #for tmp_file in (raw_bed, nonoverlap_bed, counts_bed):
             #tmp_file.unlink()
+
+    def assign_names(self) -> None:
+        labeller = Labeller()
+        xrnas: Path = self.xrna / 'xrna.bed'
+        logger.debug('Started XRNA labelling.')
+        tab = pd.read_csv(xrnas, sep='\t', header=None, names=['chr', 'start', 'end', 'strand'])
+        tab = tab.sort_values(by=['chr, start'])  # do we actually need it here?
+        tab['name'] = '.'
+        tab['score'] = 100
+        for i in tab.index:
+            tab.at[i, 'name'] = labeller.next_label(tab.at[i, 'chr'], tab.at[i, 'start'])
+        tab.to_csv(xrnas, sep='\t', index=False, header=False)
+
+    def closest_gene(self,
+                     bed_annot: Path) -> None:
+        xrnas: Path = self.xrna / 'xrna.bed'
+        closest_res: Path = self.xrna / 'closest.bed'
+        logger.debug('Started determining closest gene.')
+        # ignore overlaps (just in case, there wont be any),
+        # require same strand, report signed distance, report first tie
+        cmd = (
+            f'bedtools -io -s -D a -t first -a {xrnas} '
+            f'-b {bed_annot} > {closest_res}'
+        )
+        ret = run_command(cmd, shell=True)
+        if ret: exit_with_error('Running bedtools closest failed!')
+        # process results
+        
+        # cleanup
+        #closest_res.unlink()
+
+
 
     def run(self,
             input_bams: List[Path],
@@ -148,3 +181,5 @@ class StringtiePipeline:
         raw_gtfs = self.run_stringtie(input_bams, annot_info.gtf_annotation)
         self.run_stringtie_merge(raw_gtfs)
         self.handle_intervals(annot_info.annot_bed)
+        self.assign_names()
+        self.closest_gene(annot_info.annot_bed)
