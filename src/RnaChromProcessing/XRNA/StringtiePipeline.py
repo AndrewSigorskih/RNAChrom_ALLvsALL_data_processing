@@ -153,12 +153,13 @@ class StringtiePipeline:
         tab['score'] = 100
         for i in tab.index:
             tab.at[i, 'name'] = labeller.next_label(tab.at[i, 'chr'], tab.at[i, 'start'])
+        tab = tab[['chr', 'start', 'end', 'name', 'score', 'strand']]
         tab.to_csv(xrnas, sep='\t', index=False, header=False)
 
     def closest_gene(self,
                      bed_annot: Path) -> None:
         xrnas: Path = self.xrna / 'xrna.bed'
-        closest_res: Path = self.xrna / 'closest.bed'
+        closest_res: Path = self.bed_transforms / 'closest.bed'
         logger.debug('Started determining closest gene.')
         # ignore overlaps (just in case, there wont be any),
         # require same strand, report signed distance, report first tie
