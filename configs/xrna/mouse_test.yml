@@ -1,7 +1,7 @@
 bed_input_dir: results/bed
 fq_input_dir: results/trim
 output_dir: xrnas
-cpus: 2
+cpus: 5
 rna_ids:
 - SRR9201799
 - SRR9201801
@@ -15,5 +15,7 @@ hisat:
     genome_path: /gpfs/asigorskikh/data/genomes/mm10/mm10
     known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
     hisat_threads: 8
+    cpus: 2
 stringtie:
     stringtie_threads: 8
+    cpus: 2

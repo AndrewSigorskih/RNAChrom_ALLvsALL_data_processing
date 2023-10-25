@@ -1,6 +1,6 @@
 import concurrent.futures
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 from ..utils.errors import StageFailedError
 
@@ -16,13 +16,14 @@ class PoolExecutor:
                      func: Callable[[Any, Any], int],
                      inputs: List[Any],
                      outputs: List[Any],
-                     require_zero_code: bool = True) -> None:
+                     require_zero_code: bool = True,
+                     override_cpus: Optional[int] = None) -> None:
         if len(outputs) != len(inputs):
             msg = f'Lengths of inputs and outputs lists for {func.__qualname__} do not match!'
             raise StageFailedError(msg)
-        
-        logger.debug(f'Running function {func.__qualname__} with {self.cpus} threads.')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
+        cpus = override_cpus or self.cpus
+        logger.debug(f'Running function {func.__qualname__} with {cpus} threads.')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=cpus) as executor:
             futures = [
                 executor.submit(func, inp, out)
                 for inp, out in zip(inputs, outputs)

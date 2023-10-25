@@ -13,14 +13,14 @@ from pydantic import BaseModel, Field, field_validator
 from .AnnotInfo import AnnotInfo, SampleInfo
 from .PoolExecutor import PoolExecutor
 from ..utils import (
-    find_in_list, run_command, validate_tool_path
+    find_in_list, run_command, run_get_stdout, validate_tool_path
 )
-logger = logging.getLogger()
 
 CHUNKSIZE = 10_000_000
 PREPROCESS_STAGES = (
     'filter_bed', 'filter_fastq', 'revc_fastq', 'align', 'merge_bams', 'sort_bams'
 )
+logger = logging.getLogger()
 
 
 def _update_samples_files(file_dir: Path,
@@ -63,6 +63,13 @@ def _filter_fq_by_ids(inputs: Tuple[Path, Path],
     in_fq, in_lst = inputs
     cmd = f'seqtk subseq {in_fq} {in_lst} > {out_file}'
     return_code = run_command(cmd, shell=True)
+    # seqtk subseq sanity check
+    # somewhat expensive -> perform only of needed
+    if logger.level <= logging.DEBUG:
+        ids_num = run_get_stdout(f'wc -l < {in_lst}', shell=True).strip()
+        reads_num = run_get_stdout(f'wc -l < {out_file}', shell=True)
+        reads_num = int(reads_num) / 4
+        logger.debug(f'{out_file.stem}: {ids_num} ids selected, {reads_num} reads extracted')
     return return_code
 
 
@@ -99,6 +106,7 @@ class HisatTool(BaseModel):
     known_splice: Path
     tool_path: Annotated[Optional[Path], Field(validate_default=True)] = None
     hisat_threads: int = 1
+    cpus: Optional[int] = None
 
     @field_validator('tool_path')
     @classmethod
@@ -179,7 +187,7 @@ class PreprocessingPipeline:
         self.executor.run_function(
             self.hisat_tool.run,
             [sample.fq_file for sample in samples_list],
-            outputs
+            outputs, override_cpus=self.hisat_tool.cpus
         )
         for sample, output in zip(samples_list, outputs):
             sample.update_field('bam_file', output)

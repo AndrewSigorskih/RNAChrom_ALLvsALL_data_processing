@@ -20,8 +20,9 @@ STRINGTIE_STAGES = (
 
 
 class StringtieTool(BaseModel):
-    stringtie_threads: Optional[int] = 1
     tool_path: Annotated[Optional[Path], Field(validate_default=True)] = None
+    stringtie_threads: int = 1
+    cpus: Optional[int] = None
     
     @field_validator('tool_path')
     @classmethod
@@ -32,7 +33,7 @@ class StringtieTool(BaseModel):
 
     def run_stringtie(self,
                       inputs: Tuple[Path, Path],
-                      out_file: Path) -> None:
+                      out_file: Path) -> int:
         in_bam, gtf_annot = inputs
         cmd = (
             f'{self.tool_path} -o {out_file} -G {gtf_annot} '
@@ -44,7 +45,7 @@ class StringtieTool(BaseModel):
 
     def run_stringtie_merge(self,
                             assembly_list: Path,
-                            output_file: Path) -> None:
+                            output_file: Path) -> int:
         logger.debug('Started stringtie merge.')
         cmd = (
             f'{self.tool_path} --merge -p {self.stringtie_threads} '
@@ -52,6 +53,9 @@ class StringtieTool(BaseModel):
         )
         return_code = run_command(cmd, shell=True)
         return return_code
+    
+    def run_stringtie_cov(self,) -> int:
+        pass
 
 
 class StringtiePipeline:
@@ -80,7 +84,7 @@ class StringtiePipeline:
         ]
         self.executor.run_function(
             self.stringtie_tool.run_stringtie,
-            inputs, outputs
+            inputs, outputs, override_cpus=self.stringtie_tool.cpus
         )
         return outputs
     
@@ -140,8 +144,8 @@ class StringtiePipeline:
             f'merged intervals, {final_counts} dont overlap with annotation.'
         )
         # cleanup
-        #for tmp_file in (raw_bed, nonoverlap_bed, counts_bed):
-            #tmp_file.unlink()
+        for tmp_file in (raw_bed, nonoverlap_bed, counts_bed):
+            tmp_file.unlink()
 
     def assign_names(self) -> None:
         labeller = Labeller()
@@ -158,23 +162,35 @@ class StringtiePipeline:
 
     def closest_gene(self,
                      bed_annot: Path) -> None:
-        xrnas: Path = self.xrna / 'xrna.bed'
+        xrnas_bed: Path = self.xrna / 'xrna.bed'
+        xrnas_tab: Path = self.xrna / 'xrna.tab'
         closest_res: Path = self.bed_transforms / 'closest.bed'
         logger.debug('Started determining closest gene.')
         # ignore overlaps (just in case, there wont be any),
         # require same strand, report signed distance, report first tie
         cmd = (
-            f'bedtools closest -io -s -D a -t first -a {xrnas} '
+            f'bedtools closest -io -s -D a -t first -a {xrnas_bed} '
             f'-b {bed_annot} > {closest_res}'
         )
         ret = run_command(cmd, shell=True)
         if ret: exit_with_error('Running bedtools closest failed!')
         # process results
-        
+        closest_res_header = [
+            'chr', 'start', 'end', 'name', 'score', 'strand', 'closest_gene_chr',
+            'closest_gene_start', 'closest_gene_end', 'closest_gene_name',
+            'closest_gene_score', 'closest_gene_strand', 'closest_gene_dist'
+        ]
+        tab = pd.read_csv(closest_res, sep='\t', header=None, names=closest_res_header)
+        tab = tab.drop(columns=['score', 'closest_gene_chr', 'closest_gene_strand', 'closest_gene_score'])
+        tab['closest_gene_side'] = '5\''
+        tab[tab['distance'] < 0]['closest_gene_side'] = '3\''
+        tab = tab.set_index('name', drop=True)
+        tab.to_csv(xrnas_tab, sep='\t', index=True, header=True)
         # cleanup
-        #closest_res.unlink()
+        closest_res.unlink()
 
-
+    def run_stringtie_cov(self, input_bams: List[Path]) -> None:
+        pass
 
     def run(self,
             input_bams: List[Path],
