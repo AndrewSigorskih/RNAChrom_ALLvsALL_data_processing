@@ -120,7 +120,7 @@ class StringtiePipeline:
         )
         ret_2 = run_command(cmd, shell=True)
         # safety
-        if (not ret_1) or (not ret_2):
+        if ret_1 or ret_2:
             exit_with_error('Bedtools operations failed!')
         # save results
         tab = pd.read_csv(

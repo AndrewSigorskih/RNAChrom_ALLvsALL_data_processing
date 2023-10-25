@@ -73,8 +73,6 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         logger.info('Done.')
         
         # stringtie pipeline:
-            # merge intervals (bedtools)
-            # do they overlap genes? filter out
             # name XRNAs
             # closest gene
             # expression estimate
