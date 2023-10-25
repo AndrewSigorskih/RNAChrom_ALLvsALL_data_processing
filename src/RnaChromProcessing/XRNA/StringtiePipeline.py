@@ -163,7 +163,7 @@ class StringtiePipeline:
         # ignore overlaps (just in case, there wont be any),
         # require same strand, report signed distance, report first tie
         cmd = (
-            f'bedtools -io -s -D a -t first -a {xrnas} '
+            f'bedtools closest -io -s -D a -t first -a {xrnas} '
             f'-b {bed_annot} > {closest_res}'
         )
         ret = run_command(cmd, shell=True)
