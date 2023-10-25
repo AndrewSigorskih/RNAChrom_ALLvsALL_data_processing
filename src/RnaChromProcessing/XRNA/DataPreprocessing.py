@@ -68,7 +68,7 @@ def _filter_fq_by_ids(inputs: Tuple[Path, Path],
     if logger.level <= logging.DEBUG:
         ids_num = run_get_stdout(f'wc -l < {in_lst}', shell=True).strip()
         reads_num = run_get_stdout(f'wc -l < {out_file}', shell=True)
-        reads_num = int(reads_num) / 4
+        reads_num = int(reads_num) // 4
         logger.debug(f'{out_file.stem}: {ids_num} ids selected, {reads_num} reads extracted')
     return return_code
 

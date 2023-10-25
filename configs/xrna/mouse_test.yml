@@ -3,6 +3,7 @@ fq_input_dir: results/trim
 output_dir: xrnas
 cpus: 5
 rna_ids:
+- SRR5035944
 - SRR9201799
 - SRR9201801
 - SRR9201803
