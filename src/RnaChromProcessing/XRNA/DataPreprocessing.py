@@ -30,7 +30,7 @@ def _update_samples_files(file_dir: Path,
     for sample in samples:
         file_name = find_in_list(sample.sample_id, files)
         if not file_name:
-            logging.warning(f'Could not find file {sample.sample_id} in {file_dir}!')
+            logger.warning(f'Could not find file {sample.sample_id} in {file_dir}!')
             continue
         sample.update_field(field_name, file_dir / file_name)
 

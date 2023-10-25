@@ -1,3 +1,4 @@
+import logging
 import shutil
 from functools import partial
 from pathlib import Path
@@ -9,8 +10,9 @@ from pydantic import BaseModel, Field, field_validator
 
 from .AnnotInfo import AnnotInfo
 from .PoolExecutor import PoolExecutor
-from ..utils import run_command, validate_tool_path
+from ..utils import exit_with_error, run_command, run_get_stdout, validate_tool_path
 
+logger = logging.getLogger()
 STRINGTIE_STAGES = (
     'stringtie_raw', 'stringtie_merge', 'bed_transforms', 'stringtie_cov', 'xrna'
 )
@@ -42,6 +44,7 @@ class StringtieTool(BaseModel):
     def run_stringtie_merge(self,
                             assembly_list: Path,
                             output_file: Path) -> None:
+        logger.debug('Started stringtie merge.')
         cmd = (
             f'{self.tool_path} --merge -p {self.stringtie_threads} '
             f'-o {output_file} {assembly_list}'
@@ -91,33 +94,53 @@ class StringtiePipeline:
 
     def handle_intervals(self,
                          bed_annot: Path) -> None:
+        logger.debug('Started processing raw stringtie output.')
         raw_gtf: Path = self.stringtie_merge / 'merged.gtf'
         raw_bed: Path = self.bed_transforms / 'raw.bed'
         nonoverlap_bed: Path = self.bed_transforms / 'non-overlap.bed'
-        counts_bed: Path = self.bed_transforms / 'overlaps.bed'
-        true_x_bed: Path = self.bed_transforms / 'xrnas.bed'
+        counts_bed: Path = self.bed_transforms / 'counts.bed'
+        xrnas: Path = self.xrna / 'xrna.tab'
         # gtf -> sorted bed
+        gtf_header = ['chr', 'type', 'start', 'end', 'score', 'strand', 'misc']
         tab = pd.read_csv(
-            raw_gtf, sep='\t', header=None, skiprows=2, usecols=[0,2,3,4,5,6,7]
+            raw_gtf, sep='\t', header=None, skiprows=2, usecols=[0,2,3,4,5,6,7],
+            names=gtf_header
         )
-        tab = tab[tab[2] == 'transcript']
-        tab = tab[[0,3,4,7,5,6]].sort_values(by=[0,3], inplace=False)
+        tab = tab[tab['type'] == 'transcript']
+        tab = tab[['chr', 'start', 'end', 'misc', 'score', 'strand']]
+        tab = tab.sort_values(by=['chr','start'], inplace=False)
         tab.to_csv(raw_bed, sep='\t', index=False, header=False)
         # sorted bed -> merge overlaps
         cmd = f'bedtools merge -s -c 6 -o distinct -i {raw_bed} > {nonoverlap_bed}'
-        run_command(cmd, shell=True)
+        ret_1 = run_command(cmd, shell=True)
         # merge overlaps -> intersections w/ annotation
         cmd = (
             f'bedtools coverage -a {nonoverlap_bed} -b {bed_annot} '
             f'-s -counts > {counts_bed}'
         )
-        run_command(cmd, shell=True)
-        # intersections w/ annotation -> filter out
-        
-
-        
-
-
+        ret_2 = run_command(cmd, shell=True)
+        # safety
+        if (not ret_1) or (not ret_2):
+            exit_with_error('Bedtools operations failed!')
+        # save results
+        tab = pd.read_csv(
+            counts_bed, sep='\t', header=None,
+            names=['chr', 'start', 'end', 'strand', 'counts']
+        )
+        tab = tab[tab['counts'] == 0]
+        tab = tab.drop(['counts'], axis=1)
+        tab.to_csv(xrnas, sep='\t', index=False, header=False)
+        # count intermediate results
+        raw_counts = run_get_stdout(f'wc -l < {raw_bed}', shell=True)
+        merged_counts = run_get_stdout(f'wc -l < {nonoverlap_bed}', shell=True)
+        final_counts = tab.shape[0]
+        logger.debug(
+            f'{raw_counts} raw stringtie transcripts, {merged_counts} '
+            f'merged intervals, {final_counts} dont overlap with annotation.'
+        )
+        # cleanup
+        #for tmp_file in (raw_bed, nonoverlap_bed, counts_bed):
+            #tmp_file.unlink()
 
     def run(self,
             input_bams: List[Path],
