@@ -148,7 +148,7 @@ class StringtiePipeline:
         xrnas: Path = self.xrna / 'xrna.bed'
         logger.debug('Started XRNA labelling.')
         tab = pd.read_csv(xrnas, sep='\t', header=None, names=['chr', 'start', 'end', 'strand'])
-        tab = tab.sort_values(by=['chr, start'])  # do we actually need it here?
+        tab = tab.sort_values(by=['chr', 'start'])  # do we actually need it here?
         tab['name'] = '.'
         tab['score'] = 100
         for i in tab.index:
