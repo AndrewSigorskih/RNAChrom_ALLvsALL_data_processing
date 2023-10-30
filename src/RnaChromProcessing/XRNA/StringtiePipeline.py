@@ -183,7 +183,7 @@ class StringtiePipeline:
         tab = pd.read_csv(closest_res, sep='\t', header=None, names=closest_res_header)
         tab = tab.drop(columns=['score', 'closest_gene_chr', 'closest_gene_strand', 'closest_gene_score'])
         tab['closest_gene_side'] = '5\''
-        tab[tab['closest_gene_dist'] < 0]['closest_gene_side'] = '3\''
+        tab.loc[tab['closest_gene_dist'] < 0, 'closest_gene_side'] = '3\''
         tab = tab.set_index('name', drop=True)
         tab.to_csv(xrnas_tab, sep='\t', index=True, header=True)
         # cleanup
