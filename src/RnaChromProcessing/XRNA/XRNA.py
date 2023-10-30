@@ -73,7 +73,5 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         logger.info('Done.')
         
         # stringtie pipeline:
-            # name XRNAs
-            # closest gene
             # expression estimate
             # plots _)

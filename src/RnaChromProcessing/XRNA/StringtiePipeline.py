@@ -54,8 +54,16 @@ class StringtieTool(BaseModel):
         return_code = run_command(cmd, shell=True)
         return return_code
     
-    def run_stringtie_cov(self,) -> int:
-        pass
+    def run_stringtie_cov(self,
+                          inputs: Tuple[Path, Path],
+                          out_file: Path) -> int:
+        inp_bam, inp_gtf = inputs
+        cmd = (
+            f'{self.tool_path} -e -B -p {self.stringtie_threads} '
+            f'-G {inp_gtf} -o {out_file} {inp_bam}'
+        )
+        return_code = run_command(cmd, shell=True)
+        return return_code
 
 
 class StringtiePipeline:
@@ -190,6 +198,9 @@ class StringtiePipeline:
         closest_res.unlink()
 
     def run_stringtie_cov(self, input_bams: List[Path]) -> None:
+        # create X-rna GTF file
+
+        # fun stringtie-cov
         pass
 
     def run(self,
