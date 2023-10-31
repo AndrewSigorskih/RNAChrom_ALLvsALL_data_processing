@@ -237,7 +237,7 @@ class StringtiePipeline:
             cov_tbl = pd.read_csv(output, sep='\t', header=None,
                                   skiprows=2, names=gtf_header)
             cov_tbl = cov_tbl[cov_tbl['feature'] == 'transcript']
-            cov_tbl['tpm'] = cov_tbl['attr'].apply(
+            cov_tbl['TPM'] = cov_tbl['attr'].apply(
                 lambda x: re.search(TPM_PAT, x).group(0)
             ).astype(float)
             cov_tbl['X_id'] = cov_tbl['attr'].apply(
@@ -246,7 +246,7 @@ class StringtiePipeline:
             cov_tbl = cov_tbl.set_index('X_id')
             tab[f'{name}_TPM'] = cov_tbl['TPM']
             # DEBUG FOR NOW
-            print(f'cov_table {name} mean TPM: {cov_tbl["tpm"].mean()}')
+            print(f'cov_table {name} mean TPM: {cov_tbl["TPM"].mean()}')
             print(cov_tbl.head())
             print('------------------------')
         tab.to_csv(xrnas_tab, sep='\t', index=True, header=True)
