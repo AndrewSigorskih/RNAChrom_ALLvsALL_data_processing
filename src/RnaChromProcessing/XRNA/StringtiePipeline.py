@@ -1,5 +1,6 @@
 import logging
 import shutil
+from csv import QUOTE_NONE
 from functools import partial
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -211,7 +212,7 @@ class StringtiePipeline:
         )
         gtf_header = ['chr', 'name', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attr']
         tab = tab[gtf_header]
-        tab.to_csv(xrnas_gtf, sep='\t', index=False, header=False)
+        tab.to_csv(xrnas_gtf, sep='\t', index=False, header=False, quoting=QUOTE_NONE)
         # run stringtie-cov
         inputs = list(
             zip(
