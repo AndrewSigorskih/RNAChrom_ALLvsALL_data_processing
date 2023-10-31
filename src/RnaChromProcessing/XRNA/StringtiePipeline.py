@@ -249,3 +249,4 @@ class StringtiePipeline:
         self.handle_intervals(annot_info.annot_bed)
         self.assign_names()
         self.closest_gene(annot_info.annot_bed)
+        self.run_stringtie_cov(input_bams)
