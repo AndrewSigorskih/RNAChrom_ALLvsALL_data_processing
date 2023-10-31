@@ -1,5 +1,6 @@
 import logging
 import shutil
+import re
 from csv import QUOTE_NONE
 from functools import partial
 from pathlib import Path
@@ -18,6 +19,8 @@ logger = logging.getLogger()
 STRINGTIE_STAGES = (
     'stringtie_raw', 'stringtie_merge', 'bed_transforms', 'stringtie_cov', 'xrna'
 )
+TPM_PAT = re.compile(r'(?<=TPM \")([0-9]*[.])?[0-9]+(?=\";)')
+X_ID_PAT = re.compile(r'(?<=gene_id \")[0-9a-zA-Z_]+(?=\";)')
 
 
 class StringtieTool(BaseModel):
@@ -232,15 +235,21 @@ class StringtiePipeline:
         for output in outputs:
             name = output.stem
             cov_tbl = pd.read_csv(output, sep='\t', header=None,
-                                  skiprows=2, index_col=1, names=gtf_header)
+                                  skiprows=2, names=gtf_header)
             cov_tbl = cov_tbl[cov_tbl['feature'] == 'transcript']
             cov_tbl['tpm'] = cov_tbl['attr'].apply(
-                lambda x: x.split(';')[-2].split(' ')[-1].strip('""')
+                lambda x: re.search(TPM_PAT, x).group(0)
             ).astype(float)
+            cov_tbl['X_id'] = cov_tbl['attr'].apply(
+                lambda x: re.search(X_ID_PAT, x).group(0)
+            )
+            cov_tbl = cov_tbl.set_index('X_id')
+            tab[f'{name}_TPM'] = cov_tbl['TPM']
             # DEBUG FOR NOW
             print(f'cov_table {name} mean TPM: {cov_tbl["tpm"].mean()}')
             print(cov_tbl.head())
             print('------------------------')
+        tab.to_csv(xrnas_tab, sep='\t', index=True, header=True)
 
     def run(self,
             input_bams: List[Path],
