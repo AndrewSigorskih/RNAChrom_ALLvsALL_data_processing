@@ -1,7 +1,7 @@
 bed_input_dir: results/bed
 fq_input_dir: results/trim
 output_dir: xrnas
-cpus: 10
+cpus: 6
 rna_ids:
 - SRR5035944
 - SRR5035946

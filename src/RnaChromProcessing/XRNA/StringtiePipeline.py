@@ -198,10 +198,48 @@ class StringtiePipeline:
         closest_res.unlink()
 
     def run_stringtie_cov(self, input_bams: List[Path]) -> None:
+        xrnas_bed: Path = self.xrna / 'xrna.bed'
+        xrnas_gtf: Path = self.xrna / 'xrna.gtf'
+        xrnas_tab: Path = self.xrna / 'xrna.tab'
         # create X-rna GTF file
-
-        # fun stringtie-cov
-        pass
+        tab = pd.read_csv(xrnas_bed, sep='\t', header=None,
+                          names=['chr', 'start', 'end', 'name', 'score', 'strand'])
+        tab['feature'] = 'transcript'
+        tab['frame'] = '.'
+        tab['attr'] = tab['name'].apply(
+            lambda x: f'gene_id "{x}"; gene_name "{x}";'
+        )
+        gtf_header = ['chr', 'name', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attr']
+        tab = tab[gtf_header]
+        tab.to_csv(xrnas_gtf, sep='\t', index=False, header=False)
+        # run stringtie-cov
+        inputs = list(
+            zip(
+                input_bams,
+                (xrnas_gtf for _ in range(len(input_bams)))
+            )
+        )
+        outputs: List[Path] = [
+            self.stringtie_cov / f'{file.stem}.gtf' for file in input_bams
+        ]
+        self.executor.run_function(
+            self.stringtie_tool.run_stringtie_cov,
+            inputs, outputs, override_cpus=self.stringtie_tool.cpus
+        )
+        # add fields to xrna table
+        tab = pd.read_csv(xrnas_tab, sep='\t', index_col=0)
+        for output in outputs:
+            name = output.stem
+            cov_tbl = pd.read_csv(output, sep='\t', header=None,
+                                  skiprows=2, index_col=1, names=gtf_header)
+            cov_tbl = cov_tbl[cov_tbl['feature'] == 'transcript']
+            cov_tbl['tpm'] = cov_tbl['attr'].apply(
+                lambda x: x.split(';')[-2].split(' ')[-1].strip('""')
+            ).astype(float)
+            # DEBUG FOR NOW
+            print(f'cov_table {name} mean TPM: {cov_tbl["tpm"].mean()}')
+            print(cov_tbl.head())
+            print('------------------------')
 
     def run(self,
             input_bams: List[Path],
