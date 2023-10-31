@@ -208,7 +208,7 @@ class StringtiePipeline:
         tab['feature'] = 'transcript'
         tab['frame'] = '.'
         tab['attr'] = tab['name'].apply(
-            lambda x: f'gene_id "{x}"; gene_name "{x}";'
+            lambda x: f'gene_id "{x}"; transcript_id "{x}"'
         )
         gtf_header = ['chr', 'name', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attr']
         tab = tab[gtf_header]
