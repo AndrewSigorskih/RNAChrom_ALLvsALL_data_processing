@@ -13,6 +13,7 @@ from .StringtiePipeline import StringtieTool, StringtiePipeline
 from ..utils import exit_with_error
 
 logger = logging.getLogger()
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 class XRNAProcessor(BaseModel, extra=Extra.allow):
@@ -73,5 +74,4 @@ class XRNAProcessor(BaseModel, extra=Extra.allow):
         logger.info('Done.')
         
         # stringtie pipeline:
-            # expression estimate
-            # plots _)
+            # save outputs

@@ -13,11 +13,13 @@ from pydantic import BaseModel, Field, field_validator
 from .AnnotInfo import AnnotInfo
 from .Labeller import Labeller
 from .PoolExecutor import PoolExecutor
+from ..plots import set_style_white, plot_distance_to_closest, plot_length_distribution
 from ..utils import exit_with_error, run_command, run_get_stdout, validate_tool_path
 
 logger = logging.getLogger()
 STRINGTIE_STAGES = (
-    'stringtie_raw', 'stringtie_merge', 'bed_transforms', 'stringtie_cov', 'xrna'
+    'stringtie_raw', 'stringtie_merge', 'bed_transforms', 'stringtie_cov',
+    'xrna', 'plots'
 )
 TPM_PAT = re.compile(r'(?<=TPM \")([0-9]*[.])?[0-9]+(?=\";)')
 X_ID_PAT = re.compile(r'(?<=gene_id \")[0-9a-zA-Z_]+(?=\";)')
@@ -245,18 +247,24 @@ class StringtiePipeline:
             )
             cov_tbl = cov_tbl.set_index('X_id')
             tab[f'{name}_TPM'] = cov_tbl['TPM']
-            # DEBUG FOR NOW
-            print(f'cov_table {name} mean TPM: {cov_tbl["TPM"].mean()}')
-            print(cov_tbl.head())
-            print('------------------------')
         tab.to_csv(xrnas_tab, sep='\t', index=True, header=True)
+
+    def make_plots(self, prefix: str) -> None:
+        xrnas_tab: Path = self.xrna / 'xrna.tab'
+        tab = pd.read_csv(xrnas_tab, sep='\t', index_col=0)
+        # plot data
+        set_style_white()
+        plot_length_distribution(tab, self.plots, prefix)
+        plot_distance_to_closest(tab, self.plots, prefix)
 
     def run(self,
             input_bams: List[Path],
-            annot_info: AnnotInfo) -> None:
+            annot_info: AnnotInfo,
+            prefix: str = 'xrna') -> None:
         raw_gtfs = self.run_stringtie(input_bams, annot_info.gtf_annotation)
         self.run_stringtie_merge(raw_gtfs)
         self.handle_intervals(annot_info.annot_bed)
         self.assign_names()
         self.closest_gene(annot_info.annot_bed)
         self.run_stringtie_cov(input_bams)
+        self.make_plots(prefix)

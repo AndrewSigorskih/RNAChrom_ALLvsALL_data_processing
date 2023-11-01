@@ -3,6 +3,11 @@ import matplotlib.patches as mpatches
 import numpy as np 
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
+
+FIGSIZE = (11.7, 8.27)
+TEN_KB = 10_000
+
 
 def set_style_white() -> None:
     sns.set_style('white')
@@ -33,7 +38,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
                        prefix: str) -> None:
     # init figure
     fig, ax = plt.subplots()
-    fig.set_size_inches(11.7, 8.27)
+    fig.set_size_inches(*FIGSIZE)
     ax.set_ylim(-total_genes-2, total_genes+2)
     # variables
     index = wins.index
@@ -74,10 +79,10 @@ def rna_strand_barplot(wins: pd.DataFrame,
         for rect in rects:
             height = round(rect.get_height(),2)
             ax.annotate(f'{np.abs(height)}',
-                    xy=(rect.get_x()+width/2, height),
-                    xytext=(0, 3*neg),  # 3 points vertical offset
-                    textcoords='offset points',
-                    ha='center', va='bottom')
+                        xy=(rect.get_x()+width/2, height),
+                        xytext=(0, 3*neg),  # 3 points vertical offset
+                        textcoords='offset points',
+                        ha='center', va='bottom')
     autolabel(rects)
     autolabel(negrects, -3)
     # save
@@ -85,3 +90,60 @@ def rna_strand_barplot(wins: pd.DataFrame,
     fig.tight_layout()
     plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
+
+
+def plot_length_distribution(tab: pd.DataFrame,
+                             out_dir: Path,
+                             prefix: str) -> None:
+    fig, axes = plt.subplots()
+    fig.set_size_inches(*FIGSIZE)
+    length = tab['end'] - tab['start'] + 1
+    length[length <= TEN_KB].hist(ax=axes, color='grey',
+                                  grid=False, bins=20)
+    title = 'X-RNAs lengths distribution'
+    plt.title(title)
+    axes.set_ylabel('Count', fontsize=20)
+    axes.set_xlabel('Length, bp', fontsize=20)
+    info = f'max: {length.max()}\nmin: {length.min()}'
+    plt.text(0.75*axes.dataLim.bounds[2],
+             0.75*axes.dataLim.bounds[3],
+             info, ha='left', va='center')
+    # save
+    plt.savefig(out_dir / f'{prefix}_length_distr.png',
+                dpi=300, bbox_inches='tight')
+
+
+
+def plot_distance_to_closest(tab: pd.DataFrame,
+                             out_dir: Path,
+                             prefix: str) -> None:
+    fig, ax = plt.subplots()
+    fig.set_size_inches(*FIGSIZE)
+    # select 5` and 3` distances that are within 10kb window around genes
+    prime5 = tab[
+        (tab['closest_gene_side'] == '5\'') &
+        (tab['closest_gene_dist'].abs() <= TEN_KB)
+    ]['closest_gene_dist'].abs()
+    prime3 = tab[
+        (tab['closest_gene_side'] == '3\'') &
+        (tab['closest_gene_dist'].abs() <= TEN_KB)
+    ]['closest_gene_dist'].abs()
+    prime5.name = '5\''
+    prime3.name = '3\''
+    # plot histograms
+    p1 = sns.distplot(prime5, color='r', kde=False, label=prime5.name)
+    p2 = sns.distplot(prime3, color='b', kde=False, label=prime3.name)
+    # plot kde distributions
+    ax2 = ax.twinx()
+    p3 = sns.kdeplot(prime5, color='r', ax=ax2, clip=(0.0, None))
+    p4 = sns.kdeplot(prime3, color='b', ax=ax2, clip=(0.0, None))
+    # Legend and labels
+    ax.legend(title='Prime', frameon=True)
+    ax2.set_ylabel('Density', fontsize=20)
+    title = 'Distance to closest gene by strand'
+    plt.title(title)
+    ax.set_ylabel('Count', fontsize=20)
+    ax.set_xlabel('Distance, bp', fontsize=20)
+    # save
+    plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
+                dpi=300, bbox_inches='tight')
