@@ -105,9 +105,9 @@ def plot_length_distribution(tab: pd.DataFrame,
     axes.set_ylabel('Count', fontsize=20)
     axes.set_xlabel('Length, bp', fontsize=20)
     info = (
-        f'max:\t{length.max()}\n'
-        f'min:\t{length.min()}\n'
-        f'median:\t{length.median()}'
+        f'max: {length.max()}\n'
+        f'min: {length.min()}\n'
+        f'median: {length.median():.1f}'
     )
     plt.text(0.75*axes.dataLim.bounds[2],
              0.75*axes.dataLim.bounds[3],
@@ -123,21 +123,28 @@ def plot_distance_to_closest(tab: pd.DataFrame,
                              prefix: str) -> None:
     fig, ax = plt.subplots()
     fig.set_size_inches(*FIGSIZE)
+    palette = sns.color_palette('husl', 2)
     # select 5` and 3` distances that are within 10kb window around genes
     tab = tab[['closest_gene_side', 'closest_gene_dist']]
     tab.columns = ['Prime', 'Distance']
     tab['Distance'] = tab['Distance'].abs()
     tab = tab[tab['Distance'] <= TEN_KB]
     # plot histograms
+    ax2 = ax.twinx()
     sns.histplot(
-        data=tab, x='Distance', hue='Prime', kde=True,
-        kde_kws=dict(clip=(0.0, None))
+        data=tab, x='Distance', hue='Prime', ax=ax,
+        palette=palette
+    )
+    sns.kdeplot(
+        data=tab, x='Distance', hue='Prime', ax=ax2,
+        clip=(0.0, None), palette=palette, legend=False
     )
     # labels
     title = 'Distance to closest gene by strand'
     plt.title(title)
     ax.set_ylabel('Count', fontsize=20)
     ax.set_xlabel('Distance, bp', fontsize=20)
+    ax2.set_ylabel('Density', fontsize=20)
     # save
     plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
                 dpi=300, bbox_inches='tight')
