@@ -9,6 +9,12 @@ FIGSIZE = (11.7, 8.27)
 TEN_KB = 10_000
 
 
+def _calc_upper_whisker(arr: pd.Series) -> float:
+    Q1, Q3 = np.percentile(arr, [25, 75])
+    IQR = Q3 - Q1
+    hival = Q3 + 1.5 * IQR
+    return arr[arr <= hival].max()
+
 def set_style_white() -> None:
     sns.set_style('white')
     sns.set_palette('husl')
@@ -192,26 +198,31 @@ def plot_tpm_expressions(tab: pd.DataFrame,
     # data prep
     colnames = [x for x in tab.columns if x.endswith('_TPM')]
     tab = tab[colnames].copy()
-    tab = pd.melt(tab, value_vars=colnames)
+    tab.columns = [x[:-4] for x in colnames]  # remove _TPM suffix
+    tab = pd.melt(tab, value_vars=tab.columns)
     # plot
-    plt.figure(figsize=FIGSIZE)
+    plt.figure(figsize=(14,10))
     ax = sns.boxplot(
         data=tab, x='variable', y='value', notch=True,
-        showmeans=True, meanprops=dict(
-            marker='.', markerfacecolor='red', markeredgecolor='red'
-        ),
         flierprops=dict(
-            marker=',',markersize=2, markerfacecolor='steelblue',
-            markeredgecolor='none', alpha=.2
+            marker='.', markersize=5, markerfacecolor='steelblue',
+            markeredgecolor='none', alpha=.4
         ),
         boxprops=dict(alpha=.7), width=.7
     )
-    # add noise to outliers
-    for line in ax.get_lines()[6::7]:
+    # set ylim
+    hival = max(
+        _calc_upper_whisker(
+            tab.loc[tab['variable'] == name, 'value']
+        ) 
+        for name in tab['variable'].unique())
+    plt.ylim(-5, hival+5)
+    # add noise to outliers.
+    for line in ax.get_lines()[5::6]:
         xoffsets = line.get_xdata()
-        line.set_xdata(xoffsets + np.random.uniform(-0.15, 0.15, xoffsets.size))
+        line.set_xdata(xoffsets + np.random.uniform(-0.1, 0.1, xoffsets.size))
     # labelling
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=65)
     plt.title('X-RNA TPM coverage distributions for all biological replicas',
               x=0.5, y=1.0, ha='center', fontsize=20)
     plt.ylabel("TPM values")
