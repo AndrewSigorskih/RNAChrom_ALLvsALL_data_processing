@@ -104,17 +104,46 @@ def plot_length_distribution(tab: pd.DataFrame,
     plt.title(title)
     axes.set_ylabel('Count', fontsize=20)
     axes.set_xlabel('Length, bp', fontsize=20)
-    info = f'max: {length.max()}\nmin: {length.min()}'
+    info = (
+        f'max:\t{length.max()}\n'
+        f'min:\t{length.min()}\n'
+        f'median:\t{length.median()}'
+    )
     plt.text(0.75*axes.dataLim.bounds[2],
              0.75*axes.dataLim.bounds[3],
-             info, ha='left', va='center')
+             info, ha='left', va='center',
+             fontsize=20)
     # save
     plt.savefig(out_dir / f'{prefix}_length_distr.png',
                 dpi=300, bbox_inches='tight')
-
-
+    
 
 def plot_distance_to_closest(tab: pd.DataFrame,
+                             out_dir: Path,
+                             prefix: str) -> None:
+    fig, ax = plt.subplots()
+    fig.set_size_inches(*FIGSIZE)
+    # select 5` and 3` distances that are within 10kb window around genes
+    tab = tab[['closest_gene_side', 'closest_gene_dist']]
+    tab.columns = ['Prime', 'Distance']
+    tab['Distance'] = tab['Distance'].abs()
+    tab = tab[tab['Distance'] <= TEN_KB]
+    # plot histograms
+    sns.histplot(
+        data=tab, x='Distance', hue='Prime', kde=True,
+        kde_kws=dict(clip=(0.0, None))
+    )
+    # labels
+    title = 'Distance to closest gene by strand'
+    plt.title(title)
+    ax.set_ylabel('Count', fontsize=20)
+    ax.set_xlabel('Distance, bp', fontsize=20)
+    # save
+    plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
+                dpi=300, bbox_inches='tight')
+
+
+def _plot_distance_to_closest(tab: pd.DataFrame,
                              out_dir: Path,
                              prefix: str) -> None:
     fig, ax = plt.subplots()

@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 from typing import Optional, Set
 
-from pydantic import BaseModel, Extra, PositiveInt, field_validator
+from pydantic import BaseModel, PositiveInt, field_validator
 
 from .AnnotInfo import AnnotInfo
 from .DataPreprocessing import HisatTool, PreprocessingPipeline
@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
-class XRNAProcessor(BaseModel, extra=Extra.allow):
+class XRNAProcessor(BaseModel, extra='allow'):
     bed_input_dir: Path
     fq_input_dir: Path
     output_dir: Path
