@@ -13,7 +13,10 @@ from pydantic import BaseModel, Field, field_validator
 from .AnnotInfo import AnnotInfo
 from .Labeller import Labeller
 from .PoolExecutor import PoolExecutor
-from ..plots import set_style_white, plot_distance_to_closest, plot_length_distribution
+from ..plots import (
+    set_style_white, plot_distance_to_closest, plot_length_distribution,
+    plot_tpm_expressions
+)
 from ..utils import exit_with_error, run_command, run_get_stdout, validate_tool_path
 
 logger = logging.getLogger()
@@ -256,6 +259,7 @@ class StringtiePipeline:
         set_style_white()
         plot_length_distribution(tab, self.plots, prefix)
         plot_distance_to_closest(tab, self.plots, prefix)
+        plot_tpm_expressions(tab, self.plots, prefix)
 
     def run(self,
             input_bams: List[Path],

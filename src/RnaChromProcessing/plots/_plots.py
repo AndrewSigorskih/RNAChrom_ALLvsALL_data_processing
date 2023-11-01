@@ -105,8 +105,8 @@ def plot_length_distribution(tab: pd.DataFrame,
     axes.set_ylabel('Count', fontsize=20)
     axes.set_xlabel('Length, bp', fontsize=20)
     info = (
-        f'max: {length.max()}\n'
         f'min: {length.min()}\n'
+        f'max: {length.max()}\n'
         f'median: {length.median():.1f}'
     )
     plt.text(0.75*axes.dataLim.bounds[2],
@@ -123,10 +123,11 @@ def plot_distance_to_closest(tab: pd.DataFrame,
                              prefix: str) -> None:
     fig, ax = plt.subplots()
     fig.set_size_inches(*FIGSIZE)
-    palette = sns.color_palette('husl', 2)
+    palette = {'3\'': 'b', '5\'': 'r'}
     # select 5` and 3` distances that are within 10kb window around genes
-    tab = tab[['closest_gene_side', 'closest_gene_dist']]
+    tab = tab[['closest_gene_side', 'closest_gene_dist']].copy()
     tab.columns = ['Prime', 'Distance']
+    #tab = tab.assign(Distance=tab['Distance'].abs())
     tab['Distance'] = tab['Distance'].abs()
     tab = tab[tab['Distance'] <= TEN_KB]
     # plot histograms
@@ -183,3 +184,38 @@ def _plot_distance_to_closest(tab: pd.DataFrame,
     # save
     plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
                 dpi=300, bbox_inches='tight')
+    
+
+def plot_tpm_expressions(tab: pd.DataFrame,
+                         out_dir: Path,
+                         prefix: str) -> None:
+    # data prep
+    colnames = [x for x in tab.columns if x.endswith('_TPM')]
+    tab = tab[colnames].copy()
+    tab = pd.melt(tab, value_vars=colnames)
+    # plot
+    plt.figure(figsize=FIGSIZE)
+    ax = sns.boxplot(
+        data=tab, x='variable', y='value', notch=True,
+        showmeans=True, meanprops=dict(
+            marker='.', markerfacecolor='red', markeredgecolor='red'
+        ),
+        flierprops=dict(
+            marker=',',markersize=2, markerfacecolor='steelblue',
+            markeredgecolor='none', alpha=.2
+        ),
+        boxprops=dict(alpha=.7), width=.7
+    )
+    # add noise to outliers
+    for line in ax.get_lines()[6::7]:
+        xoffsets = line.get_xdata()
+        line.set_xdata(xoffsets + np.random.uniform(-0.15, 0.15, xoffsets.size))
+    # labelling
+    plt.xticks(rotation=45)
+    plt.title('X-RNA TPM coverage distributions for all biological replicas',
+              x=0.5, y=1.0, ha='center', fontsize=20)
+    plt.ylabel("TPM values")
+    plt.xlabel("Experiment / cell line")
+    # save
+    plt.savefig(out_dir / f'{prefix}_tpm_distr.png',
+                dpi=1200, bbox_inches='tight')
