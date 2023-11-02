@@ -1,5 +1,5 @@
 import shutil
-
+from os import remove
 from typing import Any, Dict, List
 
 from .basicstage import BasicStage
@@ -38,7 +38,7 @@ class Hisat(BasicStage):
                    dna_in_file: str,
                    rna_in_file: str,
                    dna_out_file: str,
-                   rna_out_file: str):
+                   rna_out_file: str) -> int:
         """run hisat2"""
         # change file extensions from NAME.* or NAME.*.gz to NAME.bam
         dna_out_file = dna_out_file.rstrip('.gz').rsplit('.', 1)[0]+ '.bam'
@@ -57,6 +57,5 @@ class Hisat(BasicStage):
         )
         return_code_1 = run_command(dna_cmd, shell=True)
         return_code_2 = run_command(rna_cmd, shell=True)
+        remove(f'{rna_out_file}.novel_splice')
         return (return_code_1 or return_code_2)
-
-

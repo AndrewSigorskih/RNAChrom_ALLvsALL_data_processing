@@ -1,0 +1,61 @@
+rna_ids:
+- SRR9201799
+- SRR9201801
+- SRR9201803
+- SRR9201805
+- SRR9201807
+- SRR9201809
+- SRR9201811
+- SRR9201813
+- SRR9201815
+- SRR9201817
+- SRR9201819
+- SRR9201821
+- SRR9201823
+- SRR9201825
+- SRR9201827
+- SRR9201829
+dna_ids:
+- SRR9201800
+- SRR9201802
+- SRR9201804
+- SRR9201806
+- SRR9201808
+- SRR9201810
+- SRR9201812
+- SRR9201814
+- SRR9201816
+- SRR9201818
+- SRR9201820
+- SRR9201822
+- SRR9201824
+- SRR9201826
+- SRR9201828
+- SRR9201830
+base_dir: .
+input_dir: /gpfs/asigorskikh/data/radicl/gz
+output_dir: results
+cpus: 16
+keep:
+- contacts
+- bed
+- trim
+rsites:
+    type: skip
+dedup:
+    cpus: 6
+    tool: fastq-dupaway
+    params:
+        memlimit: 10240
+        compare: loose
+trim:
+    cpus: 10
+    tool: trimmomatic
+hisat:
+    cpus: 2
+    genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
+    hisat_threads: 8
+contacts:
+    cpus: 3
+stats_prefix: radicl

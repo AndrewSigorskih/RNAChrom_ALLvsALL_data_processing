@@ -1,0 +1,28 @@
+rna_ids:
+- SRR5035944
+- SRR5035946
+dna_ids:
+- SRR5035945
+- SRR5035947
+base_dir: .
+input_dir: /gpfs/asigorskikh/data/grid/gz
+output_dir: results
+cpus: 2
+keep:
+- contacts
+- bed
+- trim
+rsites:
+    type: grid
+dedup:
+    tool: fastq-dupaway
+    params:
+        memlimit: 10240
+        compare: loose
+trim:
+    tool: trimmomatic
+hisat:
+    genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
+    hisat_threads: 8
+stats_prefix: grid_mouse

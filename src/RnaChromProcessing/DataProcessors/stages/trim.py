@@ -1,5 +1,5 @@
 import shutil
-
+from os import remove
 from typing import Any, Dict, List
 from subprocess import DEVNULL
 
@@ -56,4 +56,6 @@ class Trim(BasicStage):
             f'SLIDINGWINDOW:{window}:{qual_th} MINLEN:{minlen}'
         )
         return_code = run_command(command, shell=True, stdout=DEVNULL, stderr=DEVNULL)
+        remove(f'{dna_out_file}.unpaired')
+        remove(f'{rna_out_file}.unpaired')
         return return_code

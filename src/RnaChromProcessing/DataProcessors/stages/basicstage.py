@@ -63,11 +63,12 @@ class BasicStage:
         # run func in parallel (threads)
         logger.debug(f'Running function {func.__qualname__} with {self.cpus} threads.')
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
-            futures = [executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
-                       for dna_inp, rna_inp, dna_out, rna_out in 
-                       zip(dna_input_files, rna_input_files, dna_output_files, rna_output_files)]
+            futures = [
+                executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
+                for dna_inp, rna_inp, dna_out, rna_out in
+                zip(dna_input_files, rna_input_files, dna_output_files, rna_output_files)
+            ]
             results = [future.result() for future in concurrent.futures.as_completed(futures)]
-        if require_zero_code and any([x != 0 for x in results]):
+        if require_zero_code and any(x != 0 for x in results):
             msg = f'One or several calls of {func.__name__} returned non-zero process exit code!'
-            #exit_with_error(msg)
             raise StageFailedError(msg)

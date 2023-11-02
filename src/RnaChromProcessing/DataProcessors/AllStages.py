@@ -77,9 +77,10 @@ class AllStagesProcessor(BaseProcessor):
                                        self.bed_dir, self.contacts_dir,
                                        self.cpus)
         
-    def save_outputs(self):
+    def save_outputs(self, save_all: bool = False):
         """copy everything needed to out dir"""
-        for to_copy in self.keep:
+        save_list = SUBDIR_LIST if save_all else self.keep
+        for to_copy in save_list:
             if to_copy not in SUBDIR_LIST:
                 logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
                 continue
@@ -92,7 +93,7 @@ class AllStagesProcessor(BaseProcessor):
         """Iteratively run all stages of pipeline and 
         retrieve data"""
         # run pipeline
-        logger.info(f'Started processing of {len(self.rna_ids)} pairs of files.')
+        logger.info(f'Started processing {len(self.rna_ids)} pairs of files.')
         os.chdir(self.work_dir.name)
         try:
             self.rsitefilter.run(self.dna_ids, self.rna_ids)
@@ -112,7 +113,7 @@ class AllStagesProcessor(BaseProcessor):
             import traceback
             os.chdir(self.base_dir)
             logger.critical('An error occured during pipeline execution! Trying to save available results..')
-            self.save_outputs()
+            self.save_outputs(save_all=True)
             logger.critical(f'Saved intermediate results to {self.output_dir}.')
             exit_with_error(traceback.format_exc())
         # calculate stats

@@ -59,7 +59,7 @@ Input config is expected to be in a form of json file with several "global" fiel
 
 Field name|Required|Description
 ---|---|---
-rna_ids|Yes|non-empty array of strings. **Must** contain names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
+rna_ids|Yes|non-empty array of strings. **Must** contain base names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
 dna_ids|Yes|non-empty array of strings.  **Must** contain names of files with DNA parts of reads, synchronized with rna_ids array.
 base_dir|No|string. Directory to run analysis in (one or several temporal directories will be created in this directory). Path should exist if provided. If not provided, current working directory will be used instead.
 input_dir|Yes|Path to directory with input DNA and RNA files.
@@ -92,7 +92,7 @@ Field name|Required|Description
 tool|No|What deduplication tool to use. Default is "fastuniq". Supported options:<br>- "fastuniq" : use fastuniq tool.<br>- "fastq-dupaway": use our memory-efficient deduplication tool "fastq-dupaway".<br>- "skip" : do not perform deduplication step.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
 cpus|No| int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
-params|No|Sub-config with parameters to be passed to deduplication tool(s). Supported fields:<br>- "memlimit": int in range [500, 10240]. Supported by fastq-dupaway tool. Memory limit in megabytes for every call of fastq-dupaway to use.
+tool_params|No|Sub-config with parameters to be passed to deduplication tool(s). Supported fields:<br>- "memlimit": int in range [500, 10240]. Supported by fastq-dupaway tool. Memory limit in megabytes for every call of fastq-dupaway to use.
 
 #### trim stage subconfig:
 
@@ -102,8 +102,8 @@ Field name|Required|Description
 ---|---|---
 tool|No|What trimming tool to use. Default is "trimmomatic". Supported options:<br>- "trimmomatic"<br>- "skip" : do not perform trimming step.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option.
-cpus|No|int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
-params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
+cpus|No|int > 0. Number of tasks to run simultaneously for trimming step. If not set, the "global" value will be used.
+tool_params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
 
 #### hisat stage subconfig:
 
@@ -113,8 +113,8 @@ Field name|Required|Description
 ---|---|---
 genome|Yes|Path ending with prefix of genome index files (will be passed to hisat's `-x` option; see more in [reference manual](http://daehwankimlab.github.io/hisat2/manual/#:~:text=number%3E%7D%20%5B%2DS%20%3Chit%3E%5D-,Main%20arguments,-%2Dx%20%3Chisat2%2Didx))
 known_splice|Yes|Path to known-splice file (will be passed to hisat's `--known-splicesite-infile` option).
-cpus|No|int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
-hisat_threads|No|int > 0. How many threads hisat will use **for every** simultaneously-run task. (Value to pass to hisat's `-p` option). Default 1.
+cpus|No|int > 0. Number of tasks to run simultaneously for alignment step. If not set, the "global" value will be used.
+hisat_threads|No|int > 0. How many threads hisat will use **for every** simultaneously-run task. (Value to pass to hisat's `-p` option). Default is 1.
 
 #### contacts stage subconfig:
 
@@ -122,7 +122,7 @@ A sub-config for contacts building step, should be found under the name "contact
 
 Field name|Required|Description
 ---|---|---
-cpus|No|int > 0. Number of tasks to run simultaneously for deduplication step. If not set, the "global" value will be used.
+cpus|No|int > 0. Number of tasks to run simultaneously for contacts-building step. If not set, the "global" value will be used.
 mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<br>- "fast" : load all data in ram at once.<br>- "low-mem" : process data in a slower fashion, but more RAM-friendly.
 
 
@@ -165,7 +165,6 @@ mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<
     "dedup": {
         "tool": "fastuniq",
         "tool_path": "/path/to/fastuniq",
-        "params": [],
         "cpus": 2
     },
     "rsites": {
@@ -174,7 +173,7 @@ mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<
     "trim": {
         "tool" : "trimmomatic",
         "tool_path" : "path/to/trimmomatic/jar",
-        "params": {
+        "tool_params": {
             "window": 5,
             "qual_th": 26,
             "minlen": 15
