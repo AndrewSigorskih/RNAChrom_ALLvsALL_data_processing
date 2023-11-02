@@ -9,7 +9,7 @@ Package for processing data of several "ALL-to-ALL" RNA-Chromatin interactions c
     2. [Setting up virtual environment](#venv)
     3. [Actual installation](#install1)
     4. [Data preparation](#genomeprep)
-3. [List of available tools](#tools)
+3. [List of rnachromprocessing tools](#tools)
     1. [rnachromprocessing](#rnachromprocessing)
     2. [detect-strand](#detect-strand)
     3. [X-RNA inference](#xrna)
@@ -75,7 +75,7 @@ Chromosome names in genome and gene annotation should be the same. We also recom
 Hisat2 requires genome to be indexed. In order to build the index, use command `hisat2-build -p 16 genome.fa prefix`, where **prefix** is the prefix name for genome index files. In order to properly map the RNA parts you will also need the splicecite file, that can be obtained from gene annotation file using hisat's script: `hisat2_extract_splice_sites.py genome.gtf > genome.ss`. See [hisat2 manual](http://daehwankimlab.github.io/hisat2/howto/#building-indexes) for more information.
 
 <a name="tools"></a>
-## List of available tools
+## List of rnachromprocessing tools
 
 ### [rnachromprocessing](docs/rnachromprocessing/README.md)
 
@@ -92,4 +92,4 @@ This program checks whether orientation of RNA parts of contacts was inverted or
 <a name="xrna"></a>
 ### [infer-xrna](docs/x-rna/README.md)
 
-Work in progress: this functional is not properly implemented yet!
+This program tries to infer novel transcripts that do not correspond to any gene from user-provided annotation.

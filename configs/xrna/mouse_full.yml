@@ -1,6 +1,10 @@
 bed_input_dir: results/bed
 fq_input_dir: results/trim
 output_dir: xrnas
+ouputs_prefix: xrna_mouse
+keep_extras:
+- ids
+- merged_bam
 cpus: 6
 rna_ids:
 - SRR5035944
