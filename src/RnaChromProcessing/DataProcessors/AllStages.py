@@ -113,7 +113,7 @@ class AllStagesProcessor(BaseProcessor):
             import traceback
             os.chdir(self.base_dir)
             logger.critical('An error occured during pipeline execution! Trying to save available results..')
-            self.save_outputs()
+            self.save_outputs(save_all=True)
             logger.critical(f'Saved intermediate results to {self.output_dir}.')
             exit_with_error(traceback.format_exc())
         # calculate stats

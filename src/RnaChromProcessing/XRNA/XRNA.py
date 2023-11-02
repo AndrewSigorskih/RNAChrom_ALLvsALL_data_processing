@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
-from typing import Optional, Set
+from typing import Set
 
 from pydantic import BaseModel, PositiveInt, field_validator
 
@@ -25,6 +25,8 @@ class XRNAProcessor(BaseModel, extra='allow'):
 
     rna_ids: Set[str]
     annotation: AnnotInfo
+    ouputs_prefix: str = 'xrna'
+    keep_extras: Set[str] = set()
 
     hisat: HisatTool
     stringtie: StringtieTool
@@ -35,11 +37,11 @@ class XRNAProcessor(BaseModel, extra='allow'):
         self._validate_inputs()
         # working dir
         os.chdir(self.base_dir)
-        #self.work_dir = TemporaryDirectory(dir=self.base_dir)
-        self.work_dir = mkdtemp(dir=self.base_dir)
+        self.work_dir = TemporaryDirectory(dir=self.base_dir)
+        #self.work_dir = mkdtemp(dir=self.base_dir)
         # other members
-        #work_pth = Path(self.work_dir.name)
-        work_pth = Path(self.work_dir)
+        work_pth = Path(self.work_dir.name)
+        #work_pth = Path(self.work_dir)
         executor = PoolExecutor(self.cpus)
         self.annotation.prepare_annotation(work_pth)
         self.preprocessing = PreprocessingPipeline(
@@ -66,12 +68,14 @@ class XRNAProcessor(BaseModel, extra='allow'):
             self.output_dir.mkdir(parents=True)   
 
     def run(self):
+        # run pipeline
         prepared_bams = self.preprocessing.run(
             self.rna_ids, self.bed_input_dir, self.fq_input_dir, self.annotation
         )
-        print(f'prepared BAM files: {prepared_bams}')
-        self.pipeline.run(prepared_bams, self.annotation)
+        self.pipeline.run(
+            prepared_bams, self.annotation, self.ouputs_prefix
+        )
+        # save outputs
+        self.preprocessing.save_outputs(self.output_dir, self.keep_extras)
+        self.pipeline.save_outputs(self.ouputs_prefix, self.output_dir, self.keep_extras)
         logger.info('Done.')
-        
-        # stringtie pipeline:
-            # save outputs

@@ -4,7 +4,7 @@ import re
 from csv import QUOTE_NONE
 from functools import partial
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Set
 from typing_extensions import Annotated
 
 import pandas as pd
@@ -17,7 +17,9 @@ from ..plots import (
     set_style_white, plot_distance_to_closest, plot_length_distribution,
     plot_tpm_expressions
 )
-from ..utils import exit_with_error, run_command, run_get_stdout, validate_tool_path
+from ..utils import (
+    exit_with_error, move_exist_ok, run_command, run_get_stdout, validate_tool_path
+)
 
 logger = logging.getLogger()
 STRINGTIE_STAGES = (
@@ -264,7 +266,7 @@ class StringtiePipeline:
     def run(self,
             input_bams: List[Path],
             annot_info: AnnotInfo,
-            prefix: str = 'xrna') -> None:
+            prefix: str) -> None:
         raw_gtfs = self.run_stringtie(input_bams, annot_info.gtf_annotation)
         self.run_stringtie_merge(raw_gtfs)
         self.handle_intervals(annot_info.annot_bed)
@@ -272,3 +274,26 @@ class StringtiePipeline:
         self.closest_gene(annot_info.annot_bed)
         self.run_stringtie_cov(input_bams)
         self.make_plots(prefix)
+
+    def save_outputs(self,
+                     prefix: str,
+                     output_dir: Path,
+                     keep_extras: Set[str]) -> None:
+        KEEP_FULL: Dict[str, Path]  = {
+            'stringtie_raw': self.stringtie_raw,
+            'stringtie_merge': self.stringtie_merge,
+            'stringtie_cov': self.stringtie_cov,
+            'plots': self.plots
+        }
+        keep_extras = keep_extras & set(KEEP_FULL)
+        keep_extras.add('plots') # save plots anyway
+        for name in keep_extras:
+            src = KEEP_FULL[name]
+            dst = output_dir / name
+            dst.mkdir(exist_ok=True)
+            move_exist_ok(src, dst)
+        main_outputs_ext = ('bed', 'tab')
+        for ext in main_outputs_ext:
+            src = self.xrna / f'xrna.{ext}'
+            dst = output_dir / f'{prefix}.{ext}'
+            shutil.move(src, dst)

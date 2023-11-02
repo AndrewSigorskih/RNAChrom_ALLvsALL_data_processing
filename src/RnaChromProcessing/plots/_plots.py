@@ -15,6 +15,7 @@ def _calc_upper_whisker(arr: pd.Series) -> float:
     hival = Q3 + 1.5 * IQR
     return arr[arr <= hival].max()
 
+
 def set_style_white() -> None:
     sns.set_style('white')
     sns.set_palette('husl')
@@ -129,11 +130,10 @@ def plot_distance_to_closest(tab: pd.DataFrame,
                              prefix: str) -> None:
     fig, ax = plt.subplots()
     fig.set_size_inches(*FIGSIZE)
-    palette = {'3\'': 'b', '5\'': 'r'}
+    palette = {'3\'': 'r', '5\'': 'b'}
     # select 5` and 3` distances that are within 10kb window around genes
     tab = tab[['closest_gene_side', 'closest_gene_dist']].copy()
     tab.columns = ['Prime', 'Distance']
-    #tab = tab.assign(Distance=tab['Distance'].abs())
     tab['Distance'] = tab['Distance'].abs()
     tab = tab[tab['Distance'] <= TEN_KB]
     # plot histograms
@@ -215,7 +215,8 @@ def plot_tpm_expressions(tab: pd.DataFrame,
         _calc_upper_whisker(
             tab.loc[tab['variable'] == name, 'value']
         ) 
-        for name in tab['variable'].unique())
+        for name in tab['variable'].unique()
+    )
     plt.ylim(-5, hival+5)
     # add noise to outliers.
     for line in ax.get_lines()[5::6]:
@@ -229,4 +230,4 @@ def plot_tpm_expressions(tab: pd.DataFrame,
     plt.xlabel("Experiment / cell line")
     # save
     plt.savefig(out_dir / f'{prefix}_tpm_distr.png',
-                dpi=1200, bbox_inches='tight')
+                dpi=600, bbox_inches='tight')

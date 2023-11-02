@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 from .AnnotInfo import AnnotInfo, SampleInfo
 from .PoolExecutor import PoolExecutor
 from ..utils import (
-    find_in_list, run_command, run_get_stdout, validate_tool_path
+    find_in_list,  move_exist_ok, run_command, run_get_stdout, validate_tool_path
 )
 
 CHUNKSIZE = 10_000_000
@@ -240,3 +240,17 @@ class PreprocessingPipeline:
         self.run_merge_bams(replics_dct)
         self.run_sort_bams(replics_dct)
         return self.results
+
+    def save_outputs(self,
+                     output_dir: Path,
+                     keep_extras: Set[str]) -> None:
+        KEEP_FULL: Dict[str, Path]  = {
+            'ids': self.filter_bed, 'fastq': self.revc_fastq,
+            'raw_bam': self.align, 'merged_bam': self.sort_bams
+        }
+        keep_extras = keep_extras & set(KEEP_FULL)
+        for name in keep_extras:
+            src = KEEP_FULL[name]
+            dst = output_dir / name
+            dst.mkdir(exist_ok=True)
+            move_exist_ok(src, dst)
