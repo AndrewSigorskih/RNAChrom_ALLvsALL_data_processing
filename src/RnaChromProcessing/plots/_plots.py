@@ -153,7 +153,7 @@ def plot_distance_to_closest(tab: pd.DataFrame,
     ax.set_xlabel('Distance, bp', fontsize=20)
     ax2.set_ylabel('Density', fontsize=20)
     # save
-    plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
+    plt.savefig(out_dir / f'{prefix}_closest_gene_distances.png',
                 dpi=300, bbox_inches='tight')
 
 
@@ -188,7 +188,7 @@ def _plot_distance_to_closest(tab: pd.DataFrame,
     ax.set_ylabel('Count', fontsize=20)
     ax.set_xlabel('Distance, bp', fontsize=20)
     # save
-    plt.savefig(out_dir / f'{prefix}_closets_gene_distances.png',
+    plt.savefig(out_dir / f'{prefix}_closest_gene_distances.png',
                 dpi=300, bbox_inches='tight')
     
 
