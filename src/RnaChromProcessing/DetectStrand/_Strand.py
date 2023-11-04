@@ -131,7 +131,7 @@ class DetectStrand(BaseModel):
                 ' for "gene" type records!'
             )
         gene_annot['score'] = 100
-        self._gene_names = gene_annot['name'].values()
+        self._gene_names = gene_annot['name'].values
         self._bed_annot = self._work_pth / 'annotation.bed'
         gene_annot.loc[:,BED_COLS].to_csv(self._bed_annot, sep='\t', index=False, header=False)
 
