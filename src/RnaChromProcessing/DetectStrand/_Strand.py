@@ -217,26 +217,26 @@ class DetectStrand(BaseModel):
     def counts_to_values(self) -> None:
         same_wins = lambda x: x[0] > x[1]
         anti_wins = lambda x: x[1] > x[0]
-        self.result = pd.DataFrame(data=None, index=self._raw_result.index)
-        self.result['same'] = self.raw_result.apply(lambda row: row.apply(same_wins).sum(),
+        self._result = pd.DataFrame(data=None, index=self._raw_result.index)
+        self._result['same'] = self._raw_result.apply(lambda row: row.apply(same_wins).sum(),
                                                     axis=1)
-        self.result['anti'] = self.raw_result.apply(lambda row: row.apply(anti_wins).sum(),
+        self._result['anti'] = self._raw_result.apply(lambda row: row.apply(anti_wins).sum(),
                                                     axis=1)
         
-        mask = (self.result['same'] - self.result['anti'])/(self.result['same'] + self.result['anti'])
-        self.result['strand'] = 'UNKNOWN'
-        self.result.loc[mask > 0.75, 'strand'] = 'SAME'
-        self.result.loc[mask < -0.75, 'strand'] = 'ANTI'
+        mask = (self._result['same'] - self._result['anti'])/(self._result['same'] + self._result['anti'])
+        self._result['strand'] = 'UNKNOWN'
+        self._result.loc[mask > 0.75, 'strand'] = 'SAME'
+        self._result.loc[mask < -0.75, 'strand'] = 'ANTI'
 
     def run(self) -> None:
         self.calculate()
         self.counts_to_values()
         # save outputs
-        self.result.to_csv(f'{self.output_dir}/{self.prefix}_wins.tsv', sep='\t')
-        self.raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
+        self._result.to_csv(f'{self.output_dir}/{self.prefix}_wins.tsv', sep='\t')
+        self._raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
         # make plots
         set_style_white()
-        rna_strand_barplot(self.result, self.gene_annot.shape[0],
+        rna_strand_barplot(self._result, len(self._gene_names),
                            self.output_dir, self.prefix)
         logger.info('Done.')
 
