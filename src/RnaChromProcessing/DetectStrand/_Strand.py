@@ -39,7 +39,7 @@ def _contacts_to_bed(inp_file: Path, prep_file: Path) -> None:
     for chunk in dat_iter:
         chunk['name'] = '.'
         chunk['score'] = 0
-        chunk[CONTACTS_BED_COLS].to_csv(
+        chunk.loc[:,CONTACTS_BED_COLS].to_csv(
             prep_file, sep='\t', index=False, header=False, mode='a'
         )
 
@@ -130,7 +130,7 @@ class DetectStrand(BaseModel):
             )
         gene_annot['score'] = 100
         self._bed_annot = self._work_pth / 'annotation.bed'
-        gene_annot[BED_NAMES].to_csv(self._bed_annot, sep='\t', index=False, header=False)
+        gene_annot.loc[:,BED_NAMES].to_csv(self._bed_annot, sep='\t', index=False, header=False)
 
     def __read_inputs(self, exp_groups: Dict[str, List[str]]) -> None:
         self._files_map: Dict[Tuple[str, str], Path] = {}
