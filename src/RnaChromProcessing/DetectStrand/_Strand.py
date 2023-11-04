@@ -98,7 +98,7 @@ class DetectStrand(BaseModel):
         return Path(pth).resolve()
 
     def __setup_dirs(self) -> None:
-        if not self.bed_input_dir.exists():
+        if not self.input_dir.exists():
             exit_with_error('Input directory does not exist!')
         if not self.base_dir.exists():
             self.base_dir.mkdir(parents=True)
