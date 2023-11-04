@@ -1,2 +1,2 @@
-from .Strand import StrandCalc
-from ._Strand import DetectStrand
+from .OLD_Strand import StrandCalc
+from .Strand import DetectStrand
