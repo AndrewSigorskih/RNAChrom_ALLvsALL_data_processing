@@ -155,7 +155,8 @@ class DetectStrand(BaseModel):
             exit_with_error('Could not find any if the listed files in input directory!')
         logger.info(f'{len(self._files_map)} files found in input directory')
 
-    def _get_coverage(self, input_bed) -> int:
+    def _get_coverage(self, key: Tuple[str, str]) -> int:
+        input_bed = self._files_map[key]
         name = input_bed.stem
         res_same = self._work_pth / f'{name}_same.bed'
         res_anti = self._work_pth / f'{name}_anti.bed'
@@ -184,7 +185,7 @@ class DetectStrand(BaseModel):
             same_val = same_dat[gene_name]
             anti_val = anti_dat[gene_name]
             logger.log(VERBOSE, f'Gene {gene_name}: {same_val} reads on same strand, {anti_val} on antisence.')
-            self._raw_result.loc[pd.IndexSlice[:, name], gene_name] = (same_val, anti_val)
+            self._raw_result.at[key, gene_name] = (same_val, anti_val)
         # rm tmp files
         res_same.unlink()
         res_anti.unlink()
@@ -204,7 +205,7 @@ class DetectStrand(BaseModel):
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [
                 executor.submit(self._get_coverage, inp)
-                for inp in self._files_map.values()
+                for inp in self._files_map.keys()
             ]
             results = [
                 future.result() for future in concurrent.futures.as_completed(futures)
