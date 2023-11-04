@@ -12,11 +12,13 @@ from pydantic import BaseModel, PositiveInt, field_validator
 from ..utils import (
     check_file_exists, exit_with_error, find_in_list, run_command
 )
+from ..utils.run_utils import VERBOSE
+from ..plots import rna_strand_barplot, set_style_white
 
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 CONTACTS_BED_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'name', 'score', 'rna_strand')
-BED_NAMES = ('chr', 'start', 'end', 'name', 'score', 'strand')
-GTF_NAMES = ('chr', 'type', 'start', 'end', 'strand', 'attrs')
+BED_COLS = ('chr', 'start', 'end', 'name', 'score', 'strand')
+GTF_COLS = ('chr', 'type', 'start', 'end', 'strand', 'attrs')
 
 CHUNKSIZE = 10_000_000
 GENE_ID_PAT = re.compile(r'(?<=gene_id \")[^\"]+(?=\";)')
@@ -112,7 +114,7 @@ class DetectStrand(BaseModel):
         # load annotation and extract selected genes
         gene_annot = pd.read_csv(
             self.gtf_annotation, sep='\t', header=None, skiprows=5,
-            usecols=[0,2,3,4,6,8], names=GTF_NAMES
+            usecols=[0,2,3,4,6,8], names=GTF_COLS
         )
         gene_annot = gene_annot[gene_annot['type'] == 'gene']
         gene_annot = gene_annot[gene_annot['attrs'].str.contains(genes_list)]
@@ -129,8 +131,9 @@ class DetectStrand(BaseModel):
                 ' for "gene" type records!'
             )
         gene_annot['score'] = 100
+        self._gene_names = gene_annot['name'].values()
         self._bed_annot = self._work_pth / 'annotation.bed'
-        gene_annot.loc[:,BED_NAMES].to_csv(self._bed_annot, sep='\t', index=False, header=False)
+        gene_annot.loc[:,BED_COLS].to_csv(self._bed_annot, sep='\t', index=False, header=False)
 
     def __read_inputs(self, exp_groups: Dict[str, List[str]]) -> None:
         self._files_map: Dict[Tuple[str, str], Path] = {}
@@ -142,7 +145,8 @@ class DetectStrand(BaseModel):
                     logger.warning(f'{file_id} not found in input directory, skipping..')
                     continue
                 inp_file = self.input_dir / filename
-                prep_file = _prepare_input(inp_file, self._work_pth / filename)
+                prep_file = (self._work_pth / filename).with_suffix('.bed')
+                prep_file = _prepare_input(inp_file, prep_file)
                 if not prep_file:
                     logger.warning(f'Could not read {prep_file}, skipping..')
                     continue
@@ -168,11 +172,34 @@ class DetectStrand(BaseModel):
         if ret := (ret_1 or ret_2):
             return ret
         # collect results
-        pass 
+        same_dat = pd.read_csv(
+            res_same, sep='\t', header=None, index_col=3,
+            usecols=[3, 6], names=['index', 'counts']
+        )['counts']
+        anti_dat = pd.read_csv(
+            res_anti, sep='\t', header=None, index_col=3,
+            usecols=[3, 6], names=['index', 'counts']
+        )['counts']
+        for gene_name in self._gene_names:
+            same_val = same_dat[gene_name]
+            anti_val = anti_dat[gene_name]
+            logger.log(VERBOSE, f'Gene {gene_name}: {same_val} reads on same strand, {anti_val} on antisence.')
+            self._raw_result.loc[pd.IndexSlice[:, name], gene_name] = (same_val, anti_val)
+        # rm tmp files
+        res_same.unlink()
+        res_anti.unlink()
+        return 0
 
     def calculate(self):
         # do preps
-
+        self._raw_result = pd.DataFrame(
+            data=None,
+            columns=self._gene_names,
+            index=pd.MultiIndex.from_tuples(
+                self._files_map.keys(),
+                names=['group', 'id']
+            )
+        )
         # run calcultaions in parallel
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [
@@ -185,11 +212,30 @@ class DetectStrand(BaseModel):
         if any(x != 0 for x in results):
             msg = f'One or several calls of bedtools coverage returned non-zero process exit code!'
             exit_with_error(msg)
+    
+    def counts_to_values(self) -> None:
+        same_wins = lambda x: x[0] > x[1]
+        anti_wins = lambda x: x[1] > x[0]
+        self.result = pd.DataFrame(data=None, index=self._raw_result.index)
+        self.result['same'] = self.raw_result.apply(lambda row: row.apply(same_wins).sum(),
+                                                    axis=1)
+        self.result['anti'] = self.raw_result.apply(lambda row: row.apply(anti_wins).sum(),
+                                                    axis=1)
+        
+        mask = (self.result['same'] - self.result['anti'])/(self.result['same'] + self.result['anti'])
+        self.result['strand'] = 'UNKNOWN'
+        self.result.loc[mask > 0.75, 'strand'] = 'SAME'
+        self.result.loc[mask < -0.75, 'strand'] = 'ANTI'
 
     def run(self) -> None:
         self.calculate()
-        # for each file (in parallel)?:
-        #   run bedtools coverage -s AND -S
-        #   collect  and format results
-        # organize results, make plots
-        pass
+        self.counts_to_values()
+        # save outputs
+        self.result.to_csv(f'{self.output_dir}/{self.prefix}_wins.tsv', sep='\t')
+        self.raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
+        # make plots
+        set_style_white()
+        rna_strand_barplot(self.result, self.gene_annot.shape[0],
+                           self.output_dir, self.prefix)
+        logger.info('Done.')
+
