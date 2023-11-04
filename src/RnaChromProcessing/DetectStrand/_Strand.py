@@ -173,11 +173,11 @@ class DetectStrand(BaseModel):
             return ret
         # collect results
         same_dat = pd.read_csv(
-            res_same, sep='\t', header=None, index_col=3,
+            res_same, sep='\t', header=None, index_col='index',
             usecols=[3, 6], names=['index', 'counts']
         )['counts']
         anti_dat = pd.read_csv(
-            res_anti, sep='\t', header=None, index_col=3,
+            res_anti, sep='\t', header=None, index_col='index',
             usecols=[3, 6], names=['index', 'counts']
         )['counts']
         for gene_name in self._gene_names:
