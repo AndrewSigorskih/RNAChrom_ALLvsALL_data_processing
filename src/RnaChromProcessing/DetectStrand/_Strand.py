@@ -1,18 +1,24 @@
+import concurrent.futures
 import logging
 import re
-from os import chdir, listdir
+from os import chdir, listdir, symlink
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, PositiveInt, field_validator
 
-from ..utils import check_file_exists, exit_with_error, find_in_list
+from ..utils import (
+    check_file_exists, exit_with_error, find_in_list, run_command
+)
 
+CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
+CONTACTS_BED_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'name', 'score', 'rna_strand')
 BED_NAMES = ('chr', 'start', 'end', 'name', 'score', 'strand')
 GTF_NAMES = ('chr', 'type', 'start', 'end', 'strand', 'attrs')
 
+CHUNKSIZE = 10_000_000
 GENE_ID_PAT = re.compile(r'(?<=gene_id \")[^\"]+(?=\";)')
 GENE_NAME_PAT = re.compile(r'(?<=gene_name \")[^\"]+(?=\";)')
 
@@ -26,11 +32,39 @@ def _read_name_or_id(s: str) -> str:
     return capture.group(0)
 
 
+def _contacts_to_bed(inp_file: Path, prep_file: Path) -> None:
+    # will throw exception if file is not a valid contacts table
+    dat_iter = pd.read_csv(inp_file, sep='\t', usecols=CONTACTS_COLS,
+                           chunksize=CHUNKSIZE)
+    for chunk in dat_iter:
+        chunk['name'] = '.'
+        chunk['score'] = 0
+        chunk[CONTACTS_BED_COLS].to_csv(
+            prep_file, sep='\t', index=False, header=False, mode='a'
+        )
+
+
+def _prepare_input(inp_file: Path, prep_file: Path) -> Optional[Path]:
+    if inp_file.suffix == '.bed':
+        symlink(inp_file, prep_file)
+    elif inp_file.suffix == '.tab':
+        try:
+            _contacts_to_bed(inp_file, prep_file)
+        except Exception:  # actually ValueError, maybe smth else?
+            logger.warning(f'{inp_file} is not a contacts table!')
+            return None
+    else:
+        logger.warning(f'Unknown file extension: {inp_file}')
+        return None
+    return prep_file
+
+
 class DetectStrand(BaseModel):
     prefix: str = 'strand'
     input_dir: Path
     output_dir: Path
     base_dir: Path = Path('.').resolve()
+    cpus: PositiveInt = 1
 
     gtf_annotation: Path
     genes_list: Path
@@ -99,7 +133,7 @@ class DetectStrand(BaseModel):
         gene_annot[BED_NAMES].to_csv(self._bed_annot, sep='\t', index=False, header=False)
 
     def __read_inputs(self, exp_groups: Dict[str, List[str]]) -> None:
-        self._files_map: Dict[Tuple[str, str], str] = {}
+        self._files_map: Dict[Tuple[str, str], Path] = {}
         files_list = listdir(self.input_dir)
         for group, id_list in exp_groups.items():
             for file_id in id_list:
@@ -107,13 +141,53 @@ class DetectStrand(BaseModel):
                 if not filename:
                     logger.warning(f'{file_id} not found in input directory, skipping..')
                     continue
-                self._files_map[(group, file_id)] = filename
+                inp_file = self.input_dir / filename
+                prep_file = _prepare_input(inp_file, self._work_pth / filename)
+                if not prep_file:
+                    logger.warning(f'Could not read {prep_file}, skipping..')
+                    continue
+                self._files_map[(group, file_id)] = prep_file
         if not self._files_map:
             exit_with_error('Could not find any if the listed files in input directory!')
         logger.info(f'{len(self._files_map)} files found in input directory')
 
+    def _get_coverage(self, input_bed) -> int:
+        name = input_bed.stem
+        res_same = self._work_pth / f'{name}_same.bed'
+        res_anti = self._work_pth / f'{name}_anti.bed'
+        # run coverage both ror same and anti strand
+        cmd_1 = (
+            f'bedtools coverage -a {self._bed_annot} -b {input_bed} '
+            f'-s -counts > {res_same}'
+        )
+        cmd_2 = (
+            f'bedtools coverage -a {self._bed_annot} -b {input_bed} '
+            f'-S -counts > {res_anti}'
+        )
+        ret_1, ret_2 = run_command(cmd_1, shell=True), run_command(cmd_2, shell=True)
+        if ret := (ret_1 or ret_2):
+            return ret
+        # collect results
+        pass 
+
+    def calculate(self):
+        # do preps
+
+        # run calcultaions in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
+            futures = [
+                executor.submit(self._get_coverage, inp)
+                for inp in self._files_map.values()
+            ]
+            results = [
+                future.result() for future in concurrent.futures.as_completed(futures)
+            ]
+        if any(x != 0 for x in results):
+            msg = f'One or several calls of bedtools coverage returned non-zero process exit code!'
+            exit_with_error(msg)
+
     def run(self) -> None:
-        # process files: tab or bed
+        self.calculate()
         # for each file (in parallel)?:
         #   run bedtools coverage -s AND -S
         #   collect  and format results

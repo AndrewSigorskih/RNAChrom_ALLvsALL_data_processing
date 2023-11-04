@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from .DetectStrand import StrandCalc
+from .DetectStrand import StrandCalc, DetectStrand
 from .utils import configure_logger, load_config
 
 logger = logging.getLogger('strand')
@@ -26,7 +26,8 @@ def main() -> None:
     logger.debug(f'Started with arguments: {vars(args)}')
 
     config = load_config(args.config)
-    StrandCalc(config).run()
+    #StrandCalc(config).run()
+    DetectStrand(**config).run()
 
 # TODO plots ylim = -nGenes:+nGenes
     
