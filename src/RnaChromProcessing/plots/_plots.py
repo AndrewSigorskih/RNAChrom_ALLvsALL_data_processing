@@ -72,29 +72,31 @@ def rna_strand_barplot(wins: pd.DataFrame,
         rects += ax.bar(i, wins.iat[i, 0], width, color=colors[i], alpha=.5)
         negrects += ax.bar(i, -wins.iat[i, 1], width, color=colors[i], alpha=.5)
     # labels and legend
+    ax.set_ylim(-total_genes-3, total_genes+3)
     ax.set_ylabel('Numbers of wins', fontsize=20)
     ax.set_title(f'Numbers of wins and losses\nout of {total_genes} genes', fontsize=16)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=90)
-    plt.legend(handles=patches, fontsize=14)
+    ax.set_xticklabels(labels, rotation=65)
+    #plt.legend(handles=patches, fontsize=14)
+    ax.legend(handles=patches, fontsize=14, loc='best')
     
     ax.axes.get_yaxis().set_ticks([])
     
     # exact numbers over rects
-    def autolabel(rects, neg=1):
+    def autolabel(rects, offset=1):
         """Attach a text label above each bar in *rects*, displaying its height."""
         for rect in rects:
-            height = round(rect.get_height(),2)
+            height = round(rect.get_height(), 2)
             ax.annotate(f'{np.abs(height)}',
                         xy=(rect.get_x()+width/2, height),
-                        xytext=(0, 3*neg),  # 3 points vertical offset
+                        xytext=(0, 3*offset),  # 3 points vertical offset
                         textcoords='offset points',
                         ha='center', va='bottom')
     autolabel(rects)
     autolabel(negrects, -3)
     # save
     ax.axhline(color='grey')
-    fig.tight_layout()
+    #fig.tight_layout()
     plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
 
