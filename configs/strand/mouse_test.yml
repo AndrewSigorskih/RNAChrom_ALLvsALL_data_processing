@@ -2,9 +2,10 @@ input_dir: results/contacts
 output_dir: strand
 gtf_annotation: /gpfs/asigorskikh/data/genes/gencode.vM32.annotation.gtf
 genes_list: /gpfs/asigorskikh/soft/RNAChrom_ALLvsALL_data_processing/configs/strand/gencode_vM32_rpl_genes.txt
-prefix: mouse_strand
+prefix: mouse_strand_test
+cpus: 5
 exp_groups:
-    grid:
+    grid_ES:
     - SRR5035944
     - SRR5035946
     radicl_mES_1FA:

@@ -43,6 +43,7 @@ output_dir|Yes|path to directory to store outputs in. Will be created if not exi
 gtf_annotation|Yes|path to gene annotation file in GTF format.
 genes_list|Yes|path to a file with selected genes names (or ids), one per line.
 prefix|No|prefix name for all output files. Default  is "strand".
+cpus|No|int > 0. Number of tasks to run simultaneously. Default is 1.
 exp_groups|Yes|sub-config with lists of input file ids divided by groups (experiment types, for example). See config examples for more information.
 
 [Back to top](#head)

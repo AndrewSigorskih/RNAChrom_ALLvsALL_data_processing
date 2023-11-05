@@ -1,1 +1,1 @@
-from .Strand import StrandCalc
+from .Strand import DetectStrand

@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from tempfile import TemporaryDirectory, mkdtemp
+from tempfile import TemporaryDirectory
 from typing import Set
 
 from pydantic import BaseModel, PositiveInt, field_validator
@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
-class XRNAProcessor(BaseModel, extra='allow'):
+class XRNAProcessor(BaseModel):
     bed_input_dir: Path
     fq_input_dir: Path
     output_dir: Path
@@ -37,17 +37,15 @@ class XRNAProcessor(BaseModel, extra='allow'):
         self._validate_inputs()
         # working dir
         os.chdir(self.base_dir)
-        self.work_dir = TemporaryDirectory(dir=self.base_dir)
-        #self.work_dir = mkdtemp(dir=self.base_dir)
+        self._work_dir = TemporaryDirectory(dir=self.base_dir)
         # other members
-        work_pth = Path(self.work_dir.name)
-        #work_pth = Path(self.work_dir)
+        work_pth = Path(self._work_dir.name)
         executor = PoolExecutor(self.cpus)
         self.annotation.prepare_annotation(work_pth)
-        self.preprocessing = PreprocessingPipeline(
+        self._preprocessing = PreprocessingPipeline(
             work_pth, executor, self.hisat
         )
-        self.pipeline = StringtiePipeline(
+        self._pipeline = StringtiePipeline(
             work_pth, executor, self.stringtie
         )
 
@@ -69,13 +67,13 @@ class XRNAProcessor(BaseModel, extra='allow'):
 
     def run(self):
         # run pipeline
-        prepared_bams = self.preprocessing.run(
+        prepared_bams = self._preprocessing.run(
             self.rna_ids, self.bed_input_dir, self.fq_input_dir, self.annotation
         )
-        self.pipeline.run(
+        self._pipeline.run(
             prepared_bams, self.annotation, self.ouputs_prefix
         )
         # save outputs
-        self.preprocessing.save_outputs(self.output_dir, self.keep_extras)
-        self.pipeline.save_outputs(self.ouputs_prefix, self.output_dir, self.keep_extras)
+        self._preprocessing.save_outputs(self.output_dir, self.keep_extras)
+        self._pipeline.save_outputs(self.ouputs_prefix, self.output_dir, self.keep_extras)
         logger.info('Done.')
