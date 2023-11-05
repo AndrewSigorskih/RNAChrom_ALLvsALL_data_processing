@@ -76,13 +76,12 @@ def rna_strand_barplot(wins: pd.DataFrame,
     ax.set_ylabel('Numbers of wins', fontsize=20)
     ax.set_title(f'Numbers of wins and losses\nout of {total_genes} genes', fontsize=16)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=65)
-    #plt.legend(handles=patches, fontsize=14)
+    ax.set_xticklabels(labels, rotation=80)
     ax.legend(handles=patches, fontsize=14, loc='best')
+    ax.set_yticks([])
+    #ax.axes.get_yaxis().set_ticks([])
     
-    ax.axes.get_yaxis().set_ticks([])
-    
-    # exact numbers over rects
+    # exact height values over rects
     def autolabel(rects, offset=1):
         """Attach a text label above each bar in *rects*, displaying its height."""
         for rect in rects:
@@ -96,7 +95,6 @@ def rna_strand_barplot(wins: pd.DataFrame,
     autolabel(negrects, -3)
     # save
     ax.axhline(color='grey')
-    #fig.tight_layout()
     plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
 
