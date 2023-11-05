@@ -1,9 +1,11 @@
-import matplotlib.pyplot as plt
+from pathlib import Path
+
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd
 import seaborn as sns
-from pathlib import Path
+
 
 FIGSIZE = (11.7, 8.27)
 TEN_KB = 10_000
@@ -76,7 +78,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
     ax.set_ylabel('Numbers of wins', fontsize=20)
     ax.set_title(f'Numbers of wins and losses\nout of {total_genes} genes', fontsize=16)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=80)
+    ax.set_xticklabels(labels, rotation=85)
     ax.legend(handles=patches, fontsize=14, loc='best')
     ax.set_yticks([])
     #ax.axes.get_yaxis().set_ticks([])

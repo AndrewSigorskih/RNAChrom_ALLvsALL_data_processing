@@ -3,7 +3,7 @@ import logging
 import re
 from os import chdir, listdir, symlink
 from pathlib import Path
-from tempfile import TemporaryDirectory, mkdtemp
+from tempfile import TemporaryDirectory
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -80,9 +80,7 @@ class DetectStrand(BaseModel):
         chdir(self.base_dir)
         # tmp directory
         self._work_dir = TemporaryDirectory(dir=self.base_dir)
-        #self._work_dir = mkdtemp(dir=self.base_dir)
         self._work_pth = Path(self._work_dir.name)
-        #self._work_pth = Path(self._work_dir)
         # genes
         self.__load_genes()
         # input files
@@ -238,6 +236,7 @@ class DetectStrand(BaseModel):
         self._raw_result.to_csv(f'{self.output_dir}/{self.prefix}_raw_counts.tsv', sep='\t')
         # make plots
         set_style_white()
+        logger.debug('Finished calculations, plotting results..')
         rna_strand_barplot(self._result, len(self._gene_names),
                            self.output_dir, self.prefix)
         logger.info('Done.')
