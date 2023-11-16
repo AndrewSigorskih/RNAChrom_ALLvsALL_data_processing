@@ -240,4 +240,3 @@ class DetectStrand(BaseModel):
         rna_strand_barplot(self._result, len(self._gene_names),
                            self.output_dir, self.prefix)
         logger.info('Done.')
-

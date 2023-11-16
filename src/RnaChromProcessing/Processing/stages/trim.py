@@ -17,7 +17,7 @@ class _TrimToolParams(BaseModel):
 class Trim(BasicStage):
     tool: Literal['trimmomatic', 'skip'] = 'trimmomatic'
     tool_path: Optional[Path] = None
-    tool_params: Optional[_TrimToolParams] = _TrimToolParams()
+    tool_params: _TrimToolParams = _TrimToolParams()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -34,10 +34,10 @@ class Trim(BasicStage):
             func = self._run_trimmomatic
         # prepare filepaths
         dna_outputs = [
-            self.stage_dir / sample.dna_file.name for sample in samples
+            self._stage_dir / sample.dna_file.name for sample in samples
         ]
         rna_outputs = [
-            self.stage_dir / sample.rna_file.name for sample in samples
+            self._stage_dir / sample.rna_file.name for sample in samples
         ]
         # run function
         self.run_function(

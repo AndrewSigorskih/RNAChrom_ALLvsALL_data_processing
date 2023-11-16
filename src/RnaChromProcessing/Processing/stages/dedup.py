@@ -15,7 +15,7 @@ class _DedupToolParams(BaseModel):
 class Dedup(BasicStage):
     tool: Literal['fastuniq', 'fastq-dupaway', 'skip'] = 'fastuniq'
     tool_path: Optional[Path] = None
-    tool_params: Optional[_DedupToolParams] = _DedupToolParams()
+    tool_params: _DedupToolParams = _DedupToolParams()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -34,10 +34,10 @@ class Dedup(BasicStage):
             func = self._run_fqdupaway
         # prepare filepaths
         dna_outputs = [
-            self.stage_dir / sample.dna_file.name for sample in samples
+            self._stage_dir / sample.dna_file.name for sample in samples
         ]
         rna_outputs = [
-            self.stage_dir / sample.rna_file.name for sample in samples
+            self._stage_dir / sample.rna_file.name for sample in samples
         ]
         # run function
         self.run_function(
@@ -81,5 +81,4 @@ class Dedup(BasicStage):
             '-o', rna_out_file, '-p', dna_out_file, '-m', self.tool_params.memlimit,
             '--compare-seq', self.tool_params.comparison
         ]
-        return_code = run_command(command)
-        return return_code
+        return run_command(command)

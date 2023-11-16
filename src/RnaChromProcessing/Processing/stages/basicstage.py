@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from pydantic import BaseModel, PositiveInt, SkipValidation
+from pydantic import BaseModel, PositiveInt
 
 from ...utils.errors import StageFailedError
 
@@ -27,13 +27,12 @@ class SamplePair:
 
 class BasicStage(BaseModel):
     cpus: Optional[PositiveInt] = None
-    stage_dir: SkipValidation[Path] = None
 
     def set_params(self,
                    global_cpus: int,
                    stage_dir: Path) -> None:
-        self.stage_dir = stage_dir
-        self.stage_dir.mkdir()
+        self._stage_dir = stage_dir
+        self._stage_dir.mkdir()
         if not self.cpus:
             self.cpus = global_cpus
 
