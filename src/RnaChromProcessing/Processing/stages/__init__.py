@@ -1,6 +1,7 @@
 from .align import Align
 from .bamfilter import BamFilter
 from .bamtobed import BamToBed
+from .basicstage import SamplePair
 from .contacts import Contacts
 from .dedup import Dedup
 #from .stats import StatsCalc

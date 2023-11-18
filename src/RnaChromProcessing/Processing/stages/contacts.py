@@ -7,7 +7,7 @@ import pandas as pd
 from pydantic import PositiveInt
 
 from .basicstage import BasicStage, SamplePair
-from ...utils import exit_with_error
+from ...utils import run_command
 
 DNA_COLUMNS = {
     'dna_chr': str, 'dna_bgn': np.uint32, 'dna_end': np.uint32,
@@ -44,7 +44,7 @@ class BedRow:
 
     @classmethod
     def from_string(cls, row: str):
-        return cls(*row.split())._prepare_id()
+        return cls(*row.strip().split())._prepare_id()
 
     def _prepare_id(self):
         self.id = _process_id(self.id)
@@ -78,7 +78,7 @@ class Contacts(BasicStage):
         elif self.mode == 'low-mem':
             func = self._make_contacts_iter
         # prepare filepaths
-        output_samples = self._make_output_samples(samples)
+        output_samples = self._make_output_samples(samples, new_suff='tab')
         # run function
         self.run_function(
             func,
@@ -130,20 +130,31 @@ class Contacts(BasicStage):
     def _make_contacts_iter(self,
                             dna_in_file: Path,
                             rna_in_file: Path,
-                            _: Path,  # ignore dna out file
+                            dna_out_file: Path,
                             rna_out_file: Path) -> int:
         """read 2 bed files line-by-line, produce 1 combined contacts file"""
-        with open(dna_in_file, 'r') as dna_in, \
-             open(rna_in_file, 'r') as rna_in, \
+        # sort bed files by chr and pos
+        rna_sorted = rna_out_file.with_suffix('.tmp')
+        dna_sorted = dna_out_file.with_suffix('.tmp')
+        for in_file, sorted_file in zip((dna_in_file, rna_in_file),
+                                        (dna_sorted, rna_sorted)):
+            cmd = f'sort -k 1,1 -k2,2n {in_file} > {sorted_file}'
+            retcode = run_command(cmd, shell=True)
+            if retcode: return retcode
+        # process sorted files line by line, seek matching ids
+        with open(dna_sorted, 'r') as dna_in, \
+             open(rna_sorted, 'r') as rna_in, \
              open(rna_out_file, 'w') as rna_out:
             print(*TAB_HEADER, file=rna_out, sep='\t')
             rna_row, dna_row = next(rna_in), next(dna_in)
             while(rna_row and dna_row):
                 rna_obj, dna_obj = BedRow.from_string(rna_row), BedRow.from_string(dna_row)
                 while rna_obj.id < dna_obj.id:
-                    rna_obj = BedRow.from_string(next(rna_in).strip())
+                    rna_obj = BedRow.from_string(next(rna_in))
                 while rna_obj.id > dna_obj.id:
-                    dna_obj = BedRow.from_string(next(dna_in).strip())
+                    dna_obj = BedRow.from_string(next(dna_in))
                 print(rna_obj.to_rna(), dna_obj.to_dna(), file=rna_out, sep='\t')
                 rna_row, dna_row = next(rna_in), next(dna_in)
+        rna_sorted.unlink()
+        dna_sorted.unlink()
         return 0
