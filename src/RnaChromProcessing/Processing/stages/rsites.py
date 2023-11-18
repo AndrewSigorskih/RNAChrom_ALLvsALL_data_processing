@@ -37,8 +37,7 @@ class Rsites(BasicStage):
                 self.tool_path, self.tool_path
             )
     
-    def run(self,
-            samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """Manage restriction sites filtration"""
         # choose strategy to run
         if self.type == 'skip':
@@ -50,22 +49,17 @@ class Rsites(BasicStage):
         elif self.type == 'custom':
             func = self._custom
         # prepare filepaths
-        dna_outputs = [
-            self._stage_dir / sample.dna_file.name for sample in samples
-        ]
-        rna_outputs = [
-            self._stage_dir / sample.rna_file.name for sample in samples
-        ]
+        output_samples = self._make_output_samples(samples)
         # run function
         self.run_function(
             func,
             [sample.dna_file for sample in samples],
             [sample.rna_file for sample in samples],
-            dna_outputs, rna_outputs
+            [sample.dna_file for sample in output_samples],
+            [sample.rna_file for sample in output_samples]
         )
-        # save paths
-        for sample, dna_out, rna_out in zip(samples, dna_outputs, rna_outputs):
-            sample.set_files(dna_out, rna_out)
+        # return results
+        return output_samples
         
     def _imargi_like(self,
                      dna_in_file: Path,

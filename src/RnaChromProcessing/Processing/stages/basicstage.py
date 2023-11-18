@@ -4,25 +4,30 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, List, Optional
+from typing import Callable, Iterable,  List, Optional
 
 from pydantic import BaseModel, PositiveInt
 
+from ...utils import remove_suffixes
 from ...utils.errors import StageFailedError
 
 logger = logging.getLogger()
 
 
-@dataclass
+def _all_equal(iterable: Iterable[int]) -> bool:
+    "return True if all elements in iterable are equal"
+    iterator = iter(iterable)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return True
+    return all(first == x for x in iterator)
+
+
+@dataclass(frozen=True)
 class SamplePair:
     dna_file: Path
     rna_file: Path
-
-    def set_files(self,
-                  new_dna_file: Path,
-                  new_rna_file: Path):
-        self.dna_file = new_dna_file
-        self.rna_file = new_rna_file
 
 
 class BasicStage(BaseModel):
@@ -46,16 +51,26 @@ class BasicStage(BaseModel):
         shutil.copy(rna_in_file, rna_out_file)
         return 0
     
-    def _symlink_files(self,
-                       dna_in_file: Path,
-                       rna_in_file: Path,
-                       dna_out_file: Path,
-                       rna_out_file: Path) -> int:
-        """create symlinks instead of copying"""
-        os.symlink(dna_in_file, dna_out_file)
-        os.symlink(rna_in_file, rna_out_file)
-        return 0
-    
+    def _make_output_samples(self,
+                             input_samples: List[SamplePair],
+                             new_suff: Optional[str] = None) -> List[SamplePair]:
+        """Create new SamplePairs pointing to self._stage_dir, 
+           changing file extensions if needed."""
+        if new_suff:
+            return [
+                SamplePair(
+                    self._stage_dir / f'{remove_suffixes(sample.dna_file.name)}.{new_suff}',
+                    self._stage_dir / f'{remove_suffixes(sample.rna_file.name)}.{new_suff}',
+                ) for sample in input_samples
+            ]
+        else:
+            return [
+                SamplePair(
+                    self._stage_dir / sample.dna_file.name,
+                    self._stage_dir / sample.rna_file.name
+                ) for sample in input_samples
+            ]
+
     def run_function(self,
                      func: Callable[[str, str, str, str], int],
                      dna_inputs: List[Path],
@@ -63,7 +78,7 @@ class BasicStage(BaseModel):
                      dna_outputs: List[Path],
                      rna_outputs: List[Path],
                      require_zero_code: bool = True) -> None:
-        if len(dna_outputs) != len(dna_inputs) != len(rna_outputs) != len(rna_inputs):
+        if not _all_equal((len(dna_inputs), len(dna_outputs), len(rna_outputs), len(rna_inputs))):
             msg = f'Lengths of inputs and outputs lists for {func.__qualname__} do not match!'
             raise StageFailedError(msg)
         

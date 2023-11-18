@@ -1,18 +1,15 @@
-import shutil
-from os import remove
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic import PositiveInt
 
 from .basicstage import BasicStage, SamplePair
 from ...utils import (
-    check_file_exists, exit_with_error, run_command, validate_tool_path
+    check_file_exists, exit_with_error,
+    run_command, validate_tool_path
 )
 
-def _remove_suff(pth: Path) -> str:
-    '''remove all suffixes from Path object'''
-    return str(pth).removesuffix(''.join(pth.suffixes))
+
 
 
 class Align(BasicStage):
@@ -47,8 +44,7 @@ class Align(BasicStage):
                 exit_with_error('Known splicesite infile is required for hisat RNA alignment!')
             check_file_exists(self.known_splice)
     
-    def run(self,
-            samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         '''Run chosen alignment tools'''
         # choose dna tools to run
         if self.dna_tool == 'hisat':
@@ -67,22 +63,17 @@ class Align(BasicStage):
         elif self.rna_tool == 'custom':
             self._align_rna = self._rna_custom
         # prepare filepaths
-        dna_outputs = [
-            self._stage_dir / f'{_remove_suff(sample.dna_file.name)}.bam' for sample in samples
-        ]
-        rna_outputs = [
-            self._stage_dir / f'{_remove_suff(sample.rna_file.name)}.bam' for sample in samples
-        ]
+        output_samples = self._make_output_samples(samples, new_suff='bam')
         # run
         self.run_function(
             self._run_one,
             [sample.dna_file for sample in samples],
             [sample.rna_file for sample in samples],
-            dna_outputs, rna_outputs
+            [sample.dna_file for sample in output_samples],
+            [sample.rna_file for sample in output_samples]
         )
-        # outputs
-        for sample, dna_out, rna_out in zip(samples, dna_outputs, rna_outputs):
-            sample.set_files(dna_out, rna_out)
+        # return results
+        return output_samples
 
     def _run_one(self,
                  dna_in_file: Path,

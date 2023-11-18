@@ -58,6 +58,11 @@ def move_exist_ok(src_dir: str, dest_dir: str):
             else:
                 os.remove(dest)
         shutil.move(src, dest_dir)
+    
+
+def remove_suffixes(pth: Path) -> str:
+    '''remove all suffixes from Path object'''
+    return str(pth).removesuffix(''.join(pth.suffixes))
 
 
 def validate_tool_path(path: Optional[str], tool_name: str) -> Path:

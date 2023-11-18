@@ -22,8 +22,7 @@ class Dedup(BasicStage):
         if self.tool != 'skip':
             self.tool_path = validate_tool_path(self.tool_path, self.tool)
 
-    def run(self,
-            samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """Run chosen deduplication tool"""
         # choose tool to run
         if self.tool == 'skip':
@@ -33,22 +32,17 @@ class Dedup(BasicStage):
         elif self.tool == 'fastq-dupaway':
             func = self._run_fqdupaway
         # prepare filepaths
-        dna_outputs = [
-            self._stage_dir / sample.dna_file.name for sample in samples
-        ]
-        rna_outputs = [
-            self._stage_dir / sample.rna_file.name for sample in samples
-        ]
+        output_samples = self._make_output_samples(samples)
         # run function
         self.run_function(
             func,
             [sample.dna_file for sample in samples],
             [sample.rna_file for sample in samples],
-            dna_outputs, rna_outputs
+            [sample.dna_file for sample in output_samples],
+            [sample.rna_file for sample in output_samples]
         )
-        # save paths
-        for sample, dna_out, rna_out in zip(samples, dna_outputs, rna_outputs):
-            sample.set_files(dna_out, rna_out)
+        # return results
+        return output_samples
 
     def _run_fastuniq(self,
                       dna_in_file: Path,
