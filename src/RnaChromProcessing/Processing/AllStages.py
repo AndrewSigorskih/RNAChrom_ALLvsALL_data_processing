@@ -5,12 +5,12 @@ from typing import List, Set
 
 from .Base import BaseProcessor
 from .stages import (
-    Align, BamFilter, BamToBed, Contacts, Dedup, Rsites, Trim
+    Align, BamFilter, BamToBed, Contacts, Dedup, Rsites, StatsCalc, Trim
 )
 from ..utils import exit_with_error, move_exist_ok
 
 logger = logging.getLogger()
-SUBDIR_LIST = ('dedup', 'rsites', 'trim', 'hisat', 'bam', 'bed', 'contacts')
+SUBDIR_LIST = ('rsites', 'dedup', 'trim', 'align', 'bam', 'bed', 'contacts')
 
 
 class AllStagesProcessor(BaseProcessor):
@@ -24,11 +24,18 @@ class AllStagesProcessor(BaseProcessor):
 
     keep: Set[str] = {'trim', 'bed', 'contacts'}
 
-    # TODO add stats
+    stats: StatsCalc = StatsCalc()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # init stages
+        self._stage_order = (
+            self.rsites, self.dedup, self.trim,
+            self.align, self.bam, self.bed, self.contacts
+        )
+        # init all stages
+        for dirname, stage in zip(SUBDIR_LIST, self._stage_order):
+            stage.set_params(self.cpus, self._work_dir / dirname)
+        self.stats.set_cpus(self.cpus)
 
     def save_outputs(self, save_all: bool = False):
         """copy everything needed to out dir"""
@@ -47,12 +54,9 @@ class AllStagesProcessor(BaseProcessor):
         logger.info(f'Started processing {len(samples)} pairs of files.')
         # run processing
         try:
-            for stage in (
-                self.rsites, self.dedup, self.trim,
-                self.align, self.bam, self.bed
-            ):
+            for stagename, stage in zip(SUBDIR_LIST, self._stage_order):
                 samples = stage.run(samples)
-            self.contacts.run(samples)
+                self.stats.run(stagename, samples)
         except Exception as _:
             import traceback
             chdir(self.base_dir)
@@ -60,7 +64,6 @@ class AllStagesProcessor(BaseProcessor):
             self.save_outputs(save_all=True)
             logger.critical(f'Saved intermediate results to {self.output_dir}.')
             exit_with_error(traceback.format_exc())
-        # TODO calculate stats
         # save outputs
         chdir(self.base_dir)
         self.save_outputs()

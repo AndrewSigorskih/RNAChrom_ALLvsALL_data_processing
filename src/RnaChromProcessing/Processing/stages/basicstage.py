@@ -1,7 +1,6 @@
 import concurrent.futures
 import shutil
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable,  List, Optional
@@ -72,7 +71,7 @@ class BasicStage(BaseModel):
             ]
 
     def run_function(self,
-                     func: Callable[[str, str, str, str], int],
+                     func: Callable[[Path, Path, Path, Path], int],
                      dna_inputs: List[Path],
                      rna_inputs: List[Path],
                      dna_outputs: List[Path],

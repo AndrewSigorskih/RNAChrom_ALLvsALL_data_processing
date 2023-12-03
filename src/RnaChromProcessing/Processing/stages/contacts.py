@@ -68,7 +68,7 @@ class Contacts(BasicStage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     
-    def run(self, samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """make tab-separated contacts file from two bed files"""
         # choose function to run
         if self.mode == 'fast':
@@ -87,6 +87,8 @@ class Contacts(BasicStage):
             [sample.dna_file for sample in output_samples],
             [sample.rna_file for sample in output_samples]
         )
+        # return results
+        return output_samples
 
     def _make_contacts_fast(self,
                             dna_in_file: Path,
