@@ -34,8 +34,8 @@ class AllStagesProcessor(BaseProcessor):
         )
         # init all stages
         for dirname, stage in zip(SUBDIR_LIST, self._stage_order):
-            stage.set_params(self.cpus, self._work_dir / dirname)
-        self.stats.set_cpus(self.cpus)
+            stage.set_params(self.cpus, self._work_pth / dirname)
+        self.stats.set_params(self.cpus, self._work_pth / 'stats')
 
     def save_outputs(self, save_all: bool = False):
         """copy everything needed to out dir"""
@@ -44,7 +44,7 @@ class AllStagesProcessor(BaseProcessor):
             if to_copy not in SUBDIR_LIST:
                 logger.warning(f'Unknown directory to copy: {to_copy}. Skipping..')
                 continue
-            source_pth = Path(self.work_dir.name) / to_copy
+            source_pth = self._work_pth / to_copy
             dest_pth = self.output_dir / to_copy
             dest_pth.mkdir()
             move_exist_ok(source_pth, dest_pth)
@@ -67,4 +67,5 @@ class AllStagesProcessor(BaseProcessor):
         # save outputs
         chdir(self.base_dir)
         self.save_outputs()
+        self.stats.save_result(self.output_dir)
         logger.info('Done.')
