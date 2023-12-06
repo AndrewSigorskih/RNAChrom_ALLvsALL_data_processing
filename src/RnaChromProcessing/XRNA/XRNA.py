@@ -8,9 +8,9 @@ from pydantic import BaseModel, PositiveInt, field_validator
 
 from .AnnotInfo import AnnotInfo
 from .DataPreprocessing import HisatTool, PreprocessingPipeline
-from .PoolExecutor import PoolExecutor
 from .StringtiePipeline import StringtieTool, StringtiePipeline
 from ..utils import exit_with_error
+from ..utils.PoolExecutor import PoolExecutor
 
 logger = logging.getLogger()
 logging.getLogger("matplotlib").setLevel(logging.WARNING)

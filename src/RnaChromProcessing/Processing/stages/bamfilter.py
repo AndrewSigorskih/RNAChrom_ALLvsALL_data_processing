@@ -1,14 +1,14 @@
 from pathlib import Path
 from typing import List
 
-from pydantic import PositiveInt
+from pydantic import NonNegativeInt
 
 from .basicstage import BasicStage, SamplePair
 from ...utils import run_command
 
 
 class BamFilter(BasicStage):
-    max_mismatch: PositiveInt = 2
+    max_mismatch: NonNegativeInt = 2
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -45,7 +45,8 @@ class BamFilter(BasicStage):
                                 (rna_in_file, rna_out_file)):
             cmd = (
                 f'samtools view -Sh -F 4 {infile} | '
-                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s.*NH:i:1$|^@' | "
+#                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s.*NH:i:1$|^@' | "
+                f"grep -E 'XM:i:[0-{self.max_mismatch}]|^@' | "
                 f'samtools view -Sbh - > {outfile}'
             )
             exit_codes.append(run_command(cmd, shell=True))

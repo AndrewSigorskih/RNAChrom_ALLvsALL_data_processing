@@ -35,7 +35,7 @@ class AllStagesProcessor(BaseProcessor):
         # init all stages
         for dirname, stage in zip(SUBDIR_LIST, self._stage_order):
             stage.set_params(self.cpus, self._work_pth / dirname)
-        self.stats.set_params(self.cpus, self._work_pth / 'stats')
+        self.stats.set_params(self.cpus, self._work_pth / 'stats', self.bam.max_mismatch)
 
     def save_outputs(self, save_all: bool = False):
         """copy everything needed to out dir"""

@@ -2,7 +2,7 @@ import concurrent.futures
 import logging
 from typing import Any, Callable, List, Optional
 
-from ..utils.errors import StageFailedError
+from .errors import StageFailedError
 
 logger = logging.getLogger()
 

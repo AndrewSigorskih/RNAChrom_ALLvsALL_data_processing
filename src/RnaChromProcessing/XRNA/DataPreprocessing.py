@@ -11,7 +11,7 @@ import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 from .AnnotInfo import AnnotInfo, SampleInfo
-from .PoolExecutor import PoolExecutor
+from ..utils.PoolExecutor import PoolExecutor
 from ..utils import (
     find_in_list,  move_exist_ok, run_command, run_get_stdout, validate_tool_path
 )
