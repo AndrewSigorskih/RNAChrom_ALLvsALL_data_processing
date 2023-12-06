@@ -13,26 +13,21 @@ class BamFilter(BasicStage):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     
-    def run(self, samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """filter aligned reads: allow only reads that are aligned once
         with N or less mismatches"""
         # prepare filepaths
-        dna_outputs = [
-            self._stage_dir / sample.dna_file.name for sample in samples
-        ]
-        rna_outputs = [
-            self._stage_dir / sample.rna_file.name for sample in samples
-        ]
+        output_samples = self._make_output_samples(samples)
         # run function
         self.run_function(
             self._filter_bam,
             [sample.dna_file for sample in samples],
             [sample.rna_file for sample in samples],
-            dna_outputs, rna_outputs
+            [sample.dna_file for sample in output_samples],
+            [sample.rna_file for sample in output_samples]
         )
-        # save paths
-        for sample, dna_out, rna_out in zip(samples, dna_outputs, rna_outputs):
-            sample.set_files(dna_out, rna_out)
+        # return results
+        return output_samples
     
     def _filter_bam(self,
                     dna_in_file: Path,
