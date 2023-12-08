@@ -29,7 +29,7 @@ class Align(BasicStage):
         # genome path
         if self.tool != 'custom':
             if not self.dna_genome_path:
-                exit_with_error('DNA genome path is required if to using custom aligner script!')
+                exit_with_error('DNA genome path is required if you are not using custom aligner script!')
             if not self.rna_genome_path:
                 logger.debug('RNA genome path not provided, will use DNA genome instead.')
                 self.rna_genome_path = self.dna_genome_path

@@ -1,7 +1,8 @@
-import logging
+from logging import getLogger
 from os import chdir
-from pathlib import Path
-from typing import List, Set
+from typing import Set
+
+from pydantic import Field
 
 from .Base import BaseProcessor
 from .stages import (
@@ -9,18 +10,18 @@ from .stages import (
 )
 from ..utils import exit_with_error, move_exist_ok
 
-logger = logging.getLogger()
+logger = getLogger()
 SUBDIR_LIST = ('rsites', 'dedup', 'trim', 'align', 'bam', 'bed', 'contacts')
 
 
 class AllStagesProcessor(BaseProcessor):
-    rsites: Rsites = Rsites()
-    dedup: Dedup = Dedup()
-    trim: Trim = Trim()
-    align: Align = Align()
-    bam: BamFilter = BamFilter()
-    bed: BamToBed = BamToBed()
-    contacts: Contacts = Contacts()
+    rsites: Rsites = Field(default_factory=Rsites)
+    dedup: Dedup = Field(default_factory=Dedup)
+    trim: Trim = Field(default_factory=Trim)
+    align: Align = Field(default_factory=Align)
+    bam: BamFilter = Field(default_factory=BamFilter)
+    bed: BamToBed = Field(default_factory=BamToBed)
+    contacts: Contacts = Field(default_factory=Contacts)
 
     keep: Set[str] = {'trim', 'bed', 'contacts'}
 
@@ -53,6 +54,7 @@ class AllStagesProcessor(BaseProcessor):
         samples = self.gather_inputs()
         logger.info(f'Started processing {len(samples)} pairs of files.')
         # run processing
+        chdir(self._work_pth)
         try:
             for stagename, stage in zip(SUBDIR_LIST, self._stage_order):
                 samples = stage.run(samples)

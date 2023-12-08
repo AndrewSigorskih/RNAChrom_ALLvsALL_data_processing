@@ -29,11 +29,12 @@ dedup:
 trim:
     cpus: 5
     tool: trimmomatic
-hisat:
+align:
     cpus: 2
-    genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    tool: hisat2
+    dna_genome_path: /gpfs/asigorskikh/data/genomes/mm10/mm10
     known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
-    hisat_threads: 8
+    tool_threads: 8
 contacts:
     cpus: 2
 stats_prefix: radicl

@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 from os import chdir, listdir
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -9,7 +9,7 @@ from pydantic import BaseModel, PositiveInt
 from .stages import SamplePair
 from ..utils import exit_with_error, find_in_list
 
-logger = logging.getLogger()
+logger = getLogger()
 
 
 class BaseProcessor(BaseModel):

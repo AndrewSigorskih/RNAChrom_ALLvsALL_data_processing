@@ -1,8 +1,11 @@
 import argparse
 import logging
 
-from .DataProcessors import AllStagesProcessor, SingleStageProcessor, SUBDIR_LIST
-from .utils import configure_logger, load_config
+from pydantic import ValidationError
+
+#from .DataProcessors import AllStagesProcessor, SingleStageProcessor, SUBDIR_LIST
+from .Processing import AllStagesProcessor, SingleStageProcessor, SUBDIR_LIST
+from .utils import configure_logger, exit_with_error, load_config
 
 logger = logging.getLogger()
 
@@ -30,10 +33,17 @@ def main() -> None:
 
     config = load_config(args.config)
 
-    if not args.stage:
-        AllStagesProcessor(config).run()
-    else:
-        SingleStageProcessor(config, args.stage).run()
+    try:
+        if not args.stage:
+            model = AllStagesProcessor(**config)
+        else:
+            model = SingleStageProcessor(args.stage, **config)
+    except ValidationError as e:
+        logger.critical('An error occured during input validation:')
+        print(e)
+        exit_with_error('Aborting: incorrect input!')
+
+    model.run()
     
 
 if __name__ == '__main__':
