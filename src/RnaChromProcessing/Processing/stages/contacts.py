@@ -80,65 +80,53 @@ class Contacts(BasicStage):
         # prepare filepaths
         output_samples = self._make_output_samples(samples, new_suff='tab')
         # run function
-        self.run_function(
-            func,
-            [sample.dna_file for sample in samples],
-            [sample.rna_file for sample in samples],
-            [sample.dna_file for sample in output_samples],
-            [sample.rna_file for sample in output_samples]
-        )
+        self.run_function(func, samples, output_samples)
         # return results
         return output_samples
 
     def _make_contacts_fast(self,
-                            dna_in_file: Path,
-                            rna_in_file: Path,
-                            _: Path,  # ignore dna out file
-                            rna_out_file: Path) -> int:
+                            inp_sample: SamplePair,
+                            out_sample: SamplePair) -> int:
         """read 2 bed files in memory, produce 1 combined contacts file"""
-        dna = pd.read_csv(dna_in_file, sep='\t', header=None,
+        dna = pd.read_csv(inp_sample.dna_file, sep='\t', header=None,
                           names=DNA_COLUMNS.keys(), dtype=DNA_COLUMNS)
-        rna = pd.read_csv(rna_in_file, sep='\t', header=None,
+        rna = pd.read_csv(inp_sample.rna_file, sep='\t', header=None,
                           names=RNA_COLUMNS.keys(), dtype=RNA_COLUMNS)
         dna['id'] = dna['id'].apply(_process_id)
         rna['id'] = rna['id'].apply(_process_id)
         rna = pd.merge(rna, dna, on='id', how='inner')
         rna = rna.drop(['rna_score', 'dna_score'], axis=1)
-        rna.to_csv(rna_out_file, sep='\t', index=False, header=True)
+        rna.to_csv(out_sample.rna_file, sep='\t', index=False, header=True)
         return 0
     
     def _make_contacts_chunks(self,
-                              dna_in_file: Path,
-                              rna_in_file: Path,
-                              _: Path,  # ignore dna out file
-                              rna_out_file: Path) -> int:
+                              inp_sample: SamplePair,
+                              out_sample: SamplePair) -> int:
         # https://stackoverflow.com/questions/58441517/merging-dataframe-chunks-in-pandas
         """read rna bed file in a memory-efficient way, produce 1 combined contacts file"""
          # prepare names for output and temporal files
-        dna = pd.read_csv(dna_in_file, sep='\t', header=None,
+        dna = pd.read_csv(inp_sample.dna_file, sep='\t', header=None,
                           names=DNA_COLUMNS.keys(), dtype=DNA_COLUMNS)
         dna['id'] = dna['id'].apply(_process_id)
         result_chunks = []
-        for chunk in pd.read_csv(rna_in_file, sep='\t', header=None,
+        for chunk in pd.read_csv(inp_sample.rna_file, sep='\t', header=None,
                                  names=RNA_COLUMNS.keys(), dtype=RNA_COLUMNS,
                                  chunksize=self.chunksize):
             chunk['id'] = chunk['id'].apply(_process_id)
             result_chunks.append(pd.merge(dna, chunk, on='id', how='inner'))
         result = pd.concat(result_chunks)
         result = result.drop(['rna_score', 'dna_score'], axis=1)
-        result.to_csv(rna_out_file, sep='\t', index=False, header=True)
+        result.to_csv(out_sample.rna_file, sep='\t', index=False, header=True)
         return 0
     
     def _make_contacts_iter(self,
-                            dna_in_file: Path,
-                            rna_in_file: Path,
-                            dna_out_file: Path,
-                            rna_out_file: Path) -> int:
+                            inp_sample: SamplePair,
+                            out_sample: SamplePair) -> int:
         """read 2 bed files line-by-line, produce 1 combined contacts file"""
         # sort bed files by chr and pos
-        rna_sorted = rna_out_file.with_suffix('.tmp')
-        dna_sorted = dna_out_file.with_suffix('.tmp')
-        for in_file, sorted_file in zip((dna_in_file, rna_in_file),
+        rna_sorted = out_sample.rna_file.with_suffix('.tmp')
+        dna_sorted = out_sample.dna_file.with_suffix('.tmp')
+        for in_file, sorted_file in zip((inp_sample.dna_file, out_sample.rna_file),
                                         (dna_sorted, rna_sorted)):
             cmd = f'sort -k 1,1 -k2,2n {in_file} > {sorted_file}'
             retcode = run_command(cmd, shell=True)
@@ -146,7 +134,7 @@ class Contacts(BasicStage):
         # process sorted files line by line, seek matching ids
         with open(dna_sorted, 'r') as dna_in, \
              open(rna_sorted, 'r') as rna_in, \
-             open(rna_out_file, 'w') as rna_out:
+             open(out_sample.rna_file, 'w') as rna_out:
             print(*TAB_HEADER, file=rna_out, sep='\t')
             rna_row, dna_row = next(rna_in), next(dna_in)
             while(rna_row and dna_row):

@@ -19,25 +19,17 @@ class BamFilter(BasicStage):
         # prepare filepaths
         output_samples = self._make_output_samples(samples)
         # run function
-        self.run_function(
-            self._filter_bam,
-            [sample.dna_file for sample in samples],
-            [sample.rna_file for sample in samples],
-            [sample.dna_file for sample in output_samples],
-            [sample.rna_file for sample in output_samples]
-        )
+        self.run_function(self._filter_bam, samples, output_samples)
         # return results
         return output_samples
     
     def _filter_bam(self,
-                    dna_in_file: Path,
-                    rna_in_file: Path,
-                    dna_out_file: Path,
-                    rna_out_file: Path) -> int:
+                    inp_sample: SamplePair,
+                    out_sample: SamplePair) -> int:
         """actual bam-filtering function"""
         exit_codes = []
-        for infile, outfile in ((dna_in_file, dna_out_file),
-                                (rna_in_file, rna_out_file)):
+        for infile, outfile in ((inp_sample.dna_file, out_sample.dna_file),
+                                (inp_sample.rna_file, out_sample.rna_file)):
             cmd = (
                 f'samtools view -Sh -F 4 {infile} | '
 #                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s.*NH:i:1$|^@' | "

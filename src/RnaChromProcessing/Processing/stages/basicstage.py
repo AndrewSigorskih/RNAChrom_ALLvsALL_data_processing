@@ -3,24 +3,14 @@ import shutil
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable,  List, Optional
+from typing import Callable, List, Optional
 
 from pydantic import BaseModel, PositiveInt
 
-from ...utils import remove_suffixes
+from ...utils import remove_suffixes, run_command
 from ...utils.errors import StageFailedError
 
 logger = logging.getLogger()
-
-
-def _all_equal(iterable: Iterable[int]) -> bool:
-    "return True if all elements in iterable are equal"
-    iterator = iter(iterable)
-    try:
-        first = next(iterator)
-    except StopIteration:
-        return True
-    return all(first == x for x in iterator)
 
 
 @dataclass(frozen=True)
@@ -41,14 +31,22 @@ class BasicStage(BaseModel):
             self.cpus = global_cpus
 
     def _copy_files(self,
-                    dna_in_file: Path,
-                    rna_in_file: Path,
-                    dna_out_file: Path,
-                    rna_out_file: Path) -> int:
+                    inp_sample: SamplePair,
+                    out_sample: SamplePair) -> int:
         """trivially copy files"""
-        shutil.copy(dna_in_file, dna_out_file)
-        shutil.copy(rna_in_file, rna_out_file)
+        shutil.copy(inp_sample.dna_file, out_sample.dna_file)
+        shutil.copy(inp_sample.rna_file, out_sample.rna_file)
         return 0
+    
+    def _custom(self,
+                inp_sample: SamplePair,
+                out_sample: SamplePair) -> int:
+        cmd = [
+            self.tool_path, inp_sample.dna_file, inp_sample.rna_file,
+            out_sample.dna_file, out_sample.rna_file
+        ]
+        exit_code = run_command(cmd)
+        return exit_code
     
     def _make_output_samples(self,
                              input_samples: List[SamplePair],
@@ -71,22 +69,19 @@ class BasicStage(BaseModel):
             ]
 
     def run_function(self,
-                     func: Callable[[Path, Path, Path, Path], int],
-                     dna_inputs: List[Path],
-                     rna_inputs: List[Path],
-                     dna_outputs: List[Path],
-                     rna_outputs: List[Path],
+                     func: Callable[[SamplePair, SamplePair], int],
+                     inputs: List[SamplePair],
+                     outputs: List[SamplePair],
                      require_zero_code: bool = True) -> None:
-        if not _all_equal((len(dna_inputs), len(dna_outputs), len(rna_outputs), len(rna_inputs))):
+        if len(inputs) != len(outputs):
             msg = f'Lengths of inputs and outputs lists for {func.__qualname__} do not match!'
             raise StageFailedError(msg)
         
         logger.debug(f'Running function {func.__qualname__} with {self.cpus} threads.')
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
             futures = [
-                executor.submit(func, dna_inp, rna_inp, dna_out, rna_out)
-                for dna_inp, rna_inp, dna_out, rna_out in 
-                zip(dna_inputs, rna_inputs, dna_outputs, rna_outputs)
+                executor.submit(func, input_sample, output_sample)
+                for input_sample, output_sample in zip(inputs, outputs)
             ]
             results = [
                 future.result() for future in concurrent.futures.as_completed(futures)

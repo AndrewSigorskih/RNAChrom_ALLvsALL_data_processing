@@ -51,32 +51,25 @@ class Rsites(BasicStage):
         # prepare filepaths
         output_samples = self._make_output_samples(samples)
         # run function
-        self.run_function(
-            func,
-            [sample.dna_file for sample in samples],
-            [sample.rna_file for sample in samples],
-            [sample.dna_file for sample in output_samples],
-            [sample.rna_file for sample in output_samples]
-        )
+        self.run_function(func, samples, output_samples)
         # return results
         return output_samples
         
     def _imargi_like(self,
-                     dna_in_file: Path,
-                     rna_in_file: Path,
-                     dna_out_file: Path,
-                     rna_out_file: Path) -> int:
+                     inp_sample: SamplePair,
+                     out_sample: SamplePair) -> int:
         '''Save read pair if DNA read starts with CT or NT\n
            Remove first 2 bases from RNA reads.\n
            Reads in files should be synchronized.'''
+        dna_out_file, rna_out_file = out_sample.dna_file, out_sample.rna_file
         _dna_out = output_handle(dna_out_file)
         _rna_out = output_handle(rna_out_file)
         with _dna_out(dna_out_file) as dna_out_handle,\
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(dna_in_file, build_index=False, full_name=True),
-                pyfastx.Fastq(rna_in_file, build_index=False, full_name=True)
+                pyfastx.Fastq(inp_sample.dna_file, build_index=False, full_name=True),
+                pyfastx.Fastq(inp_sample.rna_file, build_index=False, full_name=True)
             ):
                 if (not dna_seq.startswith('CT')) and (not dna_seq.startswith('NT')):
                     continue
@@ -85,23 +78,22 @@ class Rsites(BasicStage):
         return 0
     
     def _grid_like(self,
-                   dna_in_file: Path,
-                   rna_in_file: Path,
-                   dna_out_file: Path,
-                   rna_out_file: Path) -> int:
+                   inp_sample: SamplePair,
+                   out_sample: SamplePair) -> int:
         '''Save read pair if DNA reads end with AG\n
            Add CT to the end of selected DNA reads\n
            Assign quality values from terminal AG to novel CT\n
            Reads in files should be synchronized.'''
         n_bases = len(self.rsite_end)
+        dna_out_file, rna_out_file = out_sample.dna_file, out_sample.rna_file
         _dna_out = output_handle(dna_out_file)
         _rna_out = output_handle(rna_out_file)
         with _dna_out(dna_out_file) as dna_out_handle,\
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(dna_in_file, build_index=False, full_name=True),
-                pyfastx.Fastq(rna_in_file, build_index=False, full_name=True)
+                pyfastx.Fastq(inp_sample.dna_file, build_index=False, full_name=True),
+                pyfastx.Fastq(inp_sample.rna_file, build_index=False, full_name=True)
             ):
                 if not dna_seq.endswith(self.rsite_bgn):
                     continue
@@ -110,12 +102,3 @@ class Rsites(BasicStage):
                 dna_qual += dna_qual[-n_bases:]
                 print(format_fastq(dna_name, dna_seq, dna_qual), file=dna_out_handle, end='')
         return 0
-    
-    def _custom(self,
-                dna_in_file: Path,
-                rna_in_file: Path,
-                dna_out_file: Path,
-                rna_out_file: Path) -> int:
-        cmd = [self.tool_path, dna_in_file, rna_in_file, dna_out_file, rna_out_file]
-        exit_code = run_command(cmd)
-        return exit_code

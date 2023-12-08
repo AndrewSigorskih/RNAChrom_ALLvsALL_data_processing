@@ -34,21 +34,13 @@ class Trim(BasicStage):
         # prepare filepaths
         output_samples = self._make_output_samples(samples)
         # run function
-        self.run_function(
-            func,
-            [sample.dna_file for sample in samples],
-            [sample.rna_file for sample in samples],
-            [sample.dna_file for sample in output_samples],
-            [sample.rna_file for sample in output_samples]
-        )
+        self.run_function(func, samples, output_samples)
         # return results
         return output_samples
     
     def _run_trimmomatic(self,
-                         dna_in_file: Path,
-                         rna_in_file: Path,
-                         dna_out_file: Path,
-                         rna_out_file: Path) -> int:
+                         inp_sample: SamplePair,
+                         out_sample: SamplePair) -> int:
         """run trimmomatic"""
         # make sure conda wrapper works as well
         if self.tool_path.endswith('.jar'):
@@ -56,12 +48,12 @@ class Trim(BasicStage):
         else:  # wrapper
             tool_alias = self.tool_path
         command = (
-            f'{tool_alias} PE -phred33 {dna_in_file} '
-            f'{rna_in_file} {dna_out_file} {dna_out_file}.unpaired '
-            f'{rna_out_file} {rna_out_file}.unpaired '
+            f'{tool_alias} PE -phred33 {inp_sample.dna_file} {inp_sample.rna_file} '
+            f'{out_sample.dna_file} {out_sample.dna_file}.unpaired '
+            f'{out_sample.rna_file} {out_sample.rna_file}.unpaired '
             f'SLIDINGWINDOW:{self.tool_params.window}:{self.tool_params.qual_th} MINLEN:{self.tool_params.minlen}'
         )
         return_code = run_command(command, shell=True, stdout=DEVNULL, stderr=DEVNULL)
-        remove(f'{dna_out_file}.unpaired')
-        remove(f'{rna_out_file}.unpaired')
+        remove(f'{out_sample.dna_file}.unpaired')
+        remove(f'{out_sample.rna_file}.unpaired')
         return return_code
