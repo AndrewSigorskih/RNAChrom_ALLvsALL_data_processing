@@ -35,8 +35,8 @@ class BaseProcessor(BaseModel):
     def __validate_inputs(self):
         self.input_dir = self.input_dir.resolve()
         self.output_dir = self.output_dir.resolve()
-        if not self.output_dir.exists():
-            exit_with_error(f'Input directory doesntt exist: {self.input_dir}')
+        if not self.input_dir.exists():
+            exit_with_error(f'Input directory doesnt exist: {self.input_dir}')
         if not self.output_dir.exists():
             self.output_dir.mkdir(parents=True)
         if len(self.rna_ids) != len(self.dna_ids):
