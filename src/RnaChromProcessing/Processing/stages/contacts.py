@@ -52,12 +52,12 @@ class BedRow:
 
     def to_rna(self) -> str:
         return '\t'.join(
-            self.chr, self.bgn, self.end, self.id, self.strand, self.cigar
+            (self.chr, self.bgn, self.end, self.id, self.strand, self.cigar)
         )
     
     def to_dna(self) -> str:
         return '\t'.join(
-            self.chr, self.bgn, self.end, self.strand, self.cigar
+            (self.chr, self.bgn, self.end, self.strand, self.cigar)
         )
 
 

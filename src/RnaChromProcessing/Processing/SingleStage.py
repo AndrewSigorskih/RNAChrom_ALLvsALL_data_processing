@@ -14,10 +14,10 @@ logger = getLogger()
 
 
 class IStage(Protocol):
-    def run(samples: List[SamplePair]) -> List[SamplePair]:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         ...
     
-    def set_params(global_cpus: int, stage_dir: Path) -> None:
+    def set_params(self, global_cpus: int, stage_dir: Path) -> None:
         ...
 
 STAGES_MAP = {

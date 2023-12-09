@@ -1,12 +1,15 @@
 import logging
 import subprocess
+from pathlib import Path
 
 from typing import Any, Iterable, List, Union
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 LOGGING_FORMAT = '%(asctime)s | %(levelname)-8s | %(message)s'
-logger = logging.getLogger()
 VERBOSE = 5
+
+logger = logging.getLogger()
+PathLike = Union[str, Path]
 
 
 def configure_logger(logger: logging.Logger, verbose: int = 0) -> None:
@@ -44,7 +47,7 @@ def run_get_stdout(cmd: Union[List[str], str],
     return result.stdout
 
 
-def log_cmd(cmd: Union[Iterable[Any], str]) -> None:
+def log_cmd(cmd: Union[Iterable[PathLike], str]) -> None:
     if isinstance(cmd, list):
         cmd_str = " ".join(str(x) for x in cmd)
     else:

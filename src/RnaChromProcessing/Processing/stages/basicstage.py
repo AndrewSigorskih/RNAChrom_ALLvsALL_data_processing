@@ -56,8 +56,8 @@ class BasicStage(BaseModel):
         if new_suff:
             return [
                 SamplePair(
-                    self._stage_dir / f'{remove_suffixes(sample.dna_file.name)}.{new_suff}',
-                    self._stage_dir / f'{remove_suffixes(sample.rna_file.name)}.{new_suff}',
+                    self._stage_dir / f'{remove_suffixes(Path(sample.dna_file.name))}.{new_suff}',
+                    self._stage_dir / f'{remove_suffixes(Path(sample.rna_file.name))}.{new_suff}'
                 ) for sample in input_samples
             ]
         else:

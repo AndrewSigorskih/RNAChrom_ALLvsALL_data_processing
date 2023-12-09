@@ -127,5 +127,5 @@ class StatsCalc(BaseModel):
 
     def save_result(self, output_dir: Path) -> None:
         output_name = output_dir / f'{self.prefix}.tsv'
-        result = pd.DataFrame.from_dict(self.result).sort_index()
+        result = pd.DataFrame.from_dict(self._result).sort_index()
         result.to_csv(output_name, sep='\t', index=True, header=True)
