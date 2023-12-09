@@ -54,7 +54,12 @@ class BaseProcessor(BaseModel):
                     'in input directory, skipping pair!'
                 )
                 continue
-            samples.append(SamplePair(Path(dna_file), Path(rna_file)))
+            samples.append(
+                SamplePair(
+                    self.input_dir / dna_file,
+                    self.input_dir / rna_file
+                )
+            )
         if not samples:
             exit_with_error('Could not find any files in input directory, aborting!')
         return samples
