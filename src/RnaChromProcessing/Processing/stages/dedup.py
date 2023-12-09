@@ -62,7 +62,7 @@ class Dedup(BasicStage):
         """run fastq-dupaway"""
         command = [
             self.tool_path, '-i', inp_sample.rna_file, '-u', inp_sample.dna_file,
-            '-o', out_sample.rna_file, '-p', out_sample.dna_file, '-m', self.tool_params.memlimit,
+            '-o', out_sample.rna_file, '-p', out_sample.dna_file, '-m', str(self.tool_params.memlimit),
             '--compare-seq', self.tool_params.comparison
         ]
         return run_command(command)
