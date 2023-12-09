@@ -33,8 +33,6 @@ class Align(BasicStage):
             if not self.rna_genome_path:
                 logger.debug('RNA genome path not provided, will use DNA genome instead.')
                 self.rna_genome_path = self.dna_genome_path
-            check_file_exists(self.dna_genome_path)
-            check_file_exists(self.rna_genome_path)
         # tool path
         if (self.tool == 'custom' and not self.tool_path) :
             exit_with_error('Path to custom script is required when using the "custom" option!')
