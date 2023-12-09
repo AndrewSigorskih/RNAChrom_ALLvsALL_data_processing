@@ -23,9 +23,9 @@ rsites:
 dedup:
     cpus: 4
     tool: fastq-dupaway
-    params:
+    tool_params:
         memlimit: 10240
-        compare: loose
+        comparison: loose
 trim:
     cpus: 5
     tool: trimmomatic

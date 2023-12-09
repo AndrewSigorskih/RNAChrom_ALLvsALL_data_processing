@@ -43,7 +43,7 @@ class Trim(BasicStage):
                          out_sample: SamplePair) -> int:
         """run trimmomatic"""
         # make sure conda wrapper works as well
-        if self.tool_path.endswith('.jar'):
+        if self.tool_path.suffix == '.jar':
             tool_alias: str = f'java -jar {self.tool_path}'
         else:  # wrapper
             tool_alias = self.tool_path
