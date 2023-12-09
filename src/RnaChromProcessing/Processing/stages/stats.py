@@ -24,12 +24,12 @@ def _get_positions(stage: str, num: int) -> List[TablePos]:
 class StatsCalc(BaseModel):
     cpus: Optional[PositiveInt] = None
     prefix: str = 'stats'
-    mode: Literal['skip', 'default', 'full'] = 'default'
+    mode: Literal['skip', 'default'] = 'default'
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._executor = None
-        self._result = defaultdict(dict)
+        self._result = defaultdict(dict, RNA_ID={}, DNA_ID={})
     
     def set_params(self, global_cpus: int, stage_dir: Path, mism_num: int) -> None:
         self.cpus = self.cpus or global_cpus
@@ -52,7 +52,7 @@ class StatsCalc(BaseModel):
         for infile in (sample.dna_file, sample.rna_file):
             cat = 'zcat' if infile.suffix == '.gz' else 'cat'
             cmd = (
-                f'{cat} {infile} | sed -n  "1~4p" | wc -l'
+                f'{cat} {infile} | wc -l'
             )
             res[infile.name] = int(run_get_stdout(cmd, shell=True)) / 4
         if res[rna_name] != res[dna_name]:

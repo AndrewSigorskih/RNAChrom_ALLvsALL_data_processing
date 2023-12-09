@@ -12,7 +12,7 @@ dna_ids:
 - SRR9201808
 base_dir: .
 input_dir: /gpfs/asigorskikh/data/radicl/gz
-output_dir: results
+output_dir: new_results
 cpus: 16
 keep:
 - contacts
@@ -37,4 +37,8 @@ align:
     tool_threads: 8
 contacts:
     cpus: 2
-stats_prefix: radicl
+    mode: low-mem
+stats:
+    cpus: 8
+    prefix: radicl
+    mode: default
