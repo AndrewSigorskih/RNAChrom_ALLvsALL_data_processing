@@ -57,14 +57,14 @@ class StatsCalc(BaseModel):
             res[infile.name] = int(run_get_stdout(cmd, shell=True)) / 4
         if res[rna_name] != res[dna_name]:
             msg = (
-                f'Fastq files for the {pos.stage} had different read counts: '
+                f'Fastq files for the {pos.column} had different read counts: '
                 f'{rna_name}: {res[rna_name]}, {dna_name}:{res[dna_name]}. '
                 'Any further analysis may be compromised.'
             )
             logger.warning(msg)
         if not isinstance(res[rna_name], int):
             msg = (
-                f'Fastq files for the {pos.stage} had malformed structure! '
+                f'Fastq files for the {pos.column} had malformed structure! '
                 f'Number of lines is not divisible by 4: {res[rna_name] * 4}. '
                 'Any further analysis may be compromised.'
             )
