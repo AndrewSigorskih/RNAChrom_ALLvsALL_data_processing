@@ -30,7 +30,7 @@ class BaseProcessor(BaseModel):
         self.base_dir.mkdir(parents=True, exist_ok=True)
         chdir(self.base_dir)
         self._work_dir = TemporaryDirectory(dir=self.base_dir)
-        self._work_pth = Path(self._work_dir.name)
+        self._work_pth = Path(self._work_dir.name).resolve()
 
     def __validate_inputs(self):
         self.input_dir = self.input_dir.resolve()
