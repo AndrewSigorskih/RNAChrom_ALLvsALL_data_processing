@@ -136,15 +136,18 @@ class Contacts(BasicStage):
              open(rna_sorted, 'r') as rna_in, \
              open(out_sample.rna_file, 'w') as rna_out:
             print(*TAB_HEADER, file=rna_out, sep='\t')
-            rna_row, dna_row = next(rna_in), next(dna_in)
-            while(rna_row and dna_row):
-                rna_obj, dna_obj = BedRow.from_string(rna_row), BedRow.from_string(dna_row)
-                while rna_obj.id < dna_obj.id:
-                    rna_obj = BedRow.from_string(next(rna_in))
-                while rna_obj.id > dna_obj.id:
-                    dna_obj = BedRow.from_string(next(dna_in))
-                print(rna_obj.to_rna(), dna_obj.to_dna(), file=rna_out, sep='\t')
+            try:
                 rna_row, dna_row = next(rna_in), next(dna_in)
+                while(rna_row and dna_row):
+                    rna_obj, dna_obj = BedRow.from_string(rna_row), BedRow.from_string(dna_row)
+                    while rna_obj.id < dna_obj.id:
+                        rna_obj = BedRow.from_string(next(rna_in))
+                    while rna_obj.id > dna_obj.id:
+                        dna_obj = BedRow.from_string(next(dna_in))
+                    print(rna_obj.to_rna(), dna_obj.to_dna(), file=rna_out, sep='\t')
+                    rna_row, dna_row = next(rna_in), next(dna_in)
+            except StopIteration:  # one or both files ended
+                pass
         rna_sorted.unlink()
         dna_sorted.unlink()
         return 0
