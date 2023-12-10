@@ -21,8 +21,8 @@ def parse_args() -> argparse.Namespace:
                         help='Run only specified stage of the pipeline.')
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='''Verbosity level. By default little to none information is printed.
-Use -v once to increase information logs about each step, and -vv to 
-print every command that is being run.''')
+Use -v once to get information logs about each step, and -vv to 
+print detailed information about every command that is being run.''')
     parser.add_argument('--input_dir', required=False,
                         help='''Specify input directory. Overrides the "input_dir" field in config.''')
     parser.add_argument('--output_dir', required=False,

@@ -40,6 +40,7 @@ class SingleStageProcessor(BaseProcessor):
         dest_pth = self.output_dir / self._stagename
         dest_pth.mkdir(exist_ok=True)
         move_exist_ok(source_pth, dest_pth)
+        self._work_dir.cleanup()
 
     def run(self) -> None:
         samples = self.gather_inputs()
@@ -51,6 +52,7 @@ class SingleStageProcessor(BaseProcessor):
         except Exception as _:
             import traceback
             logger.critical(f'An error occured during {self._stagename} stage execution:')
+            self._work_dir.cleanup()
             exit_with_error(traceback.format_exc())
         # save results
         chdir(self.base_dir)
