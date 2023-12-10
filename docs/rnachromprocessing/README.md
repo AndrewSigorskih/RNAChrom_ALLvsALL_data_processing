@@ -112,7 +112,7 @@ Field name|Required|Description
 cpus|No|int > 0. Number of tasks to run simultaneously for this step. If not set, the "global" value will be used.
 tool|No|What trimming tool to use. Default is "trimmomatic". Supported options:<br>- "trimmomatic"<br>- "custom" : Use custom script provided by user. See [custom script section](#custom) for more information.<br>- "skip" : do not perform trimming step.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option. If "custom" tool is chosen, path to your script must be provided here.
-tool_params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window", "qual_th" and "minlen" (int > 0 each).
+tool_params|No|Tool-specific parameters in form of a sub-config. For "Trimmomatic" tool supported parameters are "window" (default 5), "qual_th" (default 26) and "minlen" (default 15).
 
 #### align stage subconfig:
 
@@ -123,7 +123,7 @@ Field name|Required|Description
 cpus|No|int > 0. Number of tasks to run simultaneously for alignment step. If not set, the "global" value will be used.
 tool|No|What alignment tool to use. Default is "hisat2". Supported options:<br>- "hisat2": use hisat2 aligner with `--no-spliced-alignment` mode for DNA reads and `--dta-cufflinks` for RNA reads.<br>- "bwa": [not implemented yet]<br>- "star": [not implemented yet]<br>- "custom": Use custom script provided by user. See [custom script section](#custom) for more information.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option. If "custom" tool is chosen, path to your script must be provided here.
-dna_genome_path|**yes**|Path ending with prefix of genome index files for DNA reads alignment.
+dna_genome_path|**Yes**|Path ending with prefix of genome index files for DNA reads alignment.
 rna_genome_path|No|Path ending with prefix of genome index files for RNA reads alignment. If not provided, the dna_genome_path will be used here as well.
 known_splice|**Yes** for hisat2|Path to known-splice file (will be passed to hisat's `--known-splicesite-infile` option).
 tool_threads|No|int > 0. How many threads aligner tool will use **for every** simultaneously-run task. Default is 1. Total maximum core usage for the "align" stage will be cpus * tool_threads.
@@ -142,10 +142,13 @@ cpus|No|int > 0. Number of tasks to run simultaneously for contacts-building ste
 mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<br>- "fast" : load all data in ram at once.<br>- "low-mem" : process data in a slower fashion, but more RAM-friendly.
 
 
+[stats sub config]
+
+
 <a name="custom"></a>
 ### Providing custom scripts for pipeline stages.
 
-Several pipeline stages (rsites, dedup, trim, align) may accept custom user script instead of running pre-defined behaviour. SUch script should comply with the following rules:
+Several pipeline stages (rsites, dedup, trim, align) may accept custom user script instead of running pre-defined behaviour. Such script should comply with the following rules:
 
 * It should be an executable that accepts exactly 4 positional arguments: input_dna_file, input_rna_file, output_dna_file, output_rna_file.
 During pipeline execution, it will be run as follows:
@@ -165,25 +168,32 @@ During pipeline execution, it will be run as follows:
 ### Minimal config example
 
 ```
-{
-    "rna_ids": ["SRR9201799", "SRR9201801"],
-    "dna_ids": ["SRR9201800", "SRR9201802"],
-    "base_dir" : ".",
-    "input_dir": "../data/radicl/raw",
-    "output_dir": "results",
-    "cpus": 2,
-    "dedup": {
-        "tool": "fastuniq",
-        "tool_path": "tools/fastuniq"
-    },
-    "rsites": {
-        "type": "skip"
-    },
-    "hisat": {
-        "genome": "data/mm10/mm10",
-        "known_splice": "data/genes/gencode.vM32.ss"
-    }
-}
+rna_ids:
+- SRR9201799
+- SRR9201801
+- SRR9201803
+- SRR9201805
+- SRR9201807
+dna_ids:
+- SRR9201800
+- SRR9201802
+- SRR9201804
+- SRR9201806
+- SRR9201808
+input_dir: /gpfs/asigorskikh/data/radicl/gz
+output_dir: new_results
+cpus: 16
+align:
+    cpus: 2
+    tool: hisat2
+    dna_genome_path: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
+    tool_threads: 8
+stats:
+    cpus: 8
+    prefix: radicl
+    mode: default
+
 ```
 <a name="advancedconfig"></a>
 ### Advanced config example

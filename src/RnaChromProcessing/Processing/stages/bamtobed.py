@@ -26,7 +26,7 @@ class BamToBed(BasicStage):
         for infile, outfile in ((inp_sample.dna_file, out_sample.dna_file),
                                 (inp_sample.rna_file, out_sample.rna_file)):
             cmd = (
-                f"samtools view -Sbh {infile} | grep -E 'NH:i:1$|^@' | "
+                f"samtools view -Sh {infile} | grep -E 'NH:i:1$|^@' | samtools view -Sbh - |"
                 f'bedtools bamtobed -cigar -i stdin > {outfile}'
             )
             exit_codes.append(run_command(cmd, shell=True))
