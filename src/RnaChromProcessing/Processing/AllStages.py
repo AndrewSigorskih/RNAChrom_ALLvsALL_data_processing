@@ -49,7 +49,6 @@ class AllStagesProcessor(BaseProcessor):
             dest_pth = self.output_dir / to_copy
             dest_pth.mkdir(exist_ok=True)
             move_exist_ok(source_pth, dest_pth)
-        self._work_dir.cleanup()
 
     def run(self) -> None:
         samples = self.gather_inputs()

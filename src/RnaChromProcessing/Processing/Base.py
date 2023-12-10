@@ -1,3 +1,4 @@
+from shutil import rmtree
 from logging import getLogger
 from os import chdir, listdir
 from pathlib import Path
@@ -31,6 +32,9 @@ class BaseProcessor(BaseModel):
         chdir(self.base_dir)
         self._work_dir = TemporaryDirectory(dir=self.base_dir)
         self._work_pth = Path(self._work_dir.name).resolve()
+
+    def __del__(self):
+        rmtree(self._work_pth)
 
     def __validate_inputs(self):
         self.input_dir = self.input_dir.resolve()
