@@ -130,7 +130,9 @@ class Contacts(BasicStage):
                                         (dna_sorted, rna_sorted)):
             cmd = f'sort -k 1,1 -k2,2n {in_file} > {sorted_file}'
             retcode = run_command(cmd, shell=True)
-            if retcode: return retcode
+            if retcode:
+                print(f'{retcode=}')
+                return retcode
         # process sorted files line by line, seek matching ids
         with open(dna_sorted, 'r') as dna_in, \
              open(rna_sorted, 'r') as rna_in, \
