@@ -126,10 +126,11 @@ class Contacts(BasicStage):
         # sort bed files by id
         rna_sorted = out_sample.rna_file.with_suffix('.tmp')
         dna_sorted = out_sample.dna_file.with_suffix('.tmp')
-        for in_file, sorted_file in zip((inp_sample.dna_file, out_sample.rna_file),
+        for in_file, sorted_file in zip((inp_sample.dna_file, inp_sample.rna_file),
                                         (dna_sorted, rna_sorted)):
             cmd = f'sort -k 4 {in_file} > {sorted_file}'
-            run_command(cmd, shell=True)
+            retcode = run_command(cmd, shell=True)
+            if retcode: return retcode
         # process sorted files line by line, seek matching ids
         with open(dna_sorted, 'r') as dna_in, \
              open(rna_sorted, 'r') as rna_in, \
