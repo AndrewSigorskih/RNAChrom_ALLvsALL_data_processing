@@ -1,14 +1,14 @@
 from logging import getLogger
 from os import chdir
 from pathlib import Path
-from typing import List, Protocol
+from typing import Dict, List, Protocol
 
 from .Base import BaseProcessor
 from .stages import (
     Align, BamFilter, BamToBed, Contacts, Dedup, Rsites, Trim
 )
 from .stages.basicstage import SamplePair
-from ..utils import move_exist_ok
+from ..utils import exit_with_error, move_exist_ok
 
 logger = getLogger()
 
@@ -20,7 +20,7 @@ class IStage(Protocol):
     def set_params(self, global_cpus: int, stage_dir: Path) -> None:
         ...
 
-STAGES_MAP = {
+STAGES_MAP: Dict[str, IStage] = {
     'rsites': Rsites, 'dedup': Dedup, 'trim': Trim,
     'align': Align, 'bam': BamFilter, 'bed': BamToBed, 'contacts': Contacts
 }
@@ -38,7 +38,7 @@ class SingleStageProcessor(BaseProcessor):
         """copy results to out dir"""
         source_pth = self._work_pth / self._stagename
         dest_pth = self.output_dir / self._stagename
-        dest_pth.mkdir()
+        dest_pth.mkdir(exist_ok=True)
         move_exist_ok(source_pth, dest_pth)
 
     def run(self) -> None:
@@ -46,8 +46,13 @@ class SingleStageProcessor(BaseProcessor):
         logger.info(f'Started processing {len(samples)} pairs of files.')
         # run processing
         chdir(self._work_pth)
-        self._stage.run(samples)
-        chdir(self.base_dir)
+        try:
+            self._stage.run(samples)
+        except Exception as _:
+            import traceback
+            logger.critical(f'An error occured during {self._stagename} stage execution:')
+            exit_with_error(traceback.format_exc())
+        # save results
         chdir(self.base_dir)
         self.save_outputs()
         logger.info('Done.')
