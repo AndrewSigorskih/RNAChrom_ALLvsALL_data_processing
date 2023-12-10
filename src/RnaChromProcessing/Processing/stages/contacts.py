@@ -123,12 +123,12 @@ class Contacts(BasicStage):
                             inp_sample: SamplePair,
                             out_sample: SamplePair) -> int:
         """read 2 bed files line-by-line, produce 1 combined contacts file"""
-        # sort bed files by chr and pos
+        # sort bed files by id
         rna_sorted = out_sample.rna_file.with_suffix('.tmp')
         dna_sorted = out_sample.dna_file.with_suffix('.tmp')
         for in_file, sorted_file in zip((inp_sample.dna_file, out_sample.rna_file),
                                         (dna_sorted, rna_sorted)):
-            cmd = f'sort -k 1,1 -k2,2n {in_file} > {sorted_file}'
+            cmd = f'sort -k 4 {in_file} > {sorted_file}'
             retcode = run_command(cmd, shell=True)
             if retcode:
                 print(f'{retcode=}')
