@@ -129,10 +129,7 @@ class Contacts(BasicStage):
         for in_file, sorted_file in zip((inp_sample.dna_file, out_sample.rna_file),
                                         (dna_sorted, rna_sorted)):
             cmd = f'sort -k 4 {in_file} > {sorted_file}'
-            retcode = run_command(cmd, shell=True)
-            if retcode:
-                print(f'{retcode=}')
-                return retcode
+            run_command(cmd, shell=True)
         # process sorted files line by line, seek matching ids
         with open(dna_sorted, 'r') as dna_in, \
              open(rna_sorted, 'r') as rna_in, \
