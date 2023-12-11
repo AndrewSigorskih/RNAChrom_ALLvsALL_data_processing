@@ -32,8 +32,8 @@ class BamFilter(BasicStage):
                                 (inp_sample.rna_file, out_sample.rna_file)):
             cmd = (
                 f'samtools view -Sh -F 4 {infile} | '
-                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s.*NH:i:1$|^@' | "
-#                f"grep -E 'XM:i:[0-{self.max_mismatch}]|^@' | "
+#                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s.*NH:i:1$|^@' | "
+                f"grep -E 'XM:i:[0-{self.max_mismatch}]\s|^@' | "
                 f'samtools view -Sbh - > {outfile}'
             )
             exit_codes.append(run_command(cmd, shell=True))

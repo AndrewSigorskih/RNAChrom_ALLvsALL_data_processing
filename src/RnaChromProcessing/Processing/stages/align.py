@@ -66,12 +66,12 @@ class Align(BasicStage):
                    out_sample: SamplePair) -> int:
         dna_cmd = (
             f'{self.tool_path} -x {self.dna_genome_path} -p {self.tool_threads} '
-            f'--no-spliced-alignment -k 100 --no-unal -U {inp_sample.dna_file} | '  # removed --no-softclip
+            f'--no-spliced-alignment --no-softclip -k 100 --no-unal -U {inp_sample.dna_file} | '
             f'samtools view -bSh > {out_sample.dna_file}'
         )
         rna_cmd = (
             f'{self.tool_path} -x {self.rna_genome_path} -p {self.tool_threads} -k 100 '
-            f'--no-unal --known-splicesite-infile {self.known_splice} --dta-cufflinks '  # removed --no-softclip
+            f'--no-unal --no-softclip --known-splicesite-infile {self.known_splice} --dta-cufflinks '
             f'-U {inp_sample.rna_file} | samtools view -bSh > {out_sample.rna_file}'
         )
         return_code_1 = run_command(dna_cmd, shell=True)
