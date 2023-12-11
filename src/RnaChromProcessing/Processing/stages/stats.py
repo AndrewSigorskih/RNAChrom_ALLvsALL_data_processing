@@ -87,7 +87,7 @@ class StatsCalc(BaseModel):
             (sample.rna_file, sample.dna_file), ('RNA', 'DNA')
         ):
             column = f'{pos.column}_{data_source}'
-            cmd = f'wc -l {infile}'
+            cmd = f'wc -l < {infile}'
             self._result[column][pos.index] = int(run_get_stdout(cmd, shell=True))
 
     def _count_in_contacts_file(self, sample: SamplePair, pos: TablePos) -> None:
