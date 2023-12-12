@@ -92,8 +92,8 @@ class StatsCalc(BaseModel):
 
     def _count_in_contacts_file(self, sample: SamplePair, pos: TablePos) -> None:
         # meta info
-        self._result['RNA_ID'][pos.index] = remove_suffixes(sample.rna_file.name)
-        self._result['DNA_ID'][pos.index] = remove_suffixes(sample.dna_file.name)
+        self._result['RNA_ID'][pos.index] = remove_suffixes(Path(sample.rna_file.name))
+        self._result['DNA_ID'][pos.index] = remove_suffixes(Path(sample.dna_file.name))
         # read contacts num
         cmd = f'wc -l < {sample.rna_file}'
         self._result[pos.column][pos.index] = int(run_get_stdout(cmd, shell=True)) - 1
