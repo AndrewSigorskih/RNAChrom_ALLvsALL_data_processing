@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Literal
+from typing import List, Literal, TextIO
 
 import numpy as np
 import pandas as pd
@@ -45,6 +44,10 @@ class BedRow:
     @classmethod
     def from_string(cls, row: str):
         return cls(*row.strip().split())._prepare_id()
+    
+    @classmethod
+    def from_file(cls, file: TextIO):
+        return cls.from_string(next(file))
 
     def _prepare_id(self):
         self.id = _process_id(self.id)
@@ -137,15 +140,14 @@ class Contacts(BasicStage):
              open(out_sample.rna_file, 'w') as rna_out:
             print(*TAB_HEADER, file=rna_out, sep='\t')
             try:
-                rna_row, dna_row = next(rna_in), next(dna_in)
-                while(rna_row and dna_row):
-                    rna_obj, dna_obj = BedRow.from_string(rna_row), BedRow.from_string(dna_row)
-                    while rna_obj.id < dna_obj.id:
-                        rna_obj = BedRow.from_string(next(rna_in))
-                    while rna_obj.id > dna_obj.id:
-                        dna_obj = BedRow.from_string(next(dna_in))
-                    print(rna_obj.to_rna(), dna_obj.to_dna(), file=rna_out, sep='\t')
-                    rna_row, dna_row = next(rna_in), next(dna_in)
+                while True:
+                    rna_row, dna_row = BedRow.from_file(rna_in), BedRow.from_file(dna_in)
+                    while (rna_row.id != dna_row.id):
+                        if rna_row.id < dna_row.id:
+                            rna_row = BedRow.from_file(rna_in)
+                        elif rna_row.id > dna_row.id:
+                            dna_row = BedRow.from_file(dna_in)
+                    print(rna_row.to_rna(), dna_row.to_dna(), file=rna_out, sep='\t')
             except StopIteration:  # one or both files ended
                 pass
         rna_sorted.unlink()
