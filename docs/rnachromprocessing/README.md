@@ -116,7 +116,7 @@ tool_params|No|Tool-specific parameters in form of a sub-config. For "Trimmomati
 
 #### align stage subconfig:
 
-A sub-config for read alignment step. Supported options:
+A sub-config for read alignment step, should be found under the name "align". Supported options:
 
 Field name|Required|Description
 ---|---|---
@@ -128,9 +128,22 @@ rna_genome_path|No|Path ending with prefix of genome index files for RNA reads a
 known_splice|**Yes** for hisat2|Path to known-splice file (will be passed to hisat's `--known-splicesite-infile` option).
 tool_threads|No|int > 0. How many threads aligner tool will use **for every** simultaneously-run task. Default is 1. Total maximum core usage for the "align" stage will be cpus * tool_threads.
 
-[bam stage subconfig]
+#### bam stage subconfig:
 
-[bed stage subconfig]
+A sub-config for bam-filtering step, should be found under the name "bam". Supported options:
+
+Field name|Required|Description
+---|---|---
+cpus|No|int > 0. Number of tasks to run simultaneously for bam-filtering step. If not set, the "global" value will be used.
+max_mismatch|No|int > 0. Maximum number of mismatches allowed in bam record to pass this step. Default value is 2.
+
+#### bed stage subconfig:
+
+A sub-config for bam-to-bed conversion step, should be found under the name "bed". Supported options:
+
+Field name|Required|Description
+---|---|---
+cpus|No|int > 0. Number of tasks to run simultaneously for bam-to-bed conversion step. If not set, the "global" value will be used.
 
 #### contacts stage subconfig:
 
@@ -142,7 +155,15 @@ cpus|No|int > 0. Number of tasks to run simultaneously for contacts-building ste
 mode|No|memory-efficiency toggling option. Default is "fast". Supported values:<br>- "fast" : load all data in ram at once.<br>- "low-mem" : process data in a slower fashion, but more RAM-friendly.
 
 
-[stats sub config]
+#### Statistic accumulation stage subconfig:
+
+A sub-config for controling surviving reads statistics calculation, should be found under the name "stats". Supported options:
+
+Field name|Required|Description
+---|---|---
+cpus|No|int > 0. Number of tasks to run simultaneously for every stats-calculating step. If not set, the "global" value will be used.
+mode|No|Whether or not count surviving reads statistics. Default is "default". Supported values:<br>- "default" : gather sirviving reads counts after each step, write resulting table in the output folder.<br>- "skip" : do not perform this stage.
+prefix|No|Name of the resulting table (without the .tsv prefix) that will be written in the output folder. Default is "stats".
 
 
 <a name="custom"></a>
@@ -166,6 +187,10 @@ During pipeline execution, it will be run as follows:
 
 <a name="minimalconfig"></a>
 ### Minimal config example
+
+<details>
+
+<summary>An example of config file with minimalistic settings in yaml format:</summary>
 
 ```
 rna_ids:
@@ -195,8 +220,15 @@ stats:
     mode: default
 
 ```
+
+</details>
+
 <a name="advancedconfig"></a>
 ### Advanced config example
+
+<details>
+
+<summary>An example of heavily  customized config file in yaml format:</summary>
 
 ```
 {
@@ -235,6 +267,8 @@ stats:
 }
 ```
 
+</details>
+
 <a name="singlestage"></a>
 ### Running only specified stage of the pipeline
 
@@ -252,7 +286,7 @@ The `input_dir` field should reference folder with valid inputs for chosen stage
     * 'rna_chr', 'rna_bgn', 'rna_end', 'rna_strand', 'rna_cigar': RNA read information from corresponfing bed file.
     * 'dna_chr', 'dna_bgn', 'dna_end', 'dna_strand', 'dna_cigar': DNA read information from corresponfing bed file.
 
-* **output_dir/stats_prefix**.tsv: Table with passing reads statistic.
+* **output_dir/stats::prefix**.tsv: Table with passing reads statistic.
 
 
 [Back to top](#head)
