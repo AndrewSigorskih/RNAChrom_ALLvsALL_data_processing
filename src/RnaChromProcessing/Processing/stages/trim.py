@@ -15,7 +15,7 @@ class _TrimToolParams(BaseModel):
     minlen: PositiveInt = 15
 
 class Trim(BasicStage):
-    tool: Literal['trimmomatic', 'skip'] = 'trimmomatic'
+    tool: Literal['trimmomatic', 'skip', 'custom'] = 'trimmomatic'
     tool_path: Optional[Path] = None
     tool_params: _TrimToolParams = _TrimToolParams()
 
@@ -31,6 +31,8 @@ class Trim(BasicStage):
             func = self._copy_files
         elif (self.tool == 'trimmomatic'):
             func = self._run_trimmomatic
+        elif self.tool == 'custom':
+            func = self._custom
         # prepare filepaths
         output_samples = self._make_output_samples(samples)
         # run function

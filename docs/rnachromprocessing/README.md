@@ -72,7 +72,7 @@ keep|No|non-empty array of strings. Should contain names of steps that will have
 rsites|No|A sub-config containing parameters for the "rsites" stage (see below).
 dedup|No|A sub-config containing parameters for the "dedup" stage (see below).
 trim|No|A sub-config containing parameters for the "trim" stage (see below).
-align|Yes|A sub-config containing parameters for the "align" stage (see below).
+align|**Yes**|A sub-config containing parameters for the "align" stage (see below).
 bam|No|A sub-config containing parameters for the "bam" stage (see below).
 bed|No|A sub-config containing parameters for the "bed" stage (see below).
 contacts|No|A sub-config containing parameters for the "contacts" stage (see below).

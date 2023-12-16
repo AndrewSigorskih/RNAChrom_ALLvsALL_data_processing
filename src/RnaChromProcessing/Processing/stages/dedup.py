@@ -13,7 +13,7 @@ class _DedupToolParams(BaseModel):
     comparison: Literal['tight', 'loose'] = 'loose'
 
 class Dedup(BasicStage):
-    tool: Literal['fastuniq', 'fastq-dupaway', 'skip'] = 'fastuniq'
+    tool: Literal['fastuniq', 'fastq-dupaway', 'skip', 'custom'] = 'fastuniq'
     tool_path: Optional[Path] = None
     tool_params: _DedupToolParams = _DedupToolParams()
 
@@ -31,6 +31,8 @@ class Dedup(BasicStage):
             func = self._run_fastuniq
         elif self.tool == 'fastq-dupaway':
             func = self._run_fqdupaway
+        elif self.tool == 'custom':
+            func = self._custom
         # prepare filepaths
         output_samples = self._make_output_samples(samples)
         # run function
