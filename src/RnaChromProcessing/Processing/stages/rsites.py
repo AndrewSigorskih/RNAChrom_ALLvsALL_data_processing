@@ -68,8 +68,8 @@ class Rsites(BasicStage):
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(inp_sample.dna_file, build_index=False, full_name=True),
-                pyfastx.Fastq(inp_sample.rna_file, build_index=False, full_name=True)
+                pyfastx.Fastq(str(inp_sample.dna_file), build_index=False, full_name=True),
+                pyfastx.Fastq(str(inp_sample.rna_file), build_index=False, full_name=True)
             ):
                 if (not dna_seq.startswith('CT')) and (not dna_seq.startswith('NT')):
                     continue
@@ -92,8 +92,8 @@ class Rsites(BasicStage):
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(inp_sample.dna_file, build_index=False, full_name=True),
-                pyfastx.Fastq(inp_sample.rna_file, build_index=False, full_name=True)
+                pyfastx.Fastq(str(inp_sample.dna_file), build_index=False, full_name=True),
+                pyfastx.Fastq(str(inp_sample.rna_file), build_index=False, full_name=True)
             ):
                 if not dna_seq.endswith(self.rsite_bgn):
                     continue
