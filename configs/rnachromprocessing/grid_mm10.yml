@@ -6,7 +6,7 @@ dna_ids:
 - SRR5035947
 base_dir: .
 input_dir: /gpfs/asigorskikh/data/grid/gz
-output_dir: results
+output_dir: new_results
 cpus: 2
 keep:
 - contacts
@@ -16,13 +16,14 @@ rsites:
     type: grid
 dedup:
     tool: fastq-dupaway
-    params:
+    tool_params:
         memlimit: 10240
-        compare: loose
-trim:
-    tool: trimmomatic
-hisat:
-    genome: /gpfs/asigorskikh/data/genomes/mm10/mm10
+        comparison: loose
+align:
+    tool: hisat2
+    dna_genome_path: /gpfs/asigorskikh/data/genomes/mm10/mm10
     known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
-    hisat_threads: 8
-stats_prefix: grid_mouse
+    tool_threads: 8
+stats:
+    cpus: 8
+    prefix: grid_mouse
