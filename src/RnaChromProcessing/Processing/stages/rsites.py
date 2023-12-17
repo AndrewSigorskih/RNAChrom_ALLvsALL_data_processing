@@ -80,9 +80,9 @@ class Rsites(BasicStage):
     def _grid_like(self,
                    inp_sample: SamplePair,
                    out_sample: SamplePair) -> int:
-        '''Save read pair if DNA reads end with AG\n
-           Add CT to the end of selected DNA reads\n
-           Assign quality values from terminal AG to novel CT\n
+        '''Save read pair if DNA reads end with RSITE_BGN\n
+           Add RSITE_END to the end of selected DNA reads\n
+           Assign quality values from terminal RSITE_BGN to novel RSITE_END\n
            Reads in files should be synchronized.'''
         n_bases = len(self.rsite_end)
         dna_out_file, rna_out_file = out_sample.dna_file, out_sample.rna_file
