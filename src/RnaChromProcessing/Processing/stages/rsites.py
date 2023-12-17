@@ -7,7 +7,7 @@ from pathlib import Path
 import pyfastx
 
 from .basicstage import BasicStage, SamplePair
-from ...utils import run_command, validate_tool_path
+from ...utils import validate_tool_path
 
 
 def open_handle(filename: Path) -> Callable[[str], Callable[[str], IO]]:
