@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from .AnnotInfo import AnnotInfo
 from .Labeller import Labeller
-from .PoolExecutor import PoolExecutor
+from ..utils.PoolExecutor import PoolExecutor
 from ..plots import (
     set_style_white, plot_distance_to_closest, plot_length_distribution,
     plot_tpm_expressions

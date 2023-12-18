@@ -1,20 +1,21 @@
 import gzip
 from functools import partial
 from mimetypes import guess_type
-from typing import Any, Callable, Dict, IO, List
+from typing import Callable, IO, List, Literal, Optional
+from pathlib import Path
 
 import pyfastx
 
-from .basicstage import BasicStage
-from ...utils import exit_with_error, run_command
+from .basicstage import BasicStage, SamplePair
+from ...utils import validate_tool_path
 
 
-def open_handle(filename: str) -> Callable[[str], Callable[[str], IO]]:
+def open_handle(filename: Path) -> Callable[[str], Callable[[str], IO]]:
     encoding = guess_type(filename)[1]
     return partial(gzip.open, mode='rt') if encoding == 'gzip' else open
 
 
-def output_handle(filename: str) -> Callable[[str], Callable[[str], IO]]:
+def output_handle(filename: Path) -> Callable[[str], Callable[[str], IO]]:
     encoding = guess_type(filename)[1]
     return partial(gzip.open, mode='wt') if encoding == 'gzip' else partial(open, mode='w')
 
@@ -24,25 +25,21 @@ def format_fastq(name: str, seq: str, qual: str) -> str:
 
 
 class Rsites(BasicStage):
-    def __init__(self, 
-                 cfg: Dict[str, Any],
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if (cpus := cfg.get('cpus', None)):
-            self.cpus: int = cpus
-        self.type: str = cfg.get('type', None)
-        if self.type == 'custom':
-            self.tool_path: str = cfg.get('tool_path', None)
-            if not self.tool_path:
-               exit_with_error('Path to custom tool for rsite procedure is not specified!')
-        elif self.type == 'grid':
-            self.rsite_bgn: str = cfg.get('rsite_bgn')
-            self.rsite_end: str = cfg.get('rsite_end')
+    type: Literal['skip', 'grid', 'imargi', 'custom'] = 'skip'
+    tool_path: Optional[Path] = None
+    rsite_bgn: str = 'AG',
+    rsite_end: str = 'CT'
 
-    def run(self,
-            dna_ids: List[str],
-            rna_ids: List[str]):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.type == 'custom':
+            self.tool_path = validate_tool_path(
+                self.tool_path, self.tool_path
+            )
+    
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """Manage restriction sites filtration"""
+        # choose strategy to run
         if self.type == 'skip':
             func = self._copy_files
         elif self.type == 'imargi':
@@ -51,27 +48,28 @@ class Rsites(BasicStage):
             func = self._grid_like
         elif self.type == 'custom':
             func = self._custom
-        else:  # unknown rsites managing strategy
-            exit_with_error('Unknown restriction-site managing strategy!')
-        # run chosen function
-        self.run_function(func, dna_ids, rna_ids)
-    
+        # prepare filepaths
+        output_samples = self._make_output_samples(samples)
+        # run function
+        self.run_function(func, samples, output_samples)
+        # return results
+        return output_samples
+        
     def _imargi_like(self,
-                     dna_in_file: str,
-                     rna_in_file: str,
-                     dna_out_file: str,
-                     rna_out_file: str) -> int:
+                     inp_sample: SamplePair,
+                     out_sample: SamplePair) -> int:
         '''Save read pair if DNA read starts with CT or NT\n
            Remove first 2 bases from RNA reads.\n
            Reads in files should be synchronized.'''
+        dna_out_file, rna_out_file = out_sample.dna_file, out_sample.rna_file
         _dna_out = output_handle(dna_out_file)
         _rna_out = output_handle(rna_out_file)
         with _dna_out(dna_out_file) as dna_out_handle,\
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(dna_in_file, build_index=False, full_name=True),
-                pyfastx.Fastq(rna_in_file, build_index=False, full_name=True)
+                pyfastx.Fastq(str(inp_sample.dna_file), build_index=False, full_name=True),
+                pyfastx.Fastq(str(inp_sample.rna_file), build_index=False, full_name=True)
             ):
                 if (not dna_seq.startswith('CT')) and (not dna_seq.startswith('NT')):
                     continue
@@ -80,23 +78,22 @@ class Rsites(BasicStage):
         return 0
     
     def _grid_like(self,
-                   dna_in_file: str,
-                   rna_in_file: str,
-                   dna_out_file: str,
-                   rna_out_file: str) -> int:
-        '''Save read pair if DNA reads end with AG\n
-           Add CT to the end of selected DNA reads\n
-           Assign quality values from terminal AG to novel CT\n
+                   inp_sample: SamplePair,
+                   out_sample: SamplePair) -> int:
+        '''Save read pair if DNA reads end with RSITE_BGN\n
+           Add RSITE_END to the end of selected DNA reads\n
+           Assign quality values from terminal RSITE_BGN to novel RSITE_END\n
            Reads in files should be synchronized.'''
         n_bases = len(self.rsite_end)
+        dna_out_file, rna_out_file = out_sample.dna_file, out_sample.rna_file
         _dna_out = output_handle(dna_out_file)
         _rna_out = output_handle(rna_out_file)
         with _dna_out(dna_out_file) as dna_out_handle,\
              _rna_out(rna_out_file) as rna_out_handle:
             # read = (name, seq, qual)
             for (dna_name, dna_seq, dna_qual), (rna_name, rna_seq, rna_qual) in zip(
-                pyfastx.Fastq(dna_in_file, build_index=False, full_name=True),
-                pyfastx.Fastq(rna_in_file, build_index=False, full_name=True)
+                pyfastx.Fastq(str(inp_sample.dna_file), build_index=False, full_name=True),
+                pyfastx.Fastq(str(inp_sample.rna_file), build_index=False, full_name=True)
             ):
                 if not dna_seq.endswith(self.rsite_bgn):
                     continue
@@ -105,12 +102,3 @@ class Rsites(BasicStage):
                 dna_qual += dna_qual[-n_bases:]
                 print(format_fastq(dna_name, dna_seq, dna_qual), file=dna_out_handle, end='')
         return 0
-                
-    def _custom(self,
-                dna_in_file: str,
-                rna_in_file: str,
-                dna_out_file: str,
-                rna_out_file: str) -> int:
-        cmd = [self.tool_path, dna_in_file, rna_in_file, dna_out_file, rna_out_file]
-        exit_code = run_command(cmd)
-        return exit_code

@@ -13,17 +13,16 @@ class _DedupToolParams(BaseModel):
     comparison: Literal['tight', 'loose'] = 'loose'
 
 class Dedup(BasicStage):
-    tool: Literal['fastuniq', 'fastq-dupaway', 'skip'] = 'fastuniq'
+    tool: Literal['fastuniq', 'fastq-dupaway', 'skip', 'custom'] = 'fastuniq'
     tool_path: Optional[Path] = None
-    tool_params: Optional[_DedupToolParams] = _DedupToolParams()
+    tool_params: _DedupToolParams = _DedupToolParams()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if self.tool != 'skip':
             self.tool_path = validate_tool_path(self.tool_path, self.tool)
 
-    def run(self,
-            samples: List[SamplePair]) -> None:
+    def run(self, samples: List[SamplePair]) -> List[SamplePair]:
         """Run chosen deduplication tool"""
         # choose tool to run
         if self.tool == 'skip':
@@ -32,54 +31,40 @@ class Dedup(BasicStage):
             func = self._run_fastuniq
         elif self.tool == 'fastq-dupaway':
             func = self._run_fqdupaway
+        elif self.tool == 'custom':
+            func = self._custom
         # prepare filepaths
-        dna_outputs = [
-            self.stage_dir / sample.dna_file.name for sample in samples
-        ]
-        rna_outputs = [
-            self.stage_dir / sample.rna_file.name for sample in samples
-        ]
+        output_samples = self._make_output_samples(samples)
         # run function
-        self.run_function(
-            func,
-            [sample.dna_file for sample in samples],
-            [sample.rna_file for sample in samples],
-            dna_outputs, rna_outputs
-        )
-        # save paths
-        for sample, dna_out, rna_out in zip(samples, dna_outputs, rna_outputs):
-            sample.set_files(dna_out, rna_out)
+        self.run_function(func, samples, output_samples)
+        # return results
+        return output_samples
 
     def _run_fastuniq(self,
-                      dna_in_file: Path,
-                      rna_in_file: Path,
-                      dna_out_file: Path,
-                      rna_out_file: Path) -> int:
+                      inp_sample: SamplePair,
+                      out_sample: SamplePair) -> int:
         """run fastuniq"""
-        if (dna_in_file.suffix == '.gz') or (rna_in_file.suffix == '.gz'):
+        if (inp_sample.dna_file.suffix == '.gz') or (inp_sample.rna_file.suffix == '.gz'):
             exit_with_error('Fastuniq tool does not accept gzipped files!')
         with NamedTemporaryFile(mode='w', dir='.') as f:
             tmpfilename = f.name
             # need to flush the file
             with f.file as temp_file:
-                print(rna_in_file, dna_in_file, sep='\n', file=temp_file)
+                print(inp_sample.rna_file, inp_sample.dna_file, sep='\n', file=temp_file)
             command = [
                 self.tool_path, '-i', tmpfilename,
-                '-o', rna_out_file, '-p', dna_out_file
+                '-o', out_sample.rna_file, '-p', out_sample.dna_file
             ]
             return_code = run_command(command)
         return return_code
     
     def _run_fqdupaway(self,
-                       dna_in_file: Path,
-                       rna_in_file: Path,
-                       dna_out_file: Path,
-                       rna_out_file: Path) -> int:
+                       inp_sample: SamplePair,
+                       out_sample: SamplePair) -> int:
         """run fastq-dupaway"""
         command = [
-            self.tool_path, '-i', rna_in_file, '-u', dna_in_file,
-            '-o', rna_out_file, '-p', dna_out_file, '-m', self.tool_params.memlimit,
+            self.tool_path, '-i', inp_sample.rna_file, '-u', inp_sample.dna_file,
+            '-o', out_sample.rna_file, '-p', out_sample.dna_file, '-m', str(self.tool_params.memlimit),
             '--compare-seq', self.tool_params.comparison
         ]
-        return_code = run_command(command)
-        return return_code
+        return run_command(command)
