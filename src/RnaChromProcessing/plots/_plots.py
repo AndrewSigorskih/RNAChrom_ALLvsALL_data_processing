@@ -63,7 +63,8 @@ def set_style_white() -> None:
 def rna_strand_barplot(wins: pd.DataFrame,
                        total_genes: int,
                        out_dir: str,
-                       prefix: str) -> None:
+                       prefix: str,
+                       plot_format = 'png') -> None:
     # init figure
     fig, ax = plt.subplots()
     fig.set_size_inches(*FIGSIZE)
@@ -115,14 +116,18 @@ def rna_strand_barplot(wins: pd.DataFrame,
     autolabel(negrects, -3)
     ax.axhline(color='grey')
     # save
-    plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
-    plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
+    if plot_format == 'png':
+        plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
+    elif plot_format == 'svg':  
+        plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
 
 
 def rna_strand_boxplot(raw_wins: pd.DataFrame,
                        total_genes: int,
                        out_dir: str,
-                       prefix: str) -> None:
+                       prefix: str,
+                       plot_format='png') -> None:
+    # init figure
     fig, (ax0, ax1) = plt.subplots(2, 1, sharex=True)
     fig.set_size_inches(11.7, 8.27)
     index = raw_wins.index
@@ -141,7 +146,7 @@ def rna_strand_boxplot(raw_wins: pd.DataFrame,
                 label=name
             )
         )
-    # prepare data (to 2 dfs and log transform?)
+    # split data to 2 dfs and log transform
     same_counts = _transform_raw_counts_df(raw_wins, labels, 0)
     anti_counts = _transform_raw_counts_df(raw_wins, labels, 1)
 
@@ -158,8 +163,10 @@ def rna_strand_boxplot(raw_wins: pd.DataFrame,
     ax0.set_title(f'Coverage distributions of {total_genes} genes,\nlog10-transformed', fontsize=16)
     fig.tight_layout()
     # save
-    plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.png', dpi=300, bbox_inches='tight')
-    plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.svg', dpi=300, bbox_inches='tight', format='svg')
+    if plot_format == 'png':
+        plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.png', dpi=300, bbox_inches='tight')
+    elif plot_format == 'svg':
+        plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.svg', dpi=300, bbox_inches='tight', format='svg')
 
 
 #----------------------------------------#
