@@ -3,12 +3,12 @@
 
 This program performs several consecutive steps of data processing as follows:
 
-1. Restriction sites handling. Filtering reads by starting bases and/or finishing the fragmented restriction site. Several "procedure presets" are available for this step based on previous papers, however users can also use their own scripts by passing those as innputs (see "Config contents" section for more information).
+1. Restriction sites handling. Filtering reads by starting bases and/or finishing the fragmented restriction site. Several "procedure presets" are available for this step based on previous papers, however users can also use their own scripts by passing those as inputs (see "[Config contents](#processingconfig)" section for more information).
 2. Dedupication step. PCR duplicates are identified and removed.
 3. Trimming. Trimming of the input fastq files by quality. 
-4. Mapping RNA and DNA reads to reference genome separately using the chosen alignment software
+4. Mapping RNA and DNA reads to reference genome separately using the chosen alignment software.
 5. Filtering resulting bam files: only reads that were mapped with N (user-defined; default 2) or fewer mismatches will pass this stage.
-6. Filtering resulting bam files: only reads that were uniquelly mapped will pass this stage. Filtered bam files are converted to bed format.
+6. Filtering resulting bam files: only reads that were uniquely mapped will pass this stage. Filtered bam files are converted to bed format.
 7. Joining surviving read pairs into resulting contacts table.
 
 Each step from 1 to 3 can be skipped. The pipeine interface provides opportunity to fine-tune the behaviour for almost each step, hovewer in case of running with defaults the user's input can be minimalistic.
@@ -34,7 +34,7 @@ Supported arguments:
 ```
 -h, --help          show help message and exit
 -c CONFIG, --config CONFIG
-                    Configuration file in json format (required).
+                    Configuration file in yaml or json format (required).
 -s STAGE, --stage STAGE
                     Run only specified stage of the pipeline.
                     Supported stages: {dedup, rsites, trim, hisat, bam, bed, contacts}.
@@ -62,9 +62,9 @@ Input config is expected to be in a form of yaml/json file with several "global"
 
 Field name|Required|Description
 ---|---|---
-rna_ids|Yes|non-empty array of strings. **Must** contain base names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
-dna_ids|Yes|non-empty array of strings.  **Must** contain names of files with DNA parts of reads, synchronized with rna_ids array.
-base_dir|No|string. Directory to run analysis in (one or several temporal directories will be created in this directory). Path should exist if provided. If not provided, current working directory will be used instead.
+rna_ids|Yes|Non-empty array of strings. **Must** contain base names of files with RNA parts of reads, without directory names or file extensions. For example, for the file named <i>SRR9201799_1.fastq.gz</i> id is SRR9201799_1.
+dna_ids|Yes|Non-empty array of strings.  **Must** contain names of files with DNA parts of reads, synchronized with rna_ids array.
+base_dir|No|String. Directory to run analysis in (one or several temporal directories will be created in this directory). Path should exist if provided. If not provided, current working directory will be used instead.
 input_dir|Yes|Path to directory with input DNA and RNA files. Should exits.
 output_dir|Yes|Path to directory to store results in. Will be created if doesn't exist.
 cpus|No|int > 0. Number of tasks to run simultaneously on each step. Default is 1.
@@ -121,7 +121,7 @@ A sub-config for read alignment step, should be found under the name "align". Su
 Field name|Required|Description
 ---|---|---
 cpus|No|int > 0. Number of tasks to run simultaneously for alignment step. If not set, the "global" value will be used.
-tool|No|What alignment tool to use. Default is "hisat2". Supported options:<br>- "hisat2": use hisat2 aligner with `--no-spliced-alignment` mode for DNA reads and `--dta-cufflinks` for RNA reads.<br>- "bwa": [not implemented yet]<br>- "star": [not implemented yet]<br>- "custom": Use custom script provided by user. See [custom script section](#custom) for more information.
+tool|No|What alignment tool to use. Default is "hisat2". Supported options:<br>- "hisat2": use hisat2 aligner with `--no-spliced-alignment --no-softclip -k 100` options for DNA reads and `--dta-cufflinks -k 100 --no-softclip --known-splicesite-infile` for RNA reads.<br>- "bwa": [not implemented yet]<br>- "star": [not implemented yet]<br>- "custom": Use custom script provided by user. See [custom script section](#custom) for more information.
 tool_path|No|Path to tool executable. Use if your tool is not available via PATH. If this option is not set, package will try to search for executable location using the `shutil.which()` function with the name of tool provided in previous option. If "custom" tool is chosen, path to your script must be provided here.
 dna_genome_path|**Yes**|Path ending with prefix of genome index files for DNA reads alignment.
 rna_genome_path|No|Path ending with prefix of genome index files for RNA reads alignment. If not provided, the dna_genome_path will be used here as well.
@@ -231,40 +231,72 @@ stats:
 <summary>An example of heavily  customized config file in yaml format:</summary>
 
 ```
-{
-    "rna_ids": ["SRR12462453_1", "SRR8206679_1", "SRR8206680_1", "SRR9900121_1", "SRR9900122_1"],
-    "dna_ids": ["SRR12462453_2", "SRR8206679_2", "SRR8206680_2", "SRR9900121_2", "SRR9900122_2"],
-    "base_dir" : ".",
-    "input_dir": "./fastq",
-    "output_dir": "results",
-    "cpus": 5,
-    "keep" : ["contacts", "bam", "rsites"],
-    "dedup": {
-        "tool": "fastuniq",
-        "tool_path": "/path/to/fastuniq",
-        "cpus": 2
-    },
-    "rsites": {
-        "type": "imargi"
-    },
-    "trim": {
-        "tool" : "trimmomatic",
-        "tool_path" : "path/to/trimmomatic/jar",
-        "tool_params": {
-            "window": 5,
-            "qual_th": 26,
-            "minlen": 15
-        }
-    },
-    "hisat": {
-        "tool_path" : "path/to/hisat",
-        "genome": "PATH/TO/GENOMEDIR",
-        "known_splice": "PATH/TO/KNOWN/SPLICE",
-    },
-    "contacts" : {
-        "mode" : "low-mem"
-    }
-}
+rna_ids:
+- SRR9201799
+- SRR9201801
+- SRR9201803
+- SRR9201805
+- SRR9201807
+- SRR9201809
+- SRR9201811
+- SRR9201813
+- SRR9201815
+- SRR9201817
+- SRR9201819
+- SRR9201821
+- SRR9201823
+- SRR9201825
+- SRR9201827
+- SRR9201829
+dna_ids:
+- SRR9201800
+- SRR9201802
+- SRR9201804
+- SRR9201806
+- SRR9201808
+- SRR9201810
+- SRR9201812
+- SRR9201814
+- SRR9201816
+- SRR9201818
+- SRR9201820
+- SRR9201822
+- SRR9201824
+- SRR9201826
+- SRR9201828
+- SRR9201830
+base_dir: .
+input_dir: /gpfs/asigorskikh/data/radicl/gz
+output_dir: new_results
+cpus: 16
+keep:
+- contacts
+- bed
+- trim
+rsites:
+    type: skip
+dedup:
+    cpus: 4
+    tool: fastq-dupaway
+    tool_params:
+        memlimit: 10240
+        comparison: loose
+trim:
+    cpus: 8
+    tool: trimmomatic
+align:
+    cpus: 2
+    tool: hisat2
+    dna_genome_path: /gpfs/asigorskikh/data/genomes/mm10/mm10
+    known_splice: /gpfs/asigorskikh/data/genes/gencode.vM32.ss
+    tool_threads: 8
+contacts:
+    cpus: 10
+    mode: low-mem
+stats:
+    cpus: 8
+    prefix: radicl
+    mode: default
 ```
 
 </details>

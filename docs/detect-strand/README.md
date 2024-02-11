@@ -58,7 +58,7 @@ exp_groups|Yes|sub-config with lists of input file ids divided by groups (experi
 
 * **output_dir**/**prefix**_raw_counts.tsv:
     Table in .tsv format, containing pairs of "same" and "anti" read counts for each gene for each dataset.<br>
-    Columns represent genes, multiindex represents experimental groups derived from the "exp_groups" config field, each value is a pair of integers in a for of tuple.<br>
+    Columns represent genes, multiindex represents experimental groups derived from the "exp_groups" config field, each value is a pair of integers in a form of a pythonic tuple.<br>
     In order to read the table properly use the following code snippet:<br>
     `pd.read_csv('PATH/TO/PREFIX_raw_counts.tsv', index_col=(0, 1), sep='\t').applymap(eval)`
 
