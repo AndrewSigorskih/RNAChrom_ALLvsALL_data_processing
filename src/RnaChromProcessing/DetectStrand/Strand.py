@@ -4,7 +4,7 @@ import re
 from os import chdir, listdir, symlink
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Literal, Optional, Tuple
 
 import pandas as pd
 from pydantic import BaseModel, PositiveInt, field_validator
@@ -13,7 +13,7 @@ from ..utils import (
     check_file_exists, exit_with_error, find_in_list, run_command
 )
 from ..utils.run_utils import VERBOSE
-from ..plots import rna_strand_barplot, set_style_white
+from ..plots import rna_strand_barplot, rna_strand_boxplot, set_style_white
 
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 CONTACTS_BED_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'name', 'score', 'rna_strand')
@@ -67,6 +67,7 @@ class DetectStrand(BaseModel):
     output_dir: Path
     base_dir: Path = Path('.').resolve()
     cpus: PositiveInt = 1
+    plots_format: Literal['png', 'svg'] = 'png'
 
     gtf_annotation: Path
     genes_list: Path
@@ -238,5 +239,7 @@ class DetectStrand(BaseModel):
         set_style_white()
         logger.debug('Finished calculations, plotting results..')
         rna_strand_barplot(self._result, len(self._gene_names),
-                           self.output_dir, self.prefix)
+                           self.output_dir, self.prefix, self.plots_format)
+        rna_strand_boxplot(self._raw_result, len(self._gene_names),
+                           self.output_dir, self.prefix, self.plots_format)
         logger.info('Done.')
