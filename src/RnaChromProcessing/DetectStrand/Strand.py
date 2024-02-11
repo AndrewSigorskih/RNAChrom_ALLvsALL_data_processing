@@ -13,7 +13,7 @@ from ..utils import (
     check_file_exists, exit_with_error, find_in_list, run_command
 )
 from ..utils.run_utils import VERBOSE
-from ..plots import rna_strand_barplot, set_style_white
+from ..plots import rna_strand_barplot, rna_strand_boxplot, set_style_white
 
 CONTACTS_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'rna_strand')
 CONTACTS_BED_COLS = ('rna_chr', 'rna_bgn', 'rna_end', 'name', 'score', 'rna_strand')
@@ -238,5 +238,7 @@ class DetectStrand(BaseModel):
         set_style_white()
         logger.debug('Finished calculations, plotting results..')
         rna_strand_barplot(self._result, len(self._gene_names),
+                           self.output_dir, self.prefix)
+        rna_strand_boxplot(self._raw_result, len(self._gene_names),
                            self.output_dir, self.prefix)
         logger.info('Done.')

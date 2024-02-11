@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,12 +11,25 @@ import seaborn as sns
 FIGSIZE = (11.7, 8.27)
 TEN_KB = 10_000
 
+#----------------------------------------#
+#         UTILITY FUNCTIONS              #
+#----------------------------------------#
 
 def _calc_upper_whisker(arr: pd.Series) -> float:
     Q1, Q3 = np.percentile(arr, [25, 75])
     IQR = Q3 - Q1
     hival = Q3 + 1.5 * IQR
     return arr[arr <= hival].max()
+
+
+def _transform_raw_counts_df(raw_wins: pd.DataFrame,
+                             merged_index: List[str],
+                             strandness: Literal[0, 1]) -> pd.DataFrame:
+    counts = raw_wins.applymap(lambda x: x[strandness])
+    counts['id'] = merged_index
+    counts = pd.melt(counts, id_vars='id')
+    counts['value'] = counts['value'].apply(np.log10)
+    return counts
 
 
 def set_style_white() -> None:
@@ -41,6 +55,11 @@ def set_style_white() -> None:
     plt.rcParams['legend.fontsize'] = 14
 
 
+#----------------------------------------#
+#           DETECT-STRAND                #
+#----------------------------------------#
+
+
 def rna_strand_barplot(wins: pd.DataFrame,
                        total_genes: int,
                        out_dir: str,
@@ -53,7 +72,7 @@ def rna_strand_barplot(wins: pd.DataFrame,
     index = wins.index
     width = 0.5  # the width of the bars
     groups = index.get_level_values(0)
-    labels = ["_".join(x) for x in index.to_flat_index()]
+    labels = ['_'.join(x) for x in index.to_flat_index()]
     x = np.arange(len(labels))  # the label locations
     # groups coloring
     colors =[]
@@ -81,7 +100,6 @@ def rna_strand_barplot(wins: pd.DataFrame,
     ax.set_xticklabels(labels, rotation=85)
     ax.legend(handles=patches, fontsize=14, loc='best')
     ax.set_yticks([])
-    #ax.axes.get_yaxis().set_ticks([])
     
     # exact height values over rects
     def autolabel(rects, offset=1):
@@ -95,10 +113,58 @@ def rna_strand_barplot(wins: pd.DataFrame,
                         ha='center', va='bottom')
     autolabel(rects)
     autolabel(negrects, -3)
-    # save
     ax.axhline(color='grey')
+    # save
     plt.savefig(f'{out_dir}/{prefix}_wins.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'{out_dir}/{prefix}_wins.svg', dpi=300, bbox_inches='tight', format='svg')
+
+
+def rna_strand_boxplot(raw_wins: pd.DataFrame,
+                       total_genes: int,
+                       out_dir: str,
+                       prefix: str) -> None:
+    fig, (ax0, ax1) = plt.subplots(2, 1, sharex=True)
+    fig.set_size_inches(11.7, 8.27)
+    index = raw_wins.index
+    groups = index.get_level_values(0)
+    labels = ['_'.join(x) for x in index.to_flat_index()]
+    x = np.arange(len(labels))  # the label locations
+    # groups coloring
+    colors =[]
+    patches=[]
+    palette = sns.color_palette("husl", len(groups.unique()))
+    for i, name in enumerate(groups.unique()):
+        colors += [palette[i]] * groups[groups==name].shape[0]
+        patches.append(
+            mpatches.Patch(
+                color=palette[i], 
+                label=name
+            )
+        )
+    # prepare data (to 2 dfs and log transform?)
+    same_counts = _transform_raw_counts_df(raw_wins, labels, 0)
+    anti_counts = _transform_raw_counts_df(raw_wins, labels, 1)
+
+    # plot 2 boxplots
+    sns.boxplot(same_counts, x='id', y='value', ax=ax0)
+    sns.boxplot(anti_counts, x='id', y='value', ax=ax1)
+    # customize axes
+    ax0.set(xlabel=None)
+    ax1.set(xlabel=None)
+    ax1.set_xticklabels(labels, rotation=85)
+    ax0.set_ylabel('Genes wins distribution', fontsize=12)
+    ax1.set_ylabel('Genes losses distribution', fontsize=12)
+    ax0.legend(handles=patches, fontsize=12, bbox_to_anchor=(1.01, 1))
+    ax0.set_title(f'Coverage distributions of {total_genes} genes,\nlog10-transformed', fontsize=16)
+    fig.tight_layout()
+    # save
+    plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{out_dir}/{prefix}_cov_boxplot.svg', dpi=300, bbox_inches='tight', format='svg')
+
+
+#----------------------------------------#
+#                 XRNA                   #
+#----------------------------------------#
 
 
 def plot_length_distribution(tab: pd.DataFrame,
@@ -154,41 +220,6 @@ def plot_distance_to_closest(tab: pd.DataFrame,
     ax.set_ylabel('Count', fontsize=20)
     ax.set_xlabel('Distance, bp', fontsize=20)
     ax2.set_ylabel('Density', fontsize=20)
-    # save
-    plt.savefig(out_dir / f'{prefix}_closest_gene_distances.png',
-                dpi=300, bbox_inches='tight')
-
-
-def _plot_distance_to_closest(tab: pd.DataFrame,
-                             out_dir: Path,
-                             prefix: str) -> None:
-    fig, ax = plt.subplots()
-    fig.set_size_inches(*FIGSIZE)
-    # select 5` and 3` distances that are within 10kb window around genes
-    prime5 = tab[
-        (tab['closest_gene_side'] == '5\'') &
-        (tab['closest_gene_dist'].abs() <= TEN_KB)
-    ]['closest_gene_dist'].abs()
-    prime3 = tab[
-        (tab['closest_gene_side'] == '3\'') &
-        (tab['closest_gene_dist'].abs() <= TEN_KB)
-    ]['closest_gene_dist'].abs()
-    prime5.name = '5\''
-    prime3.name = '3\''
-    # plot histograms
-    p1 = sns.distplot(prime5, color='r', kde=False, label=prime5.name)
-    p2 = sns.distplot(prime3, color='b', kde=False, label=prime3.name)
-    # plot kde distributions
-    ax2 = ax.twinx()
-    p3 = sns.kdeplot(prime5, color='r', ax=ax2, clip=(0.0, None))
-    p4 = sns.kdeplot(prime3, color='b', ax=ax2, clip=(0.0, None))
-    # Legend and labels
-    ax.legend(title='Prime', frameon=True)
-    ax2.set_ylabel('Density', fontsize=20)
-    title = 'Distance to closest gene by strand'
-    plt.title(title)
-    ax.set_ylabel('Count', fontsize=20)
-    ax.set_xlabel('Distance, bp', fontsize=20)
     # save
     plt.savefig(out_dir / f'{prefix}_closest_gene_distances.png',
                 dpi=300, bbox_inches='tight')
